@@ -1,0 +1,52 @@
+# Unreal Engine generated files
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Build/
+
+# Visual Studio files
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+
+# Visual Studio Code
+.vscode/
+
+# Rider
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Binary files
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Debug files
+*.pdb
+*.idb
+*.ilk
+
+# Temporary files
+*~
+*.tmp
+*.temp
+
+# UE4/UE5 specific
+*.opensdf
+*.sdf
+*.VC.db
+*.suo
+*.user
+*.userosscache
+*.log
+*.jpch
+*.pch
