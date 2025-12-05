@@ -96,6 +96,9 @@ public:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Sprinting")
 	USprintComponent* SprintComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sprinting")
+
+
 
 public:
 

@@ -173,18 +173,16 @@ public:
     // === 核心状态逻辑 ===
     
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "State Machine")
-	ECharacterState CurrentState;
+	ECharacterState CurrentState=ECharacterState::Idle;
 
     // 这是一个代理，蓝图可以绑定它来更新UI
     UPROPERTY(BlueprintAssignable, Category = "State Machine")
     FOnStateChanged OnStateChanged;
 
+	//状态机核心函数
 	UFUNCTION(BlueprintCallable, Category = "State Machine")
 	void SetState(ECharacterState NewState);
 
-    // 检查当前是否可以执行某些操作
-    bool CanMove() const;
-    bool CanAttack() const;
 
     // === 缓存的引用 (关键！以后就靠它指挥角色) ===
 protected:
@@ -194,19 +192,29 @@ protected:
 public:
     // === 战斗与连击系统 ===
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat | Combo")
     bool bCanAttack = true;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat | Combo")
     bool bCanMove = true;
 
 	// 连击段数 (当前是第几段)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat | Combo")
 	int32 ComboIndex = 0;
 
+	//上一次连击时间
+	float LastAttackTime = 0.0f;
+
+	//连击时间窗口
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Combo")
+	float ComboInputWindow = 0.6f;
+
+	//是否能接受连击输入（即是否被打断）
+	bool bCanReceiveComboInput = false;
+
     // 最大的连击段数 (比如3连击)
-    UPROPERTY(EditDefaultsOnly, Category = "Combat")
-    int32 MaxComboCount = 3;
+    //UPROPERTY(EditDefaultsOnly, Category = "Combat")
+    //int32 MaxComboCount = 3;
 
     // 是否接受连击输入 (窗口期)
     bool bAcceptingComboInput = false;
@@ -240,21 +248,27 @@ public:
 	FTimerHandle StunTimerHandle;
 	FTimerHandle DeathTimerHandle;
 
+	//眩晕时间
 	UPROPERTY(EditDefaultsOnly, Category = "Combat")
 	float StunDuration = 2.0f;
 
+	//眩晕动画
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* StunMontage;
 
+	//死亡动画
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* DeathMontage;
 
+	//眩晕回调
 	UFUNCTION()
 	void OnStunEnd();
 
+	//死亡回调
 	UFUNCTION()
 	void OnDeathFinished();
 
+	// 攻击动画结束回调
 	UFUNCTION()
 	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
@@ -262,5 +276,11 @@ public:
     // 如果你非要在这写逻辑，你需要让 Character 把碰撞事件转发过来
     UFUNCTION()
     void OnWeaponOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+
+	void PlayFootstepSound();
+	void StopFootstepSound();
+
+
 };
 
