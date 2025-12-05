@@ -18,12 +18,30 @@ public class EscapeGame : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+            "Niagara",
+			"NiagaraCore",
+			"NiagaraShader",
+			"VectorVM"
+        });
+
+		PrivateDependencyModuleNames.AddRange(new string[] {
+             "RenderCore",                   // 渲染核心
+            "RHI",                          // 渲染硬件接口
+            "Projects"                      // 项目支持
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+        if (Target.bBuildEditor == true)
+        {
+            PrivateDependencyModuleNames.AddRange(new string[] {
+                "NiagaraEditor",            // Niagara编辑器扩展
+                "UnrealEd",                 // Unreal编辑器
+                "AssetTools",               // 资产工具
+                "ContentBrowser"            // 内容浏览器
+            });
+        }
 
-		PublicIncludePaths.AddRange(new string[] {
+        PublicIncludePaths.AddRange(new string[] {
 			"EscapeGame",
 			"EscapeGame/Variant_Platforming",
 			"EscapeGame/Variant_Platforming/Animation",
