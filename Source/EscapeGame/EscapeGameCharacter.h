@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "statemachine/StateMachineComponent.h"  // 包含枚举和组件类
+#include "SprintComponent.h"                      // 包含冲刺组件
 #include "Logging/LogMacros.h"
 #include "EscapeGameCharacter.generated.h"
 
@@ -66,6 +68,8 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	
+
 
 public:
 
@@ -83,7 +87,15 @@ public:
 
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
-	virtual void DoJumpEnd();
+	virtual void DoJumpEnd(); 
+	
+	// 注意：这里只是声明“我有个背包”，背包里具体有啥，这里不管
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStateMachineComponent* StateMachineComp;
+
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Sprinting")
+	USprintComponent* SprintComp;
+
 
 public:
 
@@ -92,5 +104,7 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+
 };
 
