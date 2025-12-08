@@ -6,7 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "SprintComponent.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSprintChanged, float, CurrentSprint);
+// 体力值改变广播 (用于UI更新)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float, CurrentStamina, float, MaxStamina);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ESCAPEGAME_API USprintComponent : public UActorComponent
@@ -32,50 +33,51 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Sprint")
     void StopSprinting();
 
-    // 供 Character 查询
-    UFUNCTION(BlueprintCallable, Category = "Sprint")
-    bool IsSprinting() const { return bIsSprinting; }
-
-    // 设置基础速度（可在蓝图/编辑器改）
+    // === 属性配置 ===
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    float WalkSpeed = 400.f;
+    float MaxStamina = 100.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    float SprintSpeed = 700.f;
-
-    // 是否使用插值平滑速度（在 Character Tick 中插值）
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    bool bSmoothSpeed = true;
-
-    // 插值速度系数（越大切换越快）
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint", meta = (EditCondition = "bSmoothSpeed"))
-    float SpeedInterpRate = 10.f;
-
-    // 冲刺条属性
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    float MaxSprint = 100.0f;
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sprint")
-    float CurrentSprint = 100.0f;
+    float StaminaConsumeRate = 20.0f; // 每秒消耗
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    float SprintConsumeRate = 25.0f; // 每秒消耗
+    float StaminaRegenRate = 10.0f; // 每秒恢复
+	//issprinting=true，不启用恢复
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    float SprintRecoverRate = 15.0f; // 每秒恢复
+    float WalkSpeed = 600.0f;
 
-    // 广播给 UI
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
+    float SprintSpeed = 1000.0f;
+
+    // 广播代理
     UPROPERTY(BlueprintAssignable, Category = "Sprint")
-    FOnSprintChanged OnSprintChanged;
+    FOnStaminaChanged OnStaminaChanged;
 
     /** 冲刺输入动作 (插座) */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     class UInputAction* SprintAction; // <--- 加上这行！
-
-protected:
-    bool bIsSprinting = false;
-
     // 供 Character 使用：获取目标速度
+
+    bool bStaminaDrained;//是否耗尽
+
+    float StaminaRegenDelay;//体力恢复延迟计时器
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
+    float MaxStaminaRegenDelay = 1.0f; //体力恢复延迟时间
+
 public:
-    float GetTargetSpeed() const { return bIsSprinting ? SprintSpeed : WalkSpeed; }
+    float CurrentStamina;
+
+    bool bSprintRequested; // 玩家是否按下了 Shift
+
+    // 缓存引用
+    UPROPERTY()
+    class ACharacter* OwnerCharacter;
+
+    UPROPERTY()
+    class UCharacterMovementComponent* MovementComp;
+
+    UPROPERTY()
+    class UStateMachineComponent* StateMachine;
 };

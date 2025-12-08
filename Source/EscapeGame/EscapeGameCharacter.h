@@ -52,6 +52,15 @@ protected:
 	UInputAction* MouseLookAction;
 
 public:
+	// ... 其他输入变量 ...
+
+	/** 声明冲刺的输入动作插槽 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SprintAction; // 这就是我们要填的地方
+
+	
+
+public:
 
 	/** Constructor */
 	AEscapeGameCharacter();	
@@ -96,7 +105,7 @@ public:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Sprinting")
 	USprintComponent* SprintComp;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sprinting")
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sprinting")
 
 
 

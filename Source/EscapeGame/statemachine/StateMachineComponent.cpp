@@ -17,14 +17,8 @@ UStateMachineComponent::UStateMachineComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-	CurrentState = ECharacterState::Idle;		
-	bCanMove = true;	
-	bCanAttack = true;
-	ComboIndex = 0;
-	
-
-
+	PrimaryComponentTick.bCanEverTick = false;
+	CurrentState = ECharacterState::Idle;
 	// ...
 }
 
@@ -34,12 +28,7 @@ void UStateMachineComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	OwnerCharacter = Cast<ACharacter>(GetOwner());
-
-	if (!OwnerCharacter) 
-	{
-		UE_LOG(LogTemp, Error, TEXT("StateMachineComponent: Owner isn`t a character!"));
-	}
+	
 // ...
 	
 }
@@ -52,49 +41,71 @@ void UStateMachineComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 	// ...
 }
 
-void UStateMachineComponent::SetState(ECharacterState Newstate) 
+void UStateMachineComponent::SetState(ECharacterState NewState) 
 {
-	if (!OwnerCharacter) 
-	{
-		UE_LOG(LogTemp, Error, TEXT("StateMachineComponent: Owner isn`t a character!"));
-		return;
-	}
-	if (CurrentState == Newstate)return;
+	if (CurrentState == NewState)return;
 
-	if (CurrentState == ECharacterState::Stunned && Newstate == ECharacterState::Stunned) 
-	{
-		GetWorld()->GetTimerManager().ClearTimer(StunTimerHandle);
-		GetWorld()->GetTimerManager().SetTimer(
-			StunTimerHandle, 
-			this, 
-			&UStateMachineComponent::OnStunEnd,
-			StunDuration,
-			false
-		);
-		return;
-	}
+	ECharacterState OldState = CurrentState;
 
+	//状态保护逻辑
+	//如果当前是死亡状态，不能切换到其他状态
 	if (CurrentState == ECharacterState::Dead)return;
 
-	CurrentState = Newstate;
-	switch (CurrentState)
+	//眩晕状态 不可切换为死亡/默认状态
+	if (CurrentState == ECharacterState::Stunned && NewState != ECharacterState::Dead && NewState != ECharacterState::Idle)return;
+
+	//更新状态
+	CurrentState = NewState;
+
+	//广播状态变化事件
+	if (OnStateChanged.IsBound()) 
 	{
-	case ECharacterState::Idle:
-		break;
-	case ECharacterState::Moving:
-		StopFootstepSound();
-		break;
-	case ECharacterState::Attacking:
-		OwnerCharacter->StopAnimMontage();
-		if()
-		break;
-	case ECharacterState::Sprinting:
-		break;
-	case ECharacterState::Stunned:
-		break;
-	case ECharacterState::Dead:
-		break;
-	default:
-		break;
+		OnStateChanged.Broadcast(NewState, OldState);
+	}
+
+	if(NewState==ECharacterState::Dead)
+	{
+		ACharacter* OwnCharacter = Cast<ACharacter>(GetOwner());
+		if (OwnCharacter) 
+		{
+			// 1. 获取移动组件
+			UCharacterMovementComponent* CharMoveComp = OwnCharacter->GetCharacterMovement();
+
+			// 2. 如果组件存在，就打断腿（禁止移动）
+			if (CharMoveComp)
+			{
+				CharMoveComp->DisableMovement();
+				CharMoveComp->StopMovementImmediately(); // 顺便把当前的惯性也停掉，更干脆
+			}
+
+		}
+	}
+}
+
+void UStateMachineComponent::ApplyStun(float Duration)
+{
+	if (CurrentState == ECharacterState::Dead) return;
+
+	SetState(ECharacterState::Stunned);
+
+	if (UWorld* World = GetWorld()) 
+	{
+		World->GetTimerManager().SetTimer(TimerHandle_Stun, this, &UStateMachineComponent::OnStunFinished, Duration, false);
+	}
+
+}
+
+void UStateMachineComponent::ApplyDeath()
+{
+	if (CurrentState == ECharacterState::Dead) return;
+	SetState(ECharacterState::Dead);
+}
+
+void UStateMachineComponent::OnStunFinished()
+{
+	// 只有当前还是眩晕状态才恢复（防止中途被打死）
+	if (CurrentState == ECharacterState::Stunned)
+	{
+		SetState(ECharacterState::Idle);
 	}
 }

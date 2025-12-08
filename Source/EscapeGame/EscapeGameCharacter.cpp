@@ -55,13 +55,13 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
-	  // 初始化状态
-	if (StateMachineComp) // 加个判断是个好习惯，虽然在构造函数里通常都有
-	{
-		StateMachineComp->CurrentState = ECharacterState::Idle;
-		StateMachineComp->bCanMove = true;
-		StateMachineComp->bCanAttack = true;
-	}
+	//  // 初始化状态
+	//if (StateMachineComp) // 加个判断是个好习惯，虽然在构造函数里通常都有
+	//{
+	//	StateMachineComp->CurrentState = ECharacterState::Idle;
+	//	StateMachineComp->bCanMove = true;
+	//	StateMachineComp->bCanAttack = true;
+	//}
 }
 
 void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -80,6 +80,16 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AEscapeGameCharacter::Look);
 
+		if (SprintAction) 
+		{
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, SprintComp, &USprintComponent::StartSprinting);
+
+			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, SprintComp, &USprintComponent::StopSprinting);
+		}
+
+
+
+
 		// === 你需要在这里绑定冲刺和攻击 ===
 	    //假设你有 SprintAction 和 AttackAction
 	    //EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, SprintComp, &USprintComponent::StartSprinting);
@@ -95,7 +105,7 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 void AEscapeGameCharacter::Move(const FInputActionValue& Value)
 {
-	if (!StateMachineComp->bCanMove)return;
+	//if (!StateMachineComp->bCanMove)return;
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
