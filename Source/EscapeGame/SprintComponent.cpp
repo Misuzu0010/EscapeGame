@@ -16,6 +16,7 @@ USprintComponent::USprintComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
+	bStaminaDrained = false;
 	bSprintRequested = false;
 	CurrentStamina = MaxStamina;
 
@@ -54,25 +55,40 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (!OwnerCharacter || !MovementComp || !StateMachine)return;
+	if (CurrentStamina <= 0.0f)
+	{
+		CurrentStamina = 0.0f;
+
+		bStaminaDrained = true;
+		//// 停止冲刺
+		MovementComp->MaxWalkSpeed = WalkSpeed;
+		StateMachine->SetState(ECharacterState::Idle);
+		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Stamina Depleted!"));
+	}
+
 
 	//判断是否冲刺
 	ECharacterState CurrentState = StateMachine->GetCurrentState();
 	//仅当移动或者空闲 且有速度 允许冲刺
 	bool bCanSprint = ((CurrentState == ECharacterState::Moving || CurrentState == ECharacterState::Idle) && !OwnerCharacter->GetVelocity().IsZero());
 
-	bool bIsActurallySprinting = bSprintRequested && bCanSprint && !bStaminaDrained;
+	// 实际冲刺条件
+	bool bIsActurallySprinting = bSprintRequested && bCanSprint && !bStaminaDrained && MovementComp->IsMovingOnGround();
 
-
-
+	
 	if (bIsActurallySprinting) 
 	{
+		
 		CurrentStamina -= StaminaConsumeRate * DeltaTime;
 
 		StaminaRegenDelay = MaxStaminaRegenDelay;
 
 		//移动组件 设置为冲刺速度
 		MovementComp->MaxWalkSpeed = SprintSpeed;
-		GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, FString::Printf(TEXT("Sprinting.....: %.2f"), CurrentStamina));
+		GEngine->AddOnScreenDebugMessage(4, 0.f, FColor::Purple,
+			FString::Printf(TEXT("Actual Velocity: %.1f"), OwnerCharacter->GetVelocity().Size()));
+		GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Red,
+			FString::Printf(TEXT("MovementMode: %d"), (int32)MovementComp->MovementMode));
 
 		// 设置状态机 (防止每帧重复Set，加个判断)
 		if (CurrentState != ECharacterState::Sprinting)
@@ -80,22 +96,13 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			StateMachine->SetState(ECharacterState::Sprinting);
 
 		}
-		if (CurrentStamina <= 0.0f) 
-		{
-			CurrentStamina = 0.0f;
-			bStaminaDrained = true;
-			//// 停止冲刺
-			//MovementComp->MaxWalkSpeed = WalkSpeed;
-			//StateMachine->SetState(ECharacterState::Idle);
-			//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Stamina Depleted!"));
-		}
 	
 	}
 	else 
 	{
-		MovementComp->MaxWalkSpeed = WalkSpeed;
 		if (!bSprintRequested) 
 		{
+			MovementComp->MaxWalkSpeed = WalkSpeed;
 			if (StaminaRegenDelay > 0.0f) 
 			{
 				StaminaRegenDelay -= DeltaTime;		
@@ -107,6 +114,20 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 				{
 					CurrentStamina += StaminaRegenRate * DeltaTime;
 					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, FString::Printf(TEXT("Recovering.....: %.2f"), CurrentStamina));
+					GEngine->AddOnScreenDebugMessage(0, 0.f, FColor::Cyan,
+						FString::Printf(TEXT("WalkSpeed: %.1f | SprintSpeed: %.1f"), WalkSpeed, SprintSpeed));
+
+					GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Yellow,
+						FString::Printf(TEXT("Actual MaxWalkSpeed: %.1f"), MovementComp->MaxWalkSpeed));
+
+					GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Green,
+						FString::Printf(TEXT("bSprintRequested: %s | bStaminaDrained: %s"),
+							bSprintRequested ? TEXT("true") : TEXT("false"),
+							bStaminaDrained ? TEXT("true") : TEXT("false")));
+					GEngine->AddOnScreenDebugMessage(4, 0.f, FColor::Purple,
+						FString::Printf(TEXT("Actual Velocity: %.1f"), OwnerCharacter->GetVelocity().Size()));
+					GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Red,
+						FString::Printf(TEXT("MovementMode: %d"), (int32)MovementComp->MovementMode));
 
 				}
 
