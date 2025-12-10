@@ -55,6 +55,7 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (!OwnerCharacter || !MovementComp || !StateMachine)return;
+	float OldStamina = CurrentStamina;
 	if (CurrentStamina <= 0.0f)
 	{
 		CurrentStamina = 0.0f;
@@ -154,11 +155,13 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 			}
 		}
 	}
-
-	// ...
-	if (OnStaminaChanged.IsBound())
+	if (!FMath::IsNearlyEqual(OldStamina, CurrentStamina, 0.01f))
 	{
-		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+		// 只有真的变了，才通知 UI
+		ApplyStaminaChange();
+
+		// 调试用：只有变化时才会打印，刷屏会少很多
+		// UE_LOG(LogTemp, Warning, TEXT("Stamina Changed: %.2f"), CurrentStamina);
 	}
 
 }
@@ -171,4 +174,21 @@ void USprintComponent::StartSprinting()
 void USprintComponent::StopSprinting()
 {
 	bSprintRequested = false;
+}
+
+float USprintComponent::GetCurrentStaminaPercent() const
+{
+	return CurrentStamina / MaxStamina;
+
+
+}
+void USprintComponent::ApplyStaminaChange()
+{
+	// ...
+	if (OnStaminaChanged.IsBound())
+	{
+		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+	}
+
+	//OnStaminaChanged.Broadcast(CurrentStamina,MaxStamina);
 }

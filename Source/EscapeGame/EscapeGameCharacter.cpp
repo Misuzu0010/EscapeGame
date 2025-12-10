@@ -12,6 +12,7 @@
 #include "InputActionValue.h"
 #include "EscapeGame.h"
 #include "SprintComponent.h"
+#include "GameHUDWidget.h" 
 #include "statemachine/StateMachineComponent.h"
 
 AEscapeGameCharacter::AEscapeGameCharacter()
@@ -52,6 +53,10 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 
 	SprintComp = CreateDefaultSubobject<USprintComponent>(TEXT("SprintComp"));
 
+	AttributeComp = CreateDefaultSubobject<UAttributeComponent>(TEXT("AttributeComp"));
+
+	//SprintComp = CreateDefaultSubobject<USprintComponent>(TEXT("SprintComp"));
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
@@ -86,6 +91,9 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, SprintComp, &USprintComponent::StopSprinting);
 		}
+		// 在 SetupPlayerInputComponent 里绑定
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::StartCrouch);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AEscapeGameCharacter::StopCrouch);
 
 
 
@@ -103,6 +111,21 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	}
 }
 
+void AEscapeGameCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// 只有本地玩家才创建UI
+	if (IsLocallyControlled() && HUDWidgetClass)
+	{
+		UGameHUDWidget* HUD = CreateWidget<UGameHUDWidget>(GetWorld(), HUDWidgetClass);
+		if (HUD)
+		{
+			HUD->AddToViewport(); // 【关键】这句没写就是隐形的！
+			HUD->InitializeWidget(AttributeComp,SprintComp);
+		}
+	}
+}
 void AEscapeGameCharacter::Move(const FInputActionValue& Value)
 {
 	//if (!StateMachineComp->bCanMove)return;
@@ -164,4 +187,14 @@ void AEscapeGameCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+void AEscapeGameCharacter::StartCrouch()
+{
+	Crouch();
+}
+
+void AEscapeGameCharacter::StopCrouch()
+{
+	UnCrouch();
 }

@@ -7,6 +7,7 @@
 #include "statemachine/StateMachineComponent.h"  // 包含枚举和组件类
 #include "SprintComponent.h"                      // 包含冲刺组件
 #include "Logging/LogMacros.h"
+#include"HealthController/AttributeComponent.h"
 #include "EscapeGameCharacter.generated.h"
 
 class USpringArmComponent;
@@ -51,12 +52,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* CrouchAction;
+
+
 public:
 	// ... 其他输入变量 ...
 
 	/** 声明冲刺的输入动作插槽 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* SprintAction; // 这就是我们要填的地方
+	class UInputAction* SprintAction;
 
 	
 
@@ -69,6 +74,8 @@ protected:
 
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+protected:
+	virtual void BeginPlay() override;
 
 protected:
 
@@ -97,6 +104,12 @@ public:
 	/** Handles jump pressed inputs from either controls or UI interfaces */
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd(); 
+
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void StartCrouch();
+
+	UFUNCTION(BlueprintCallable, Category = "Input")
+	virtual void StopCrouch();
 	
 	// 注意：这里只是声明“我有个背包”，背包里具体有啥，这里不管
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -105,7 +118,13 @@ public:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Sprinting")
 	USprintComponent* SprintComp;
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sprinting")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UAttributeComponent* AttributeComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf < class UUserWidget > HUDWidgetClass;
+
+	
 
 
 

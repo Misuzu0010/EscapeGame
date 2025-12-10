@@ -21,8 +21,6 @@ UStateMachineComponent::UStateMachineComponent()
 	CurrentState = ECharacterState::Idle;
 	// ...
 }
-
-
 // Called when the game starts
 void UStateMachineComponent::BeginPlay()
 {

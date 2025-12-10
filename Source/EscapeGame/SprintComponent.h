@@ -33,6 +33,12 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Sprint")
     void StopSprinting();
 
+    UFUNCTION(BlueprintCallable, Category = "Sprint")
+	float GetCurrentStaminaPercent() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Sprint")
+	void ApplyStaminaChange();
+
     // ===  Ù–‘≈‰÷√ ===
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
     float MaxStamina = 100.0f;
