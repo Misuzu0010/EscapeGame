@@ -24,15 +24,16 @@ public:
 protected:
 
     UPROPERTY(meta = (BindWidget))
-    UImage* IconImage;  // 显示道具图标
+    TObjectPtr<UImage> IconImage;  // UE5 建议使用 TObjectPtr 替代原生指针
 
     UPROPERTY(meta = (BindWidget))
-    UTextBlock* CountText; // 显示数量
+    TObjectPtr<UTextBlock> CountText;
 
     UPROPERTY(meta = (BindWidget))
-    UButton* SlotButton;   // 点击按钮（用来使用或丢弃）
+    TObjectPtr<UButton> SlotButton;
 
     // 保存当前格子的数据，以备点击时使用
+    UPROPERTY()
     FItemStack CurrentItem;
 
     UFUNCTION()

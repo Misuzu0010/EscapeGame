@@ -57,7 +57,7 @@ struct FItemData : public FTableRowBase
 
     // 道具图标
     UPROPERTY(EditAnywhere, Category = "Item Data")
-    UTexture2D* Icon;
+    UTexture2D* Icon=nullptr;
 
     // 道具数量（默认1）
     UPROPERTY(EditAnywhere, Category = "Item Data")
@@ -86,5 +86,5 @@ struct FItemStack
     FItemData ItemData;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int32 Count;
+    int32 Count=0;
 };

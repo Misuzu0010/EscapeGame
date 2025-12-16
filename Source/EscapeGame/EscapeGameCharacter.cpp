@@ -221,7 +221,7 @@ void AEscapeGameCharacter::StopCrouch()
 void AEscapeGameCharacter::ToggleInventory()
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
-
+	UE_LOG(LogTemp, Warning, TEXT("香子兰正在监视：按下了 I 键！"));
 	//防止没有设置UI类或者PC为空时崩溃
 	if (!PC || !InventoryMenuClass) return;
 
