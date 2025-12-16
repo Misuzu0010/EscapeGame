@@ -3,11 +3,12 @@
 
 #include "GameHUDWidget.h"
 #include"Components/ProgressBar.h"
+#include"InventoryComponent.h"
 #include"Components/TextBlock.h"
 #include"SprintComponent.h"
 #include"HealthController/AttributeComponent.h"
 
-void UGameHUDWidget::InitializeWidget(UAttributeComponent* NewAttributeComp,USprintComponent*NewSprintComponent) 
+void UGameHUDWidget::InitializeWidget(UAttributeComponent* NewAttributeComp,USprintComponent*NewSprintComponent,UInventoryComponent*NewInventoryComp) 
 {
 	if (NewAttributeComp) 
 	{
@@ -24,6 +25,13 @@ void UGameHUDWidget::InitializeWidget(UAttributeComponent* NewAttributeComp,USpr
 	{
 		NewSprintComponent->OnStaminaChanged.AddDynamic(this, &UGameHUDWidget::OnStaminaUpdate);
 		float CurrentStamina = NewSprintComponent->GetCurrentStaminaPercent() * NewSprintComponent->MaxStamina;
+
+		OnStaminaUpdate(CurrentStamina, NewSprintComponent->MaxStamina);
+	}
+
+	if (HotbarWidget && AttributeCompRef.IsValid()) 
+	{
+		HotbarWidget->InitializeHotbar(NewInventoryComp);
 	}
 }
 

@@ -74,7 +74,7 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	bool bCanSprint = ((CurrentState == ECharacterState::Moving || CurrentState == ECharacterState::Idle) && !OwnerCharacter->GetVelocity().IsZero());
 
 	// 实际冲刺条件
-	bool bIsActurallySprinting = bSprintRequested && bCanSprint && !bStaminaDrained && MovementComp->IsMovingOnGround();
+	bool bIsActurallySprinting = bSprintRequested && bCanSprint && !bStaminaDrained && MovementComp->IsMovingOnGround()&&!OwnerCharacter->bIsCrouched;
 
 	
 	if (bIsActurallySprinting) 

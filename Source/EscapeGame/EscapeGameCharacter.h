@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "statemachine/StateMachineComponent.h"  // 包含枚举和组件类
 #include "SprintComponent.h"                      // 包含冲刺组件
+#include "InventoryComponent.h"
 #include "Logging/LogMacros.h"
 #include"HealthController/AttributeComponent.h"
 #include "EscapeGameCharacter.generated.h"
@@ -55,6 +56,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* CrouchAction;
 
+	// 1. 输入动作：按 I 键
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* InventoryAction;
 
 public:
 	// ... 其他输入变量 ...
@@ -74,7 +78,7 @@ protected:
 
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-protected:
+
 	virtual void BeginPlay() override;
 
 protected:
@@ -121,8 +125,23 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAttributeComponent* AttributeComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UInventoryComponent* InventoryComp;
+
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf < class UUserWidget > HUDWidgetClass;
+
+	// 2. UI 配置：我们要创建哪个 Widget？(填 WBP_InventoryMenu)
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class UUserWidget> InventoryMenuClass;
+
+	// 3. 实例缓存：保存打开的窗口，防止重复创建
+	UPROPERTY()
+	class UUserWidget* InventoryMenuInstance;
+
+	// 4. 函数声明
+	UFUNCTION()
+	void ToggleInventory();
 
 	
 

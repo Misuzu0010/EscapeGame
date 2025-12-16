@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+//各种UI的改变逻辑集成
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-//#include"HealthController/AttributeComponent.h"
+#include"InventoryHotbarWidget.h"
 #include "GameHUDWidget.generated.h"
 
 /**
@@ -13,6 +13,7 @@
 class UProgressBar;
 class UTextBlock;
 class UAttributeComponent;
+class UInventoryComponent;
 class USprintComponent;
 
 UCLASS()
@@ -21,7 +22,7 @@ class ESCAPEGAME_API UGameHUDWidget : public UUserWidget
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable,Category="UI")
-	void InitializeWidget(UAttributeComponent* NewAttributeComp,USprintComponent*NewSprintComponent);
+	void InitializeWidget(UAttributeComponent* NewAttributeComp,USprintComponent*NewSprintComponent,UInventoryComponent*NewInventoryComp);
 
 
 
@@ -41,6 +42,9 @@ protected:
 
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* StaminaText;
+
+	UPROPERTY(meta=(BindWidget))
+	UInventoryHotbarWidget* HotbarWidget;
 
 private:
 	//回调函数，收到广播时更新血条
