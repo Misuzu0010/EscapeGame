@@ -29,8 +29,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Components")
 	TObjectPtr<USphereComponent> SphereComp; // 用于检测碰撞
 
+	// 1. 指定数据表 (必须填！否则不知道 ID 对应什么)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
+	TObjectPtr<UDataTable> ItemDataTable;
+
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Pickup",meta = (ExposeOnSpawn = "true"))
-	FItemData ItemContent;
+	FName ItemID;
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Pickup")
 	int32 ItemCount = 1; // 拾取物品的数量
@@ -44,10 +48,10 @@ public:
 	virtual bool AttemptPickUp_Implementation(APawn* InstigatorPawn) override;
 
 	// 当我们在编辑器里修改 ItemContent 时，自动更新模型！(这是个超级好用的功能)
-#if WITH_EDITOR
+	
 	virtual void OnConstruction(const FTransform& Transform) override;
 	// OnConstruction 比 PostEditChangeProperty 更通用，拖拽时也能生效
-#endif
+ 
 
 
 };

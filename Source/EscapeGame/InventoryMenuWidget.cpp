@@ -24,7 +24,7 @@ void UInventoryMenuWidget::RefreshInventory()
 
 	ItemGrid ->ClearChildren();
 	
-	int32 MaxCapacity = 20;
+	int32 MaxCapacity =30;
 	for (int32 i = -0; i < MaxCapacity; i++) 
 	{
 		UInventorySlotWidget* NewSlot = CreateWidget<UInventorySlotWidget>(this, SlotWidgetClass);

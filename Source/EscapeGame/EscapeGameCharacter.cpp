@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+ï»¿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "EscapeGameCharacter.h"
 #include "Engine/LocalPlayer.h"
@@ -15,6 +15,9 @@
 #include"Blueprint/UserWidget.h"
 #include "SprintComponent.h"
 #include "GameHUDWidget.h" 
+#include "Engine/EngineTypes.h"
+#include "Engine/World.h"
+#include"Interface/PickupInterface.h"
 #include "statemachine/StateMachineComponent.h"
 
 AEscapeGameCharacter::AEscapeGameCharacter()
@@ -63,19 +66,6 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
-
-	//SprintComp = CreateDefaultSubobject<USprintComponent>(TEXT("SprintComp"));
-
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
-
-	//  // ³õÊ¼»¯×´Ì¬
-	//if (StateMachineComp) // ¼Ó¸öÅĞ¶ÏÊÇ¸öºÃÏ°¹ß£¬ËäÈ»ÔÚ¹¹Ôìº¯ÊıÀïÍ¨³£¶¼ÓĞ
-	//{
-	//	StateMachineComp->CurrentState = ECharacterState::Idle;
-	//	StateMachineComp->bCanMove = true;
-	//	StateMachineComp->bCanAttack = true;
-	//}
 }
 
 void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -84,7 +74,7 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::DoJumpStart);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -102,21 +92,24 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		}
 		if (CrouchAction) 
 		{
-			// ÔÚ SetupPlayerInputComponent Àï°ó¶¨
+			// åœ¨ SetupPlayerInputComponent é‡Œç»‘å®š
 			EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::StartCrouch);
 			EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AEscapeGameCharacter::StopCrouch);
 		}
 		if (InventoryAction)
 		{
-			// ÒâË¼ÊÇ£ºµ±°´ÏÂ I ¼ü£¬µ÷ÓÃ "this" (ÎÒ×Ô¼º/½ÇÉ«) ÉíÉÏµÄ ToggleInventory º¯Êı
+			// æ„æ€æ˜¯ï¼šå½“æŒ‰ä¸‹ I é”®ï¼Œè°ƒç”¨ "this" (æˆ‘è‡ªå·±/è§’è‰²) èº«ä¸Šçš„ ToggleInventory å‡½æ•°
 			EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::ToggleInventory);
 		}
 
+		//æ¡èµ·ç‰©å“
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::OnInteract);
 
 
 
-		// === ÄãĞèÒªÔÚÕâÀï°ó¶¨³å´ÌºÍ¹¥»÷ ===
-	    //¼ÙÉèÄãÓĞ SprintAction ºÍ AttackAction
+
+		// === ä½ éœ€è¦åœ¨è¿™é‡Œç»‘å®šå†²åˆºå’Œæ”»å‡» ===
+	    //å‡è®¾ä½ æœ‰ SprintAction å’Œ AttackAction
 	    //EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, SprintComp, &USprintComponent::StartSprinting);
 	    //EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, SprintComp, &USprintComponent::StopSprinting);
 	    //EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ECharacterState::);
@@ -132,13 +125,13 @@ void AEscapeGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Ö»ÓĞ±¾µØÍæ¼Ò²Å´´½¨UI
+	// åªæœ‰æœ¬åœ°ç©å®¶æ‰åˆ›å»ºUI
 	if (IsLocallyControlled() && HUDWidgetClass)
 	{
 		UGameHUDWidget* HUD = CreateWidget<UGameHUDWidget>(GetWorld(), HUDWidgetClass);
 		if (HUD)
 		{
-			HUD->AddToViewport(); // ¡¾¹Ø¼ü¡¿Õâ¾äÃ»Ğ´¾ÍÊÇÒşĞÎµÄ£¡
+			HUD->AddToViewport(); // ã€å…³é”®ã€‘è¿™å¥æ²¡å†™å°±æ˜¯éšå½¢çš„ï¼
 			HUD->InitializeWidget(AttributeComp,SprintComp,InventoryComp);
 		}
 	}
@@ -196,7 +189,11 @@ void AEscapeGameCharacter::DoLook(float Yaw, float Pitch)
 
 void AEscapeGameCharacter::DoJumpStart()
 {
-	// signal the character to jump
+	// 1. æŸ¥å²—ï¼šå¦‚æœè¢«å®šèº«ï¼ˆæ‰“å¼€äº†èƒŒåŒ…ï¼‰ï¼Œç›´æ¥æ— è§†è·³è·ƒè¯·æ±‚
+	if (Controller && Controller->IsMoveInputIgnored())
+	{
+		return;
+	}
 	Jump();
 }
 
@@ -221,57 +218,131 @@ void AEscapeGameCharacter::StopCrouch()
 void AEscapeGameCharacter::ToggleInventory()
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
-	UE_LOG(LogTemp, Warning, TEXT("Ïã×ÓÀ¼ÕıÔÚ¼àÊÓ£º°´ÏÂÁË I ¼ü£¡"));
-	//·ÀÖ¹Ã»ÓĞÉèÖÃUIÀà»òÕßPCÎª¿ÕÊ±±ÀÀ£
+	UE_LOG(LogTemp, Warning, TEXT("é¦™å­å…°æ­£åœ¨ç›‘è§†ï¼šæŒ‰ä¸‹äº† I é”®ï¼"));
+	//é˜²æ­¢æ²¡æœ‰è®¾ç½®UIç±»æˆ–è€…PCä¸ºç©ºæ—¶å´©æºƒ
 	if (!PC || !InventoryMenuClass) return;
 
-	// Èç¹û´°¿Ú²»´æÔÚ£¬¾Í´´½¨Ëü
+	// å¦‚æœçª—å£ä¸å­˜åœ¨ï¼Œå°±åˆ›å»ºå®ƒ
 	if (!InventoryMenuInstance)
 	{
-		// 1. ´´½¨ Widget
+		// 1. åˆ›å»º Widget
 		InventoryMenuInstance = CreateWidget<UUserWidget>(PC, InventoryMenuClass);
 
-		// 2. Ç¿×ª²¢³õÊ¼»¯ (½â³ı·âÓ¡£¡)
+		// 2. å¼ºè½¬å¹¶åˆå§‹åŒ– (è§£é™¤å°å°ï¼)
 		if (InventoryMenuInstance)
 		{
-			// ÒòÎªÎÒÃÇÒıÓÃÁËÍ·ÎÄ¼ş£¬ËùÒÔ¿ÉÒÔÓÃ UInventoryMenuWidget
+			// å› ä¸ºæˆ‘ä»¬å¼•ç”¨äº†å¤´æ–‡ä»¶ï¼Œæ‰€ä»¥å¯ä»¥ç”¨ UInventoryMenuWidget
 			UInventoryMenuWidget* MenuWidget = Cast<UInventoryMenuWidget>(InventoryMenuInstance);
 			if (MenuWidget)
 			{
-				// °ÑÉíÉÏµÄ±³°ü×é¼ş´«¸ø UI
+				// æŠŠèº«ä¸Šçš„èƒŒåŒ…ç»„ä»¶ä¼ ç»™ UI
 				MenuWidget->InitializeInventory(InventoryComp);
 			}
 		}
 	}
 
-// --- ÏÂÃæÊÇ±ØĞë²¹ÉÏµÄÂß¼­ ---
+// --- ä¸‹é¢æ˜¯å¿…é¡»è¡¥ä¸Šçš„é€»è¾‘ ---
 
-	if (InventoryMenuInstance) // ÔÙ´ÎÈ·ÈÏÒ»ÏÂÓĞ¶«Î÷
+	if (InventoryMenuInstance) // å†æ¬¡ç¡®è®¤ä¸€ä¸‹æœ‰ä¸œè¥¿
 	{
-		// ÅĞ¶Ïµ±Ç°ÊÇÔÚÆÁÄ»ÉÏÏÔÊ¾×Å£¬»¹ÊÇ²Ø×Å
+
+		// åˆ¤æ–­å½“å‰æ˜¯åœ¨å±å¹•ä¸Šæ˜¾ç¤ºç€ï¼Œè¿˜æ˜¯è—ç€
 		if (InventoryMenuInstance->IsInViewport())
 		{
-			// === Èç¹û¿ª×Å£¬¾Í¹Øµô ===
-			InventoryMenuInstance->RemoveFromParent(); // ´ÓÆÁÄ»ÒÆ³ı
+			// === å¦‚æœå¼€ç€ï¼Œå°±å…³æ‰ ===
+			InventoryMenuInstance->RemoveFromParent(); // ä»å±å¹•ç§»é™¤
 
-			// °ÑÊó±ê²ØÆğÀ´£¬¿ØÖÆÈ¨»¹¸øÓÎÏ·½ÇÉ«
+			// æŠŠé¼ æ ‡è—èµ·æ¥ï¼Œæ§åˆ¶æƒè¿˜ç»™æ¸¸æˆè§’è‰²
 			FInputModeGameOnly GameMode;
 			PC->SetInputMode(GameMode);
 			PC->bShowMouseCursor = false;
+
+			PC->SetIgnoreLookInput(false);
+			PC->SetIgnoreMoveInput(false);
+			
 		}
 		else
 		{
-			// === Èç¹û¹Ø×Å£¬¾Í´ò¿ª ===
-			InventoryMenuInstance->AddToViewport(); // Ìùµ½ÆÁÄ»ÉÏ
+			// === å¦‚æœå…³ç€ï¼Œå°±æ‰“å¼€ ===
+			InventoryMenuInstance->AddToViewport(); // è´´åˆ°å±å¹•ä¸Š
 
-			// °ÑÊó±êÏÔÊ¾³öÀ´£¬¿ØÖÆÈ¨½»¸ø UI
+			// æŠŠé¼ æ ‡æ˜¾ç¤ºå‡ºæ¥ï¼Œæ§åˆ¶æƒäº¤ç»™ UI
 			FInputModeGameAndUI UIMode;
-			UIMode.SetWidgetToFocus(InventoryMenuInstance->TakeWidget()); // ÈÃUI»ñµÃ½¹µã
+			UIMode.SetWidgetToFocus(InventoryMenuInstance->TakeWidget()); // è®©UIè·å¾—ç„¦ç‚¹
 			UIMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
 			PC->SetInputMode(UIMode);
 			PC->bShowMouseCursor = true;
+
+			// è¿™é‡Œçš„é‡ç‚¹ï¼ç¦æ­¢è¡ŒåŠ¨ï¼
+			PC->SetIgnoreMoveInput(true); // ç¦æ­¢ WASD
+			PC->SetIgnoreLookInput(true); // ç¦æ­¢é¼ æ ‡æ—‹è½¬é•œå¤´
 		}
 	}
 
 	
+}
+// è®°å¾—åœ¨æ–‡ä»¶é¡¶éƒ¨æ£€æŸ¥æ˜¯å¦åŒ…å«è¿™äº›å¤´æ–‡ä»¶ï¼Œæ²¡æœ‰å°±è¡¥ä¸Šï¼
+// #include "Engine/World.h"
+// #include "Engine/EngineTypes.h"
+
+void AEscapeGameCharacter::OnInteract(const FInputActionValue& Value)
+{
+	// --- 1. å‡†å¤‡å‚æ•° ---
+
+	UE_LOG(LogTemp, Warning, TEXT("é¦™å­å…°æ”¶åˆ°æŒ‡ä»¤ï¼šæ­£åœ¨å°è¯•äº¤äº’ï¼"));
+
+	FVector Start = GetActorLocation();
+	FVector End = Start; // èµ·ç‚¹å’Œç»ˆç‚¹ä¸€æ ·ï¼Œå°±ç›¸å½“äºåŸåœ°ç”Ÿæˆä¸€ä¸ªçƒ
+
+	// åˆ›å»ºä¸€ä¸ªåŠå¾„ 150 çš„çƒå½¢
+	FCollisionShape Shape = FCollisionShape::MakeSphere(150.0f);
+
+	// å¿½ç•¥å‚æ•°ï¼šå¿½ç•¥è‡ªå·±
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	// ç”¨æ¥å­˜ç»“æœçš„æ•°ç»„ï¼ˆæ³¨æ„è¿™é‡Œå˜æˆäº† HitResultï¼Œæ›´å¸¸ç”¨ï¼ï¼‰
+	TArray<FHitResult> OutHits;
+
+	// --- 2. æ‰§è¡Œæ‰«æ (Sweep) ---
+	// ECC_WorldDynamic åŒ…å«äº†å¤§å¤šæ•°äº¤äº’ç‰©ï¼Œä¹Ÿå¯ä»¥æ”¹æˆ ECC_Pawn æˆ– ECC_Visibility çœ‹ä½ çš„è®¾ç½®
+	bool bHit = GetWorld()->SweepMultiByChannel(
+		OutHits,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_WorldDynamic,
+		Shape,
+		Params
+	);
+
+	// --- 3. å¤„ç†ç»“æœ ---
+	if (bHit)
+	{
+		for (const FHitResult& Hit : OutHits)
+		{
+			// ã€é‡ç‚¹ã€‘FHitResult çš„ GetActor() éå¸¸ç¨³å®šï¼Œä¸å®¹æ˜“æŠ¥é”™
+			AActor* HitActor = Hit.GetActor();
+
+			// é˜²å¾¡æ€§ç¼–ç¨‹ï¼šå…ˆåˆ¤ç©º
+			if (!HitActor) continue;
+
+			// æ£€æŸ¥æ˜¯å¦å®ç°äº†æ¥å£
+			if (HitActor->Implements<UPickupInterface>())
+			{
+				// æ‰¾åˆ°äº†ï¼æ‰§è¡Œäº¤äº’
+				IPickupInterface::Execute_AttemptPickUp(HitActor, this);
+
+				// è°ƒè¯•æ—¥å¿—ï¼šå‘Šè¯‰ä½ æ¡åˆ°äº†å•¥
+				 UE_LOG(LogTemp, Warning, TEXT("é¦™å­å…°å¸®ä½ æ‘¸åˆ°äº†: %sï¼Œå¹¶ä¸”æ¥å£å¯ä»¥æ­£å¸¸ä½¿ç”¨å–µ"), *HitActor->GetName());
+
+				// æ‰¾åˆ°ä¸€ä¸ªå°±æºœï¼Œé˜²æ­¢ä¸€æ¬¡æ¡èµ·å…¨å®¶æ¡¶ï¼ˆå¦‚æœä¸åŠ  break å°±æ˜¯ç¾¤å‘äº¤äº’ï¼‰
+				break;
+			}
+		}
+	}
+
+	// --- è°ƒè¯•ç”»çº¿ (å¯é€‰) ---
+	// å¦‚æœä½ æƒ³çœ‹è§é‚£ä¸ªçƒï¼ŒæŠŠä¸‹é¢è¿™è¡Œå–æ¶ˆæ³¨é‡Š (éœ€è¦ #include "DrawDebugHelpers.h")
+	// DrawDebugSphere(GetWorld(), Start, 150.0f, 12, FColor::Red, false, 2.0f);
 }

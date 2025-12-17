@@ -60,6 +60,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* InventoryAction;
 
+	UPROPERTY(EditAnywhere,Category="Input")
+	UInputAction* InteractAction;
+
 public:
 	// ... 其他输入变量 ...
 
@@ -142,6 +145,11 @@ public:
 	// 4. 函数声明
 	UFUNCTION()
 	void ToggleInventory();
+
+	// 2. 声明回调函数 (按下 E 时执行的逻辑)
+	UFUNCTION()
+	void OnInteract(const FInputActionValue& Value);
+
 
 	
 

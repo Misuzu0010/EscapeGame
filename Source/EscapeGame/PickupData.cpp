@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "InventoryComponent.h" // 引用背包组件
+#include "Engine/DataTable.h" // 必须引用这个才能用 FindRow
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -63,57 +64,72 @@ void APickupData::BeginPlay()
 	
 }
 
-bool APickupData::AttemptPickUp_Implementation(APawn* InstigatorPawn)
+bool APickupData::AttemptPickUp_Implementation(APawn* InstigatorPawn) 
 {
-    if (!InstigatorPawn)return false;
+    if (!InstigatorPawn) return false;
 
+    if (!ItemDataTable || ItemID.IsNone()) 
+    {
+        UE_LOG(LogTemp, Error, TEXT("PickupData: 缺少 DataTable 或 ItemID，无法捡起！"));
+        return false;
 
-    //尝试获取背包组件
-    UInventoryComponent* Inventory = InstigatorPawn->FindComponentByClass<UInventoryComponent>();
+    }
+
+    FItemData* RowData = ItemDataTable->FindRow<FItemData>(ItemID, TEXT("Pickup Attempt"));
+    
+    if (!RowData) 
+    {
+        UE_LOG(LogTemp, Error, TEXT("PickUpData: ID %s 不存在"), *ItemID.ToString());
+        return false;
+    }
+
+	UInventoryComponent* Inventory = InstigatorPawn->FindComponentByClass<UInventoryComponent>();
 
     if (Inventory) 
     {
-        int32 Leftover = Inventory->AddItem(ItemContent, ItemCount);
+        int32 LeftOver = Inventory->AddItem(*RowData, ItemCount);
 
-        if (Leftover < ItemCount) 
+        if (LeftOver < ItemCount) 
         {
-            UE_LOG(LogTemp, Log, TEXT("Picked up: %s"), *ItemContent.ID.ToString());
+            UE_LOG(LogTemp, Log, TEXT("Picked up: %s"), *ItemID.ToString());
 
-            if (Leftover <= 0) 
+            if (LeftOver <= 0)
             {
-				Destroy();
+                Destroy();
                 return true;
             }
             else
             {
-                ItemCount = Leftover;
+                ItemCount = LeftOver;
                 return true;
             }
-
         }
-        else 
+        else
         {
-            //背包满了
             UE_LOG(LogTemp, Warning, TEXT("Inventory Full!!!"));
             return false;
         }
-
-
     }
     return false;
+
 }
 
-// === 编辑器可视化逻辑 ===
-// 只要你在编辑器里修改了 ItemData，或者拖拽了这个 Actor，这个函数就会跑
-#if WITH_EDITOR
+// === 可视化逻辑：自动换模型 ===
+// 只要你在编辑器里修改 ItemID，或者拖动 Actor，这个函数就会跑
 void APickupData::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
 
-    // 如果 ItemContent 里配置了模型，就自动设置给 MeshComp
-    if (ItemContent.WorldMesh && MeshComp)
+    // 1. 检查是否有表和ID
+    if (ItemDataTable && !ItemID.IsNone())
     {
-        MeshComp->SetStaticMesh(ItemContent.WorldMesh);
+        // 2. 查表 (OnConstruction里通常不报错，静默失败即可)
+        FItemData* RowData = ItemDataTable->FindRow<FItemData>(ItemID, TEXT("Pickup OnConstruction"));
+
+        // 3. 换模型
+        if (RowData && RowData->WorldMesh && MeshComp)
+        {
+            MeshComp->SetStaticMesh(RowData->WorldMesh);
+        }
     }
 }
-#endif
