@@ -8,6 +8,7 @@
 #include "SprintComponent.h"                      // 包含冲刺组件
 #include "InventoryComponent.h"
 #include "Logging/LogMacros.h"
+#include"InterectComponent.h"
 #include"HealthController/AttributeComponent.h"
 #include "EscapeGameCharacter.generated.h"
 
@@ -137,36 +138,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
 	UCameraComponent* FirstPersonCameraComponent;
 
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Component")
+	UInterectComponent* InteractComp;
+
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf < class UUserWidget > HUDWidgetClass;
 
-	// 2. UI 配置：我们要创建哪个 Widget？(填 WBP_InventoryMenu)
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<class UUserWidget> InventoryMenuClass;
-
-	// 3. 实例缓存：保存打开的窗口，防止重复创建
-	UPROPERTY()
-	class UUserWidget* InventoryMenuInstance;
-
-	// 4. 函数声明
-	UFUNCTION()
-	void ToggleInventory();
-
-	// 2. 声明回调函数 (按下 E 时执行的逻辑)
-	UFUNCTION()
-	void OnInteract(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void ToggleCameraMode();
 
 	UPROPERTY()
 	bool bIsFirstPerson = false;
-
-
-
-	
-
-
 
 public:
 

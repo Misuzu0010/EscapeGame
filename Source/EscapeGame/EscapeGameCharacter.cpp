@@ -70,6 +70,8 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 	// 创建背包组件
 	InventoryComp = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
 
+	InteractComp = CreateDefaultSubobject<UInterectComponent>(TEXT("InteractComp"));
+
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
@@ -92,26 +94,26 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AEscapeGameCharacter::Look);
 
-		if (SprintAction) 
-		{
-			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, SprintComp, &USprintComponent::StartSprinting);
-
-			EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, SprintComp, &USprintComponent::StopSprinting);
-		}
-		if (CrouchAction) 
-		{
+		
+		
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, SprintComp, &USprintComponent::StartSprinting);
+		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, SprintComp, &USprintComponent::StopSprinting);
+		
+		
+		
 			// 在 SetupPlayerInputComponent 里绑定
-			EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::StartCrouch);
-			EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AEscapeGameCharacter::StopCrouch);
-		}
-		if (InventoryAction)
-		{
-			// 意思是：当按下 I 键，调用 "this" (我自己/角色) 身上的 ToggleInventory 函数
-			EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::ToggleInventory);
-		}
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::StartCrouch);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AEscapeGameCharacter::StopCrouch);
+		
+		
+			// 注意第三个参数是 InterectComp，第四个参数是组件的函数地址			
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::ToggleInventory);
+
+			// 交互键也是同理
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::OnInteract);
+		
 
 		//捡起物品
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::OnInteract);
 
 		//切换视角
 		EnhancedInputComponent->BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::ToggleCameraMode);
@@ -229,137 +231,7 @@ void AEscapeGameCharacter::StopCrouch()
 	UnCrouch();
 }
 
-void AEscapeGameCharacter::ToggleInventory()
-{
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	UE_LOG(LogTemp, Warning, TEXT("香子兰正在监视：按下了 I 键！"));
-	//防止没有设置UI类或者PC为空时崩溃
-	if (!PC || !InventoryMenuClass) return;
 
-	// 如果窗口不存在，就创建它
-	if (!InventoryMenuInstance)
-	{
-		// 1. 创建 Widget
-		InventoryMenuInstance = CreateWidget<UUserWidget>(PC, InventoryMenuClass);
-
-		// 2. 强转并初始化 (解除封印！)
-		if (InventoryMenuInstance)
-		{
-			// 因为我们引用了头文件，所以可以用 UInventoryMenuWidget
-			UInventoryMenuWidget* MenuWidget = Cast<UInventoryMenuWidget>(InventoryMenuInstance);
-			if (MenuWidget)
-			{
-				// 把身上的背包组件传给 UI
-				MenuWidget->InitializeInventory(InventoryComp);
-			}
-		}
-	}
-
-// --- 下面是必须补上的逻辑 ---
-
-	if (InventoryMenuInstance) // 再次确认一下有东西
-	{
-
-		// 判断当前是在屏幕上显示着，还是藏着
-		if (InventoryMenuInstance->IsInViewport())
-		{
-			// === 如果开着，就关掉 ===
-			InventoryMenuInstance->RemoveFromParent(); // 从屏幕移除
-
-			// 把鼠标藏起来，控制权还给游戏角色
-			FInputModeGameOnly GameMode;
-			PC->SetInputMode(GameMode);
-			PC->bShowMouseCursor = false;
-
-			PC->SetIgnoreLookInput(false);
-			PC->SetIgnoreMoveInput(false);
-			
-		}
-		else
-		{
-			// === 如果关着，就打开 ===
-			InventoryMenuInstance->AddToViewport(); // 贴到屏幕上
-
-			// 把鼠标显示出来，控制权交给 UI
-			FInputModeGameAndUI UIMode;
-			UIMode.SetWidgetToFocus(InventoryMenuInstance->TakeWidget()); // 让UI获得焦点
-			UIMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PC->SetInputMode(UIMode);
-			PC->bShowMouseCursor = true;
-
-			// 这里的重点！禁止行动！
-			PC->SetIgnoreMoveInput(true); // 禁止 WASD
-			PC->SetIgnoreLookInput(true); // 禁止鼠标旋转镜头
-		}
-	}
-
-	
-}
-// 记得在文件顶部检查是否包含这些头文件，没有就补上！
-// #include "Engine/World.h"
-// #include "Engine/EngineTypes.h"
-
-void AEscapeGameCharacter::OnInteract(const FInputActionValue& Value)
-{
-	// --- 1. 准备参数 ---
-
-	UE_LOG(LogTemp, Warning, TEXT("香子兰收到指令：正在尝试交互！"));
-
-	FVector Start = GetActorLocation();
-	FVector End = Start; // 起点和终点一样，就相当于原地生成一个球
-
-	// 创建一个半径 150 的球形
-	FCollisionShape Shape = FCollisionShape::MakeSphere(150.0f);
-
-	// 忽略参数：忽略自己
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	// 用来存结果的数组（注意这里变成了 HitResult，更常用！）
-	TArray<FHitResult> OutHits;
-
-	// --- 2. 执行扫描 (Sweep) ---
-	// ECC_WorldDynamic 包含了大多数交互物，也可以改成 ECC_Pawn 或 ECC_Visibility 看你的设置
-	bool bHit = GetWorld()->SweepMultiByChannel(
-		OutHits,
-		Start,
-		End,
-		FQuat::Identity,
-		ECC_WorldDynamic,
-		Shape,
-		Params
-	);
-
-	// --- 3. 处理结果 ---
-	if (bHit)
-	{
-		for (const FHitResult& Hit : OutHits)
-		{
-			// 【重点】FHitResult 的 GetActor() 非常稳定，不容易报错
-			AActor* HitActor = Hit.GetActor();
-
-			// 防御性编程：先判空
-			if (!HitActor) continue;
-
-			// 检查是否实现了接口
-			if (HitActor->Implements<UPickupInterface>())
-			{
-				// 找到了！执行交互
-				IPickupInterface::Execute_AttemptPickUp(HitActor, this);
-
-				// 调试日志：告诉你捡到了啥
-				 UE_LOG(LogTemp, Warning, TEXT("香子兰帮你摸到了: %s，并且接口可以正常使用喵"), *HitActor->GetName());
-
-				// 找到一个就溜，防止一次捡起全家桶（如果不加 break 就是群发交互）
-				break;
-			}
-		}
-	}
-
-	// --- 调试画线 (可选) ---
-	// 如果你想看见那个球，把下面这行取消注释 (需要 #include "DrawDebugHelpers.h")
-	// DrawDebugSphere(GetWorld(), Start, 150.0f, 12, FColor::Red, false, 2.0f);
-}
 
 void AEscapeGameCharacter::ToggleCameraMode()
 {
