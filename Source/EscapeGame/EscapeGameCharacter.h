@@ -63,6 +63,9 @@ protected:
 	UPROPERTY(EditAnywhere,Category="Input")
 	UInputAction* InteractAction;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* ToggleCameraAction;
+
 public:
 	// ... 其他输入变量 ...
 
@@ -131,6 +134,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UInventoryComponent* InventoryComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Component")
+	UCameraComponent* FirstPersonCameraComponent;
+
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf < class UUserWidget > HUDWidgetClass;
 
@@ -149,6 +155,13 @@ public:
 	// 2. 声明回调函数 (按下 E 时执行的逻辑)
 	UFUNCTION()
 	void OnInteract(const FInputActionValue& Value);
+
+	UFUNCTION()
+	void ToggleCameraMode();
+
+	UPROPERTY()
+	bool bIsFirstPerson = false;
+
 
 
 	

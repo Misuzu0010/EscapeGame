@@ -54,12 +54,20 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
+	// Create first person camera
+	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FIrstPersonCamera"));
+	FirstPersonCameraComponent->SetupAttachment(GetMesh(),FName("head"));
+	FirstPersonCameraComponent->bUsePawnControlRotation = true;
+	FirstPersonCameraComponent->SetRelativeLocation(FVector(10.0f,0.0f,0.0f));
+	FirstPersonCameraComponent->SetActive(false);
+	bIsFirstPerson = false;
+	// 创建状态机组件
 	StateMachineComp = CreateDefaultSubobject<UStateMachineComponent>(TEXT("StateMachineComp"));
-
+	// 创建冲刺组件
 	SprintComp = CreateDefaultSubobject<USprintComponent>(TEXT("SprintComp"));
-
+	// 创建属性组件
 	AttributeComp = CreateDefaultSubobject<UAttributeComponent>(TEXT("AttributeComp"));
-
+	// 创建背包组件
 	InventoryComp = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -104,6 +112,12 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		//捡起物品
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::OnInteract);
+
+		//切换视角
+		EnhancedInputComponent->BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::ToggleCameraMode);
+		
+
+		
 
 
 
@@ -345,4 +359,22 @@ void AEscapeGameCharacter::OnInteract(const FInputActionValue& Value)
 	// --- 调试画线 (可选) ---
 	// 如果你想看见那个球，把下面这行取消注释 (需要 #include "DrawDebugHelpers.h")
 	// DrawDebugSphere(GetWorld(), Start, 150.0f, 12, FColor::Red, false, 2.0f);
+}
+
+void AEscapeGameCharacter::ToggleCameraMode()
+{
+	bIsFirstPerson = !bIsFirstPerson;
+	if (bIsFirstPerson)
+	{	
+		FollowCamera->SetActive(false);
+		FirstPersonCameraComponent->SetActive(true);
+		bUseControllerRotationYaw = true;
+		
+	}
+	else
+	{
+		FollowCamera->SetActive(true);
+		FirstPersonCameraComponent->SetActive(false);
+		bUseControllerRotationYaw = false;
+	}
 }
