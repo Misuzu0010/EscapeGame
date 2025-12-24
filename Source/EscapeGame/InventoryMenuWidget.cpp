@@ -42,7 +42,7 @@ void UInventoryMenuWidget::RefreshInventory()
 				FItemStack EmptyItem;
 				NewSlot->SetItem(EmptyItem);
 			}
-
+			//添加到格子里
 			ItemGrid->AddChild(NewSlot);
 		}
 	}

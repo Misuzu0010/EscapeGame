@@ -28,7 +28,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Logic", meta = (EditCondition = "bStackable"))
 	int32 MaxStackCount = 99;
 
-	// 使用道具的逻辑
-	virtual void OnUse_Implementation(ACharacter* Character);
+
+	// 【核心】当物品被使用时触发。
+	// 传入 User (玩家)，这样物品就知道给谁加血/加速。
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Item Logic")
+	void OnUse(AActor* User);
 	
 };

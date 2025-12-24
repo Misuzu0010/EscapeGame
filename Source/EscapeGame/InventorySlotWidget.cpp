@@ -12,6 +12,7 @@ void UInventorySlotWidget::NativeConstruct()
 
 	if (SlotButton) 
 	{
+		//绑定点击事件
 		SlotButton->OnClicked.AddDynamic(this, &UInventorySlotWidget::OnSlotClicked);
 	}
 }
@@ -19,14 +20,16 @@ void UInventorySlotWidget::NativeConstruct()
 //设置物品基本属性
 void UInventorySlotWidget::SetItem(const FItemStack& Item) 
 {
-	CurrentItem = Item;
 	//如果本物件存在图片
+	CurrentItem = Item;
+	
 	
 	if (IconImage) 
 	{
-		//设置图片
+		//设置图片步骤
 		if (IsValid(Item.ItemData.Icon)) 
 		{
+			//设置图标
 			IconImage->SetBrushFromTexture(Item.ItemData.Icon);
 			IconImage->SetVisibility(ESlateVisibility::Visible);
 		}

@@ -2,6 +2,8 @@
 
 
 #include "InventoryComponent.h"
+#include"HealthController/AttributeComponent.h"
+#include"SprintComponent.h"
 #include"ItemDefinition.h"
 
 // Sets default values for this component's properties
@@ -86,7 +88,7 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 	return LeftoverCount;
 }
 
-void UInventoryComponent::RemoveItem(FItemData InItemData, int32 InCount) 
+void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount) 
 {
 	if (InCount <= 0)return;
 
@@ -151,3 +153,39 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	// ...
 }
 
+void UInventoryComponent::UseItem(int32 SlotIndex) 
+{
+	if (!Items.IsValidIndex(SlotIndex)) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("无效的背包槽位索引！"));
+		return;
+	}
+
+	FItemStack& ItemStack = Items[SlotIndex];
+
+	if (ItemStack.Count <= 0) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("背包槽位 %d 为空！"), SlotIndex);
+		return;
+	}
+
+	UItemDefinition* LogicAsset = ItemStack.ItemData.ItemLogic;
+
+	if (LogicAsset) 
+	{
+		LogicAsset->OnUse(GetOwner());
+
+		if (LogicAsset->bConsumeOnUse)
+		{
+			// 调用之前写好的按索引移除
+			//这里的1应该是物品定义里的消耗数量
+			//但是 一次只消耗一个 所以我觉得 没啥问题
+			RemoveItem(ItemStack.ItemData, 1);
+		}
+	}
+
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("物品没有定义 LogicAsset，无法使用！"));
+	}
+}

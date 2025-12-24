@@ -59,7 +59,7 @@ void UInventoryHotbarWidget::RefreshHotbar()
 				FItemStack EmptyItem;
 				NewSlot->SetItem(EmptyItem);
 			}
-
+			//将格子添加到UI
 			HotbarGrid->AddChildToHorizontalBox(NewSlot);
 		}
 	}

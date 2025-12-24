@@ -3,7 +3,7 @@
 
 #include "ItemDefinition.h"
 
-void UItemDefinition::OnUse_Implementation(ACharacter* Character)
+void UItemDefinition::OnUse_Implementation(AActor* User)
 {
 	// 默认实现为空，可以在子类中重写
 }

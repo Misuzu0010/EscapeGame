@@ -72,6 +72,22 @@ struct FItemData : public FTableRowBase
     UPROPERTY(EditAnywhere, Category = "Item Data")
     FText UseEffectDescription;
 
+    // 回复多少血？
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Usage", meta = (EditCondition = "ItemType==EItemType::Consumable"))
+    float RestoreHealthAmount=0;
+
+    // 增加多少移动速度？
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Usage", meta = (EditCondition = "ItemType==EItemType::Consumable"))
+    float SpeedBoostAmount=0;
+
+    // 增加多少移动速度？
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Usage", meta = (EditCondition = "ItemType==EItemType::Consumable"))
+    float DamageBoostAmount = 0;
+
+    // 持续多长时间
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Usage", meta = (EditCondition = "ItemType==EItemType::Consumable"))
+    float DamageBoostTime = 0.0f;
+
     UPROPERTY(EditAnywhere, Category = "Item Representation")
     TObjectPtr<UStaticMesh> WorldMesh;
 

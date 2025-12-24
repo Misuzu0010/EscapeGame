@@ -44,13 +44,14 @@ public:
 	int32 AddItem(const FItemData &InItemData, int32 InCount);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void RemoveItem(FItemData InItemData, int32 InCount);
+	void RemoveItem(const FItemData &InItemData, int32 InCount);
 
 	// 辅助：获取物品数量
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 GetTotalCountOfItem(FName ItemID);
-
-
+	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void UseItem(int32 SlotIndex);
 
 		
 };

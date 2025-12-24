@@ -11,6 +11,7 @@
 #include "GameFramework/Controller.h"
 #include"Collision.h"
 #include "Engine/World.h"
+#include"Interface/InteractableInterface.h"
 #include "Engine/EngineTypes.h"
 #include "InventoryComponent.h"
 
@@ -186,6 +187,18 @@ void UInterectComponent::OnInteract(const FInputActionValue& Value)
 					UE_LOG(LogTemp, Warning, TEXT("香子兰帮你摸到了: %s"), *HitActor->GetName());
 					break;
 				}
+			}
+			else if (HitActor->Implements<UInteractableInterface>())
+			{
+				// 这里调用新的通用交互逻辑
+				// 注意：要传入 Pawn，方便门知道是谁开了它
+				APawn* PawnOwner = Cast<APawn>(GetOwner());
+				if(PawnOwner)
+				{
+					IInteractableInterface::Execute_Interact(HitActor, PawnOwner);
+				}
+
+				break; // 交互通常一次只触发一个
 			}
 		}
 	}
