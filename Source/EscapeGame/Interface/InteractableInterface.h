@@ -26,4 +26,13 @@ public:
 	bool Interact(APawn* InstigatorPawn);
 
 
+    // 检查是否可交互
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+    bool CanInteract(AActor* Interactor) const;
+
+    // 获取交互显示文本
+    UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+    FText GetInteractText(AActor* Interactor) const;
+
+
 };

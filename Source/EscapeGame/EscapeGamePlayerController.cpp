@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 
 #include "EscapeGamePlayerController.h"
@@ -6,8 +6,10 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Blueprint/UserWidget.h"
+#include "InventoryComponent.h"
 #include "EscapeGame.h"
 #include "Widgets/Input/SVirtualJoystick.h"
+#include"InventoryMenuWidget.h"
 
 void AEscapeGamePlayerController::BeginPlay()
 {
@@ -58,4 +60,81 @@ void AEscapeGamePlayerController::SetupInputComponent()
 			}
 		}
 	}
+}
+void AEscapeGamePlayerController::ToggleInventoryUI()
+{
+    // 1. 如果 UI 还没创建，先创建
+
+    UE_LOG(LogTemp, Warning, TEXT("控制器收到开包指令！")); // 第一步检查
+
+    if (!InventoryMenuClass)
+    {
+        UE_LOG(LogTemp, Error, TEXT("笨蛋！你忘了在蓝图里设置 InventoryMenuClass！"));
+        return;
+    }
+
+    if (!InventoryMenuInstance && InventoryMenuClass)
+    {
+        InventoryMenuInstance = CreateWidget<UUserWidget>(this, InventoryMenuClass);
+
+        // --- 初始化 UI 数据 ---
+        // 控制器要去问控制的 Pawn：“你身上有背包组件吗？”
+        APawn* ControlledPawn = GetPawn();
+        if (ControlledPawn && InventoryMenuInstance)
+        {
+            UInventoryComponent* InvComp = ControlledPawn->FindComponentByClass<UInventoryComponent>();
+            UInventoryMenuWidget* MenuWidget = Cast<UInventoryMenuWidget>(InventoryMenuInstance);
+            if (MenuWidget && InvComp)
+            {
+                MenuWidget->InitializeInventory(InvComp);
+            }
+        }
+    }
+
+    if (!InventoryMenuInstance) return;
+
+    // 2. 根据当前状态切换
+    if (InventoryMenuInstance->IsInViewport())
+    {
+        // 如果开着，就关掉
+        SetInventoryVisibility(false);
+    }
+    else
+    {
+        // 如果关着，就打开
+        SetInventoryVisibility(true);
+    }
+}
+
+void AEscapeGamePlayerController::SetInventoryVisibility(bool bVisible)
+{
+    if (!InventoryMenuInstance) return;
+
+    if (bVisible)
+    {
+        InventoryMenuInstance->AddToViewport();
+
+        // === 这里的代码完全是你原来的逻辑，只是换了个地方 ===
+        FInputModeGameAndUI InputMode;
+        InputMode.SetWidgetToFocus(InventoryMenuInstance->TakeWidget());
+        InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
+        SetInputMode(InputMode);
+        bShowMouseCursor = true;
+
+        // 既然是 Controller，直接设置自己就行，不用 GetController() 了
+        SetIgnoreMoveInput(true);
+        SetIgnoreLookInput(true);
+    }
+    else
+    {
+        InventoryMenuInstance->RemoveFromParent();
+
+        FInputModeGameOnly InputMode;
+        SetInputMode(InputMode);
+        bShowMouseCursor = false;
+
+        SetIgnoreMoveInput(false);
+        SetIgnoreLookInput(false);
+    }
 }

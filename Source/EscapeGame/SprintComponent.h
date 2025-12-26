@@ -37,7 +37,15 @@ public:
 	float GetCurrentStaminaPercent() const;
 
     UFUNCTION(BlueprintCallable, Category = "Sprint")
-	void ApplyStaminaChange();
+    void ApplyStaminaChange();
+
+    UFUNCTION(BlueprintCallable, Category = "Sprint")
+	void StaminaChange(float Delta);
+
+ 
+
+    UFUNCTION(BlueprintCallable, Category = "Sprint")
+    void ApplyMaxChange(float Delta);
 
     // === 属性配置 ===
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
@@ -77,6 +85,8 @@ public:
 
     bool bSprintRequested; // 玩家是否按下了 Shift
 
+	bool bIsActurallySprinting; // 实际是否在冲刺
+
     // 缓存引用
     UPROPERTY()
     class ACharacter* OwnerCharacter;
@@ -86,4 +96,19 @@ public:
 
     UPROPERTY()
     class UStateMachineComponent* StateMachine;
+
+
+    // 修改之前的 Buff 函数接口，不需要传时间，只传倍率
+    UFUNCTION(BlueprintCallable, Category = "Buff")
+    void SetSpeedBuffMultiplier(float NewMultiplier);
+
+    //新增：更新速度的工具函数 (DRY原则)
+    void UpdateMovementSpeed();
+
+    // 现在的 Buff 倍率 (1.0 表示没 Buff)
+    float CurrentBuffMultiplier = 1.0f;
+
+    FTimerHandle TimerHandle_Buff;
+
+    void StartSpeedBuff(float Duration, float Multiplier);
 };

@@ -15,6 +15,7 @@
 #include"Blueprint/UserWidget.h"
 #include "SprintComponent.h"
 #include "GameHUDWidget.h" 
+#include"EscapeGamePlayerController.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
 #include"Interface/PickupInterface.h"
@@ -107,7 +108,7 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		
 		
 			// 注意第三个参数是 InterectComp，第四个参数是组件的函数地址			
-		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::ToggleInventory);
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::RequestToggleInventory);
 
 			// 交互键也是同理
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::OnInteract);
@@ -117,13 +118,6 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		//切换视角
 		EnhancedInputComponent->BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::ToggleCameraMode);
-		
-
-		
-
-
-
-
 		// === 你需要在这里绑定冲刺和攻击 ===
 	    //假设你有 SprintAction 和 AttackAction
 	    //EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, SprintComp, &USprintComponent::StartSprinting);
@@ -144,11 +138,18 @@ void AEscapeGameCharacter::BeginPlay()
 	// 只有本地玩家才创建UI
 	if (IsLocallyControlled() && HUDWidgetClass)
 	{
+		AEscapeGamePlayerController* PC = Cast<AEscapeGamePlayerController>(GetController());
 		UGameHUDWidget* HUD = CreateWidget<UGameHUDWidget>(GetWorld(), HUDWidgetClass);
 		if (HUD)
 		{
 			HUD->AddToViewport(); // 【关键】这句没写就是隐形的！
 			HUD->InitializeWidget(AttributeComp,SprintComp,InventoryComp);
+		}
+		if (PC && InteractComp)
+		{
+			// 【关键连线】
+			// 当组件喊话时 -> 自动调用控制器的 ToggleInventoryUI
+			InteractComp->OnRequestToggleInventory.AddDynamic(PC, &AEscapeGamePlayerController::ToggleInventoryUI);
 		}
 	}
 }
@@ -230,9 +231,6 @@ void AEscapeGameCharacter::StopCrouch()
 {
 	UnCrouch();
 }
-
-
-
 void AEscapeGameCharacter::ToggleCameraMode()
 {
 	bIsFirstPerson = !bIsFirstPerson;

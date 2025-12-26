@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "InventoryMenuWidget.h"
 #include "Components/WrapBox.h"
@@ -11,8 +11,8 @@ void UInventoryMenuWidget::InitializeInventory(UInventoryComponent* InventoryCom
 
 	InventoryRef = InventoryComp;
 
-	// °ó¶¨¹ã²¥£¡ÕâÊÇ×î¹Ø¼üµÄÒ»²½£¡
-	// Ö»ÓÐµ± C++ ×é¼þº° "ÎÒ±äÁË"£¬UI ²Å»á¶¯¡£
+	// ç»‘å®šå¹¿æ’­ï¼è¿™æ˜¯æœ€å…³é”®çš„ä¸€æ­¥ï¼
+	// åªæœ‰å½“ C++ ç»„ä»¶å–Š "æˆ‘å˜äº†"ï¼ŒUI æ‰ä¼šåŠ¨ã€‚
 	InventoryRef->OnInventoryUpdated.AddDynamic(this, &UInventoryMenuWidget::RefreshInventory);
 
 	RefreshInventory();
@@ -42,7 +42,7 @@ void UInventoryMenuWidget::RefreshInventory()
 				FItemStack EmptyItem;
 				NewSlot->SetItem(EmptyItem);
 			}
-			//Ìí¼Óµ½¸ñ×ÓÀï
+			//æ·»åŠ åˆ°æ ¼å­é‡Œ
 			ItemGrid->AddChild(NewSlot);
 		}
 	}

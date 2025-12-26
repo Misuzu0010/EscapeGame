@@ -1,19 +1,17 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "InterectComponent.h"
 #include "GameFramework/Actor.h"
-#include "GameFramework/PlayerController.h" // ±ØĞë¼Ó£¡²»È»²»ÈÏÊ¶ PC
-#include "Blueprint/UserWidget.h"           // ±ØĞë¼Ó£¡²»È»²»ÈÏÊ¶ CreateWidget
+#include "GameFramework/PlayerController.h" // å¿…é¡»åŠ ï¼ä¸ç„¶ä¸è®¤è¯† PC
+#include "Blueprint/UserWidget.h"           // å¿…é¡»åŠ ï¼ä¸ç„¶ä¸è®¤è¯† CreateWidget
 #include "Kismet/GameplayStatics.h"
 #include "Interface/PickupInterface.h"
-#include "InventoryMenuWidget.h"            // ÄãµÄ×Ô¶¨ÒåUIÍ·ÎÄ¼ş
 #include "GameFramework/Controller.h"
 #include"Collision.h"
 #include "Engine/World.h"
 #include"Interface/InteractableInterface.h"
 #include "Engine/EngineTypes.h"
-#include "InventoryComponent.h"
 
 // Sets default values for this component's properties
 UInterectComponent::UInterectComponent()
@@ -31,18 +29,7 @@ void UInterectComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ¡¾¹Ø¼ü²¹¶¡¡¿
-	// ×é¼ş³öÉúÊ±£¬È¥ÎÊÎÊÖ÷ÈË£º¡°ºÙ£¬ÄãÉíÉÏÓĞÃ»ÓĞ¹Ò×Å±³°ü×é¼ş£¿¡±
-	// Èç¹û²»ÕÒ£¬InventoryComp ¾ÍÊÇ¿ÕÖ¸Õë£¬Ò»»á´ò¿ª UI ¾Í»á±ÀÀ££¡
-	AActor* Owner = GetOwner();
-	if (Owner)
-	{
-		InventoryComp = Owner->FindComponentByClass<UInventoryComponent>();
-		if (!InventoryComp)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Ïã×ÓÀ¼¾¯¸æ£º%s ÉíÉÏÍüÁË¹Ò InventoryComponent£¡"), *Owner->GetName());
-		}
-	}
+
 }
 
 
@@ -54,105 +41,33 @@ void UInterectComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 	// ...
 }
 
-void UInterectComponent::ToggleInventory()
-{
 
-	// ¡¾´íÎóĞŞÕı 1¡¿×é¼şÃ»ÓĞ GetController()£¡
-	// ±ØĞëÏÈÕÒµ½ Owner (Pawn)£¬ÔÙ´Ó Pawn ÕÒ Controller
-	APawn* OwnerPawn = Cast<APawn>(GetOwner());
-	if (!OwnerPawn) return;
-
-	APlayerController* PC = Cast<APlayerController>(OwnerPawn->GetController());
-
-	UE_LOG(LogTemp, Warning, TEXT("Ïã×ÓÀ¼ÕıÔÚ¼àÊÓ£º°´ÏÂÁË I ¼ü£¡"));
-
-	if (!PC || !InventoryMenuClass)
-	{
-		UE_LOG(LogTemp, Error, TEXT("È±ÉÙ PC »òÕß Î´ÉèÖÃ UI Class£¡"));
-		return;
-	}
-
-	// Èç¹û´°¿Ú²»´æÔÚ£¬¾Í´´½¨Ëü
-	if (!InventoryMenuInstance)
-	{
-		InventoryMenuInstance = CreateWidget<UUserWidget>(PC, InventoryMenuClass);
-		if (InventoryMenuInstance)
-		{
-			UInventoryMenuWidget* MenuWidget = Cast<UInventoryMenuWidget>(InventoryMenuInstance);
-
-			// ÕâÀïÓÃµ½ÁË InventoryComp£¬ËùÒÔÔÚ BeginPlay Àï±ØĞë»ñÈ¡µ½Ëü£¡
-			if (MenuWidget && InventoryComp)
-			{
-				MenuWidget->InitializeInventory(InventoryComp);
-			}
-		}
-	}
-	// --- ÏÂÃæÊÇ±ØĞë²¹ÉÏµÄÂß¼­ ---
-
-	if (InventoryMenuInstance) // ÔÙ´ÎÈ·ÈÏÒ»ÏÂÓĞ¶«Î÷
-	{
-
-		// ÅĞ¶Ïµ±Ç°ÊÇÔÚÆÁÄ»ÉÏÏÔÊ¾×Å£¬»¹ÊÇ²Ø×Å
-		if (InventoryMenuInstance->IsInViewport())
-		{
-			// === Èç¹û¿ª×Å£¬¾Í¹Øµô ===
-			InventoryMenuInstance->RemoveFromParent(); // ´ÓÆÁÄ»ÒÆ³ı
-
-			// °ÑÊó±ê²ØÆğÀ´£¬¿ØÖÆÈ¨»¹¸øÓÎÏ·½ÇÉ«
-			FInputModeGameOnly GameMode;
-			PC->SetInputMode(GameMode);
-			PC->bShowMouseCursor = false;
-
-			PC->SetIgnoreLookInput(false);
-			PC->SetIgnoreMoveInput(false);
-
-		}
-		else
-		{
-			// === Èç¹û¹Ø×Å£¬¾Í´ò¿ª ===
-			InventoryMenuInstance->AddToViewport(); // Ìùµ½ÆÁÄ»ÉÏ
-
-			// °ÑÊó±êÏÔÊ¾³öÀ´£¬¿ØÖÆÈ¨½»¸ø UI
-			FInputModeGameAndUI UIMode;
-			UIMode.SetWidgetToFocus(InventoryMenuInstance->TakeWidget()); // ÈÃUI»ñµÃ½¹µã
-			UIMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PC->SetInputMode(UIMode);
-			PC->bShowMouseCursor = true;
-
-			// ÕâÀïµÄÖØµã£¡½ûÖ¹ĞĞ¶¯£¡
-			PC->SetIgnoreMoveInput(true); // ½ûÖ¹ WASD
-			PC->SetIgnoreLookInput(true); // ½ûÖ¹Êó±êĞı×ª¾µÍ·
-		}
-	}
-
-
-}
 void UInterectComponent::OnInteract(const FInputActionValue& Value)
 {
-	// --- 1. ×¼±¸²ÎÊı ---
+	// --- 1. å‡†å¤‡å‚æ•° ---
 
-	UE_LOG(LogTemp, Warning, TEXT("Ïã×ÓÀ¼ÊÕµ½Ö¸Áî£ºÕıÔÚ³¢ÊÔ½»»¥£¡"));
+	UE_LOG(LogTemp, Warning, TEXT("é¦™å­å…°æ”¶åˆ°æŒ‡ä»¤ï¼šæ­£åœ¨å°è¯•äº¤äº’ï¼"));
 
 
-	//±ØĞëÎÊ Owner Òª×ø±ê£¡
+	//å¿…é¡»é—® Owner è¦åæ ‡ï¼
 	AActor* MyOwner = GetOwner();
 	if (!MyOwner) return;
 
 	FVector Start = MyOwner->GetActorLocation();
-	FVector End = Start; // ÆğµãºÍÖÕµãÒ»Ñù£¬¾ÍÏàµ±ÓÚÔ­µØÉú³ÉÒ»¸öÇò
+	FVector End = Start; // èµ·ç‚¹å’Œç»ˆç‚¹ä¸€æ ·ï¼Œå°±ç›¸å½“äºåŸåœ°ç”Ÿæˆä¸€ä¸ªçƒ
 
-	// ´´½¨Ò»¸ö°ë¾¶ 150 µÄÇòĞÎ
+	// åˆ›å»ºä¸€ä¸ªåŠå¾„ 150 çš„çƒå½¢
 	FCollisionShape Shape = FCollisionShape::MakeSphere(150.0f);
 
-	// ºöÂÔ²ÎÊı£ººöÂÔ×Ô¼º
+	// å¿½ç•¥å‚æ•°ï¼šå¿½ç•¥è‡ªå·±
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(MyOwner);
 
-	// ÓÃÀ´´æ½á¹ûµÄÊı×é£¨×¢ÒâÕâÀï±ä³ÉÁË HitResult£¬¸ü³£ÓÃ£¡£©
+	// ç”¨æ¥å­˜ç»“æœçš„æ•°ç»„ï¼ˆæ³¨æ„è¿™é‡Œå˜æˆäº† HitResultï¼Œæ›´å¸¸ç”¨ï¼ï¼‰
 	TArray<FHitResult> OutHits;
 
-	// --- 2. Ö´ĞĞÉ¨Ãè (Sweep) ---
-	// ECC_WorldDynamic °üº¬ÁË´ó¶àÊı½»»¥Îï£¬Ò²¿ÉÒÔ¸Ä³É ECC_Pawn »ò ECC_Visibility ¿´ÄãµÄÉèÖÃ
+	// --- 2. æ‰§è¡Œæ‰«æ (Sweep) ---
+	// ECC_WorldDynamic åŒ…å«äº†å¤§å¤šæ•°äº¤äº’ç‰©ï¼Œä¹Ÿå¯ä»¥æ”¹æˆ ECC_Pawn æˆ– ECC_Visibility çœ‹ä½ çš„è®¾ç½®
 	bool bHit = GetWorld()->SweepMultiByChannel(
 		OutHits,
 		Start,
@@ -163,47 +78,61 @@ void UInterectComponent::OnInteract(const FInputActionValue& Value)
 		Params
 	);
 
-	// --- 3. ´¦Àí½á¹û ---
+	// --- 3. å¤„ç†ç»“æœ ---
 	if (bHit)
 	{
 		for (const FHitResult& Hit : OutHits)
 		{
-			// ¡¾ÖØµã¡¿FHitResult µÄ GetActor() ·Ç³£ÎÈ¶¨£¬²»ÈİÒ×±¨´í
+			// ã€é‡ç‚¹ã€‘FHitResult çš„ GetActor() éå¸¸ç¨³å®šï¼Œä¸å®¹æ˜“æŠ¥é”™
 			AActor* HitActor = Hit.GetActor();
 
-			// ·ÀÓùĞÔ±à³Ì£ºÏÈÅĞ¿Õ
+			// é˜²å¾¡æ€§ç¼–ç¨‹ï¼šå…ˆåˆ¤ç©º
 			if (!HitActor) continue;
+			UE_LOG(LogTemp, Warning, TEXT("é¦™å­å…°çœ‹åˆ°äº†: %s"), *HitActor->GetName());
 
-			// ¼ì²éÊÇ·ñÊµÏÖÁË½Ó¿Ú
+			// æ£€æŸ¥æ˜¯å¦å®ç°äº†æ¥å£
 			if (HitActor->Implements<UPickupInterface>())
 			{
-				// ÕÒµ½ÁË£¡Ö´ĞĞ½»»¥
+				// æ‰¾åˆ°äº†ï¼æ‰§è¡Œäº¤äº’
 				APawn* PawnOwner = Cast<APawn>(MyOwner);
 				if (PawnOwner)
 				{
-					// ÏÖÔÚ´«½øÈ¥µÄ¾ÍÊÇ Pawn* ÀàĞÍÁË£¬±¨´í¾Í»áÏûÊ§£¡
+					// ç°åœ¨ä¼ è¿›å»çš„å°±æ˜¯ Pawn* ç±»å‹äº†ï¼ŒæŠ¥é”™å°±ä¼šæ¶ˆå¤±ï¼
 					IPickupInterface::Execute_AttemptPickUp(HitActor, PawnOwner);
 
-					UE_LOG(LogTemp, Warning, TEXT("Ïã×ÓÀ¼°ïÄãÃşµ½ÁË: %s"), *HitActor->GetName());
+					UE_LOG(LogTemp, Warning, TEXT("é¦™å­å…°å¸®ä½ æ‘¸åˆ°äº†: %s"), *HitActor->GetName());
 					break;
 				}
 			}
 			else if (HitActor->Implements<UInteractableInterface>())
 			{
-				// ÕâÀïµ÷ÓÃĞÂµÄÍ¨ÓÃ½»»¥Âß¼­
-				// ×¢Òâ£ºÒª´«Èë Pawn£¬·½±ãÃÅÖªµÀÊÇË­¿ªÁËËü
+				// è¿™é‡Œè°ƒç”¨æ–°çš„é€šç”¨äº¤äº’é€»è¾‘
+				// æ³¨æ„ï¼šè¦ä¼ å…¥ Pawnï¼Œæ–¹ä¾¿é—¨çŸ¥é“æ˜¯è°å¼€äº†å®ƒ
 				APawn* PawnOwner = Cast<APawn>(GetOwner());
 				if(PawnOwner)
 				{
 					IInteractableInterface::Execute_Interact(HitActor, PawnOwner);
 				}
 
-				break; // ½»»¥Í¨³£Ò»´ÎÖ»´¥·¢Ò»¸ö
+				break; // äº¤äº’é€šå¸¸ä¸€æ¬¡åªè§¦å‘ä¸€ä¸ª
+			}
+			else 
+			{
+				UE_LOG(LogTemp, Error, TEXT("å“å“Ÿæˆ‘è‰ï¼Œå•¥ä¹Ÿæ²¡æœ‰å‘€"));
 			}
 		}
 	}
 
-	// --- µ÷ÊÔ»­Ïß (¿ÉÑ¡) ---
-	// Èç¹ûÄãÏë¿´¼ûÄÇ¸öÇò£¬°ÑÏÂÃæÕâĞĞÈ¡Ïû×¢ÊÍ (ĞèÒª #include "DrawDebugHelpers.h")
+	// --- è°ƒè¯•ç”»çº¿ (å¯é€‰) ---
+	// å¦‚æœä½ æƒ³çœ‹è§é‚£ä¸ªçƒï¼ŒæŠŠä¸‹é¢è¿™è¡Œå–æ¶ˆæ³¨é‡Š (éœ€è¦ #include "DrawDebugHelpers.h")
 	// DrawDebugSphere(GetWorld(), Start, 150.0f, 12, FColor::Red, false, 2.0f);
+}
+
+void UInterectComponent::RequestToggleInventory()
+{
+	// æˆ‘ä¸ç®¡UIæ€ä¹ˆå¼€ï¼Œæˆ‘åªç®¡å–Šä¸€å£°
+	if (OnRequestToggleInventory.IsBound()) 
+	{
+		OnRequestToggleInventory.Broadcast();
+	}
 }

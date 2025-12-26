@@ -2,12 +2,10 @@
 
 
 #include "SprintComponent.h"
-// === 必须要加的头文件 ===
-#include "GameFramework/Character.h" // 为了能用 ACharacter 的函数
-#include "GameFramework/CharacterMovementComponent.h" // 为了能操作 MaxWalkSpeed
-// 假设你的状态机组件在 statemachine 文件夹下，根据实际路径调整
-// 如果是在同一级目录，直接写 "StateMachineComponent.h" 即可
+#include "GameFramework/Character.h" 
+#include "GameFramework/CharacterMovementComponent.h" 
 #include "statemachine/StateMachineComponent.h" 
+#include"TimerManager.h"
 // ========================
 
 // Sets default values for this component's properties
@@ -22,8 +20,42 @@ USprintComponent::USprintComponent()
 
 	// ...
 }
+void USprintComponent::SetSpeedBuffMultiplier(float NewMultiplier)
+{
+	CurrentBuffMultiplier = NewMultiplier;
+
+	// 每次 Buff 改变，立刻更新当前速度
+	UpdateMovementSpeed();
+
+	UE_LOG(LogTemp, Log, TEXT("喵！速度倍率变了: %f"), CurrentBuffMultiplier);
+}
+
+void USprintComponent::UpdateMovementSpeed() 
+{
+	ACharacter* Character = Cast<ACharacter>(GetOwner());
+	if (!Character)return;
+
+	UCharacterMovementComponent* CharMoveComp = Character->GetCharacterMovement();
+	if (!CharMoveComp)return;
+
+	float BaseSpeed = bIsActurallySprinting ? SprintSpeed : WalkSpeed;
+
+	CharMoveComp->MaxWalkSpeed = BaseSpeed * CurrentBuffMultiplier;
 
 
+}
+
+void USprintComponent::StartSpeedBuff(float Duration, float Multiplier)
+{
+	// 1. 设置倍率
+	SetSpeedBuffMultiplier(Multiplier);
+
+	// 2. 设置闹钟：时间到了就把倍率改回 1.0
+	FTimerDelegate TimerDel;
+	TimerDel.BindUObject(this, &USprintComponent::SetSpeedBuffMultiplier, 1.0f); // 恢复成 1.0
+
+	GetWorld()->GetTimerManager().SetTimer(TimerHandle_Buff, TimerDel, Duration, false);
+}
 // Called when the game starts
 void USprintComponent::BeginPlay()
 {
@@ -74,7 +106,7 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	bool bCanSprint = ((CurrentState == ECharacterState::Moving || CurrentState == ECharacterState::Idle) && !OwnerCharacter->GetVelocity().IsZero());
 
 	// 实际冲刺条件
-	bool bIsActurallySprinting = bSprintRequested && bCanSprint && !bStaminaDrained && MovementComp->IsMovingOnGround()&&!OwnerCharacter->bIsCrouched;
+	bIsActurallySprinting = bSprintRequested && bCanSprint && !bStaminaDrained && MovementComp->IsMovingOnGround()&&!OwnerCharacter->bIsCrouched;
 
 	
 	if (bIsActurallySprinting) 
@@ -182,13 +214,35 @@ float USprintComponent::GetCurrentStaminaPercent() const
 
 
 }
-void USprintComponent::ApplyStaminaChange()
+void USprintComponent::StaminaChange(float Delta)
 {
 	// ...
+
+	CurrentStamina += Delta;
+	if (CurrentStamina > 100.0f)CurrentStamina = 100.0f;
 	if (OnStaminaChanged.IsBound())
 	{
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 	}
 
 	//OnStaminaChanged.Broadcast(CurrentStamina,MaxStamina);
+}
+
+void USprintComponent::ApplyMaxChange(float Delta)
+{
+	// ...
+	MaxStamina += Delta;
+	if (MaxStamina < 0.0f)MaxStamina = 0.0f;
+	if (OnStaminaChanged.IsBound())
+	{
+		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+	}
+}
+
+void USprintComponent::ApplyStaminaChange()
+{
+	if (OnStaminaChanged.IsBound())
+	{
+		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
+	}
 }

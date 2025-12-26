@@ -1,62 +1,51 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "PickupData.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "InventoryComponent.h" // ÒıÓÃ±³°ü×é¼ş
-#include "Engine/DataTable.h" // ±ØĞëÒıÓÃÕâ¸ö²ÅÄÜÓÃ FindRow
+#include "InventoryComponent.h" // å¼•ç”¨èƒŒåŒ…ç»„ä»¶
+#include "Engine/DataTable.h" // å¿…é¡»å¼•ç”¨è¿™ä¸ªæ‰èƒ½ç”¨ FindRow
 #include "Kismet/GameplayStatics.h"
 
-// Sets default values
+// PickupData.cpp æ„é€ å‡½æ•°
+
 APickupData::APickupData()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = false;
 
-	//³õÊ¼»¯mesh
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
-	//ÕâÀïµÄĞ´·¨Éæ¼°µ½AActorµÄÔ´Âë
-	/*
-	
-	    // AActor.cpp (ÒıÇæÔ´Âë)
+    // 1. ç½‘æ ¼ä½“è®¾ç½®
+    MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+    RootComponent = MeshComp;
 
-    void AActor::SetActorLocation(FVector NewLocation)
-    {
-        // ÒıÇæĞÄÀïÏë£ºÎÒÒªÒÆ¶¯Õâ¸ö Actor
-        // ¿ÉÊÇ Actor ÊÇ¸öĞéÎŞµÄ¸ÅÄî£¬ÎÒµ½µ×ÒªÒÆ¶¯Ë­ÄØ£¿
-        // ¶ÔÁË£¡ÎÒÒªÒÆ¶¯ËüµÄ RootComponent£¡
-    
-        if (RootComponent != nullptr)
-        {
-            RootComponent->SetWorldLocation(NewLocation);
-        }
-        else
-        {
-            // Èç¹û RootComponent ÊÇ¿ÕµÄ£¬ÎÒ¾Í²»ÖªµÀ¸ÃÒÆ¶¯Ë­ÁË
-            // ÓÚÊÇÎÒÊ²Ã´¶¼²»×ö£¬»òÕß±¨´í
-            UE_LOG(..., Warning, "ÒÆ¶¯Ê§°Ü£¡Õâ¸ö Actor Ã»ÓĞ¸ù×é¼ş£¡");
-        }
-    }
-	*/
-	RootComponent = MeshComp;
+    // å…³æ‰ Mesh çš„ç‰©ç†ç¢°æ’ï¼Œæˆ‘ä»¬åªç”¨ SphereComp æ¥åšæ£€æµ‹
+    // è¿™æ ·å°±ç®—ä½ çš„ Key æ¨¡å‹è‡ªå¸¦äº† BlockAllï¼Œè¿™é‡Œä¹Ÿä¼šæŠŠå®ƒå…³æ‰ï¼Œé˜²æ­¢ç»Šå€’ç©å®¶
+    MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	//Ä¬ÈÏÉèÖÃ Ã»ÓĞÎïÀíÄ£Äâ£¬Ö»ÓĞÅö×²
-	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-    //³õÊ¼»¯¼ì²âÇò
+    // 2. æ£€æµ‹çƒè®¾ç½®
     SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
     SphereComp->SetupAttachment(RootComponent);
-	SphereComp->SetSphereRadius(80.0f);
+    SphereComp->SetSphereRadius(80.0f);
 
-	//ÉèÖÃÎªQueryOnly£¬Ö»ÓĞ²éÑ¯Åö×²£¬Ã»ÓĞÎïÀíÏìÓ¦
+    // --- æ ¸å¿ƒç¢°æ’é€»è¾‘ (The Holy Grail) ---
 
+    // å¼€å¯æŸ¥è¯¢ (Query)ï¼Œç¦ç”¨ç‰©ç†æ¨¡æ‹Ÿ (Physics)
     SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+    // ç¬¬ä¸€æ­¥ï¼šå…ˆæ¸…ç©ºæ‰€æœ‰ï¼ŒæŠŠæ‰€æœ‰é¢‘é“éƒ½è®¾ä¸º Ignore (å¿½ç•¥)
+    SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+
+    // ç¬¬äºŒæ­¥ï¼šå…è®¸ ç©å®¶ (Pawn) è¸©ä¸Šå» -> è§¦å‘é‡å äº‹ä»¶ (Overlap)
+    // è¿™æ ·ä½ å°±èƒ½ç©¿è¿‡å®ƒï¼Œä¸ä¼šè¢«å¡ä½è„š
     SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
-}
+    // ç¬¬ä¸‰æ­¥ï¼šå…è®¸ å°„çº¿ (WorldDynamic) æ‰“ä¸­å®ƒ -> è§¦å‘é˜»æŒ¡ (Block)
+    // è¿™æ ·ä½ çš„äº¤äº’å°„çº¿ (SweepMultiByChannel) å°±èƒ½æ£€æµ‹åˆ°å®ƒï¼
+    SphereComp->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
 
+    // (é¢å¤–ä¿é™©) å¦‚æœä½ çš„å°„çº¿ç”¨çš„æ˜¯ Visibility é¢‘é“ï¼ŒæŠŠè¿™ä¸ªä¹ŸåŠ ä¸Š
+    SphereComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+}
 // Called when the game starts or when spawned
 void APickupData::BeginPlay()
 {
@@ -70,7 +59,7 @@ bool APickupData::AttemptPickUp_Implementation(APawn* InstigatorPawn)
 
     if (!ItemDataTable || ItemID.IsNone()) 
     {
-        UE_LOG(LogTemp, Error, TEXT("PickupData: È±ÉÙ DataTable »ò ItemID£¬ÎŞ·¨¼ñÆğ£¡"));
+        UE_LOG(LogTemp, Error, TEXT("PickupData: ç¼ºå°‘ DataTable æˆ– ItemIDï¼Œæ— æ³•æ¡èµ·ï¼"));
         return false;
 
     }
@@ -79,7 +68,7 @@ bool APickupData::AttemptPickUp_Implementation(APawn* InstigatorPawn)
     
     if (!RowData) 
     {
-        UE_LOG(LogTemp, Error, TEXT("PickUpData: ID %s ²»´æÔÚ"), *ItemID.ToString());
+        UE_LOG(LogTemp, Error, TEXT("PickUpData: ID %s ä¸å­˜åœ¨"), *ItemID.ToString());
         return false;
     }
 
@@ -114,22 +103,31 @@ bool APickupData::AttemptPickUp_Implementation(APawn* InstigatorPawn)
 
 }
 
-// === ¿ÉÊÓ»¯Âß¼­£º×Ô¶¯»»Ä£ĞÍ ===
-// Ö»ÒªÄãÔÚ±à¼­Æ÷ÀïĞŞ¸Ä ItemID£¬»òÕßÍÏ¶¯ Actor£¬Õâ¸öº¯Êı¾Í»áÅÜ
+// === å¯è§†åŒ–é€»è¾‘ï¼šè‡ªåŠ¨æ¢æ¨¡å‹ ===
+// åªè¦ä½ åœ¨ç¼–è¾‘å™¨é‡Œä¿®æ”¹ ItemIDï¼Œæˆ–è€…æ‹–åŠ¨ Actorï¼Œè¿™ä¸ªå‡½æ•°å°±ä¼šè·‘
 void APickupData::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
 
-    // 1. ¼ì²éÊÇ·ñÓĞ±íºÍID
+    // ... ä½ çš„åˆ¤æ–­ ...
     if (ItemDataTable && !ItemID.IsNone())
     {
-        // 2. ²é±í (OnConstructionÀïÍ¨³£²»±¨´í£¬¾²Ä¬Ê§°Ü¼´¿É)
-        FItemData* RowData = ItemDataTable->FindRow<FItemData>(ItemID, TEXT("Pickup OnConstruction"));
+        // åŠ ä¸Šè¿™ä¸€å¥ï¼çœ‹çœ‹æ˜¯ä¸æ˜¯çœŸçš„æ‰¾åˆ°äº†ï¼
+        FItemData* RowData = ItemDataTable->FindRow<FItemData>(ItemID, TEXT("Debug"));
 
-        // 3. »»Ä£ĞÍ
-        if (RowData && RowData->WorldMesh && MeshComp)
+        if (RowData)
         {
-            MeshComp->SetStaticMesh(RowData->WorldMesh);
+            UE_LOG(LogTemp, Warning, TEXT("å–µï¼æŸ¥è¡¨æˆåŠŸï¼æ¨¡å‹åº”è¯¥æ˜¯: %s"),
+                RowData->WorldMesh ? *RowData->WorldMesh->GetName() : TEXT("ç©º"));
+
+            if (RowData->WorldMesh)
+            {
+                MeshComp->SetStaticMesh(RowData->WorldMesh);
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("å–µï¼æŸ¥è¡¨å¤±è´¥ï¼æ‰¾ä¸åˆ° ID: %s"), *ItemID.ToString());
         }
     }
 }

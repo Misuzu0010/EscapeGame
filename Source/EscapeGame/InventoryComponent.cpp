@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "InventoryComponent.h"
@@ -24,7 +24,7 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 	}
 	int32 LeftoverCount = InCount;
 
-	//¶Ñµş¹æÔò
+	//å †å è§„åˆ™
 	bool bCanStack = true;
 	int32 MaxStackSize = 99;
 
@@ -39,20 +39,20 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 	{
 		for (FItemStack& Slot : Items) 
 		{
-			//Èç¹û·¢ÏÖÏàÍ¬IDµÄÎïÆ·£¬²¢ÇÒ¸Ã¸ñ×ÓÎ´Âú
+			//å¦‚æœå‘ç°ç›¸åŒIDçš„ç‰©å“ï¼Œå¹¶ä¸”è¯¥æ ¼å­æœªæ»¡
 			if (Slot.ItemData.ID == InItemData.ID && Slot.Count < MaxStackSize)
 			{
-				//¼ÆËã¸Ã¸ñ×Ó»¹ÄÜ·Å¶àÉÙ
+				//è®¡ç®—è¯¥æ ¼å­è¿˜èƒ½æ”¾å¤šå°‘
 				int32 RestSpace = MaxStackSize - Slot.Count;
 
-				//¼ÆËãÕâ´ÎÄÜ·Å¶àÉÙ½øÈ¥
+				//è®¡ç®—è¿™æ¬¡èƒ½æ”¾å¤šå°‘è¿›å»
 				int32 ToAdd = FMath::Min(RestSpace, LeftoverCount);
 
-				//·Å½øÈ¥
+				//æ”¾è¿›å»
 				Slot.Count += ToAdd;
 				LeftoverCount -= ToAdd;
 
-				//Èç¹ûÒÑ¾­·ÅÍêÁË£¬Ö±½ÓÌø³öÑ­»·
+				//å¦‚æœå·²ç»æ”¾å®Œäº†ï¼Œç›´æ¥è·³å‡ºå¾ªç¯
 				if (LeftoverCount <= 0) 
 				{
 					break;
@@ -62,16 +62,16 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 		}
 	}
 
-	//µ±ÎÒÃÇ·¢ÏÖÊ£ÓàÎïÆ·>99*kÊ±ºò£¬¾ÍÒª¿ªÊ¼¿ªÍØĞÂµÄ¸ñ×Ó
+	//å½“æˆ‘ä»¬å‘ç°å‰©ä½™ç‰©å“>99*kæ—¶å€™ï¼Œå°±è¦å¼€å§‹å¼€æ‹“æ–°çš„æ ¼å­
 	while (LeftoverCount > 0) 
 	{
-		//´´½¨Ò»¸öĞÂµÄÎïÆ·¸ñ×Ó
+		//åˆ›å»ºä¸€ä¸ªæ–°çš„ç‰©å“æ ¼å­
 		FItemStack NewStack;
 		NewStack.ItemData = InItemData;
 
-		//¼ÆËãĞÂ¸ñ×ÓÀï·Å¶àÉÙ
+		//è®¡ç®—æ–°æ ¼å­é‡Œæ”¾å¤šå°‘
 		int32 AmountForNewSlot = bCanStack ? FMath::Min(LeftoverCount, MaxStackSize) : 1;
-		//·Å½øÈ¥
+		//æ”¾è¿›å»
 		NewStack.Count = AmountForNewSlot;
 
 		Items.Add(NewStack);
@@ -79,7 +79,7 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 		LeftoverCount -= AmountForNewSlot;
 
 	}
-	//¹ã²¥¸üĞÂÊÂ¼ş£¬·¢ÏÖÓĞÎïÆ·±»³É¹¦Ìí¼Ó
+	//å¹¿æ’­æ›´æ–°äº‹ä»¶ï¼Œå‘ç°æœ‰ç‰©å“è¢«æˆåŠŸæ·»åŠ 
 	if (LeftoverCount < InCount) 
 	{
 		if(OnInventoryUpdated.IsBound())
@@ -92,21 +92,21 @@ void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount)
 {
 	if (InCount <= 0)return;
 
-	//Ê£ÓàĞèÒªÒÆ³ıµÄÊıÁ¿
+	//å‰©ä½™éœ€è¦ç§»é™¤çš„æ•°é‡
 	int32 LeftoverToRemove = InCount;
-	//µ¹Ğğ±éÀú ÒòÎª¼ÓÈëÎïÆ·ÊÇ´ÓÇ°Íùºó¼ÓµÄ
+	//å€’å™éå† å› ä¸ºåŠ å…¥ç‰©å“æ˜¯ä»å‰å¾€ååŠ çš„
 	for (int32 i = Items.Num() - 1; i >= 0; i--)
 	{
 		if (Items[i].ItemData.ID == InItemData.ID)
 		{
-			//×ã¹»±»ÒÆ³ı
+			//è¶³å¤Ÿè¢«ç§»é™¤
 			if (Items[i].Count >= LeftoverToRemove)
 			{
 				Items[i].Count -= LeftoverToRemove;
 				LeftoverToRemove = 0;
 				if (LeftoverToRemove == 0)
 				{
-					//Èç¹û¸Ã¸ñ×Ó±»Çå¿ÕÁË£¬ÒÆ³ı¸Ã¸ñ×Ó
+					//å¦‚æœè¯¥æ ¼å­è¢«æ¸…ç©ºäº†ï¼Œç§»é™¤è¯¥æ ¼å­
 					Items.RemoveAt(i);
 					//break;
 				}
@@ -114,7 +114,7 @@ void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount)
 			}
 			else
 			{
-				//²»¹»±»ÒÆ³ı£¬Çå¿Õ¸Ã¸ñ×Ó£¬¼ÌĞøÍùÇ°ÕÒ
+				//ä¸å¤Ÿè¢«ç§»é™¤ï¼Œæ¸…ç©ºè¯¥æ ¼å­ï¼Œç»§ç»­å¾€å‰æ‰¾
 				LeftoverToRemove -= Items[i].Count;
 				Items.RemoveAt(i);
 				break;
@@ -157,7 +157,7 @@ void UInventoryComponent::UseItem(int32 SlotIndex)
 {
 	if (!Items.IsValidIndex(SlotIndex)) 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ÎŞĞ§µÄ±³°ü²ÛÎ»Ë÷Òı£¡"));
+		UE_LOG(LogTemp, Warning, TEXT("æ— æ•ˆçš„èƒŒåŒ…æ§½ä½ç´¢å¼•ï¼"));
 		return;
 	}
 
@@ -165,7 +165,7 @@ void UInventoryComponent::UseItem(int32 SlotIndex)
 
 	if (ItemStack.Count <= 0) 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("±³°ü²ÛÎ» %d Îª¿Õ£¡"), SlotIndex);
+		UE_LOG(LogTemp, Warning, TEXT("èƒŒåŒ…æ§½ä½ %d ä¸ºç©ºï¼"), SlotIndex);
 		return;
 	}
 
@@ -177,15 +177,15 @@ void UInventoryComponent::UseItem(int32 SlotIndex)
 
 		if (LogicAsset->bConsumeOnUse)
 		{
-			// µ÷ÓÃÖ®Ç°Ğ´ºÃµÄ°´Ë÷ÒıÒÆ³ı
-			//ÕâÀïµÄ1Ó¦¸ÃÊÇÎïÆ·¶¨ÒåÀïµÄÏûºÄÊıÁ¿
-			//µ«ÊÇ Ò»´ÎÖ»ÏûºÄÒ»¸ö ËùÒÔÎÒ¾õµÃ Ã»É¶ÎÊÌâ
+			// è°ƒç”¨ä¹‹å‰å†™å¥½çš„æŒ‰ç´¢å¼•ç§»é™¤
+			//è¿™é‡Œçš„1åº”è¯¥æ˜¯ç‰©å“å®šä¹‰é‡Œçš„æ¶ˆè€—æ•°é‡
+			//ä½†æ˜¯ ä¸€æ¬¡åªæ¶ˆè€—ä¸€ä¸ª æ‰€ä»¥æˆ‘è§‰å¾— æ²¡å•¥é—®é¢˜
 			RemoveItem(ItemStack.ItemData, 1);
 		}
 	}
 
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ÎïÆ·Ã»ÓĞ¶¨Òå LogicAsset£¬ÎŞ·¨Ê¹ÓÃ£¡"));
+		UE_LOG(LogTemp, Warning, TEXT("ç‰©å“æ²¡æœ‰å®šä¹‰ LogicAssetï¼Œæ— æ³•ä½¿ç”¨ï¼"));
 	}
 }

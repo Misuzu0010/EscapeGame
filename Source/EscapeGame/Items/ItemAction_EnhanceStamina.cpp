@@ -2,4 +2,14 @@
 
 
 #include "Items/ItemAction_EnhanceStamina.h"
+#include"SprintComponent.h"
 
+void UItemAction_EnhanceStamina::OnUse_Implementation(AActor* User)
+{
+	if (!User) return;
+	USprintComponent* SprintComp = User->FindComponentByClass<USprintComponent>();
+	if (SprintComp)
+	{
+		SprintComp->ApplyMaxChange(StaminaBoostAmount);
+	}
+}

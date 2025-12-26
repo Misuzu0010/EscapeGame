@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "InventoryHotbarWidget.h"
@@ -11,10 +11,10 @@ void UInventoryHotbarWidget::InitializeHotbar(UInventoryComponent* InventoryComp
 {
 	if (InventoryComp) 
 	{
-		//ÈõÖ¸ÕëÖ¸Ïò×é¼þ·À±ÀÀ£
+		//å¼±æŒ‡é’ˆæŒ‡å‘ç»„ä»¶é˜²å´©æºƒ
 		InventoryRef = InventoryComp;
 
-		//¼àÌý¹ã²¥
+		//ç›‘å¬å¹¿æ’­
 		InventoryComp->OnInventoryUpdated.AddDynamic(this, &UInventoryHotbarWidget::RefreshHotbar);
 
 		RefreshHotbar();
@@ -47,19 +47,19 @@ void UInventoryHotbarWidget::RefreshHotbar()
 		{
 			if (InventoryRef.IsValid() && InventoryRef->Items.IsValidIndex(i)) 
 			{
-				// 3. ³¢ÊÔ´Ó±³°üÀï»ñÈ¡Êý¾Ý
-				// ×¢Òâ£ºÎÒÃÇÒª¼ì²é±³°üÀïµÄÎïÆ·¹»²»¹»
+				// 3. å°è¯•ä»ŽèƒŒåŒ…é‡ŒèŽ·å–æ•°æ®
+				// æ³¨æ„ï¼šæˆ‘ä»¬è¦æ£€æŸ¥èƒŒåŒ…é‡Œçš„ç‰©å“å¤Ÿä¸å¤Ÿ
 				NewSlot->SetItem(InventoryRef->Items[i]);
 			}
 
 			else 
 			{
-				// Ã»Êý¾Ý (±³°üÀïÖ»ÓÐ2¸öÆ»¹û£¬µ«ÕâÊÇµÚ3¸ö¸ñ×Ó)£¬ÌîÈëÒ»¸ö¿ÕµÄ½á¹¹Ìå
-				// ÄãµÄ SlotWidget ÐèÒªÄÜ´¦Àí¿ÕÊý¾Ý£¨Òþ²ØÍ¼±ê£©
+				// æ²¡æ•°æ® (èƒŒåŒ…é‡Œåªæœ‰2ä¸ªè‹¹æžœï¼Œä½†è¿™æ˜¯ç¬¬3ä¸ªæ ¼å­)ï¼Œå¡«å…¥ä¸€ä¸ªç©ºçš„ç»“æž„ä½“
+				// ä½ çš„ SlotWidget éœ€è¦èƒ½å¤„ç†ç©ºæ•°æ®ï¼ˆéšè—å›¾æ ‡ï¼‰
 				FItemStack EmptyItem;
 				NewSlot->SetItem(EmptyItem);
 			}
-			//½«¸ñ×ÓÌí¼Óµ½UI
+			//å°†æ ¼å­æ·»åŠ åˆ°UI
 			HotbarGrid->AddChildToHorizontalBox(NewSlot);
 		}
 	}

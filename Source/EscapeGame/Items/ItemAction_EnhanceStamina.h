@@ -14,5 +14,10 @@ UCLASS()
 class ESCAPEGAME_API UItemAction_EnhanceStamina : public UItemDefinition
 {
 	GENERATED_BODY()
+public:
+	virtual void OnUse_Implementation(AActor* User) override;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SprintBuff")
+	float StaminaBoostAmount = 15.0f;
 	
 };

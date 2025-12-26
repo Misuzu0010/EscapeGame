@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "EscapeGamePlayerController.generated.h"
 
+class UInventoryComponent;
 class UInputMappingContext;
 class UUserWidget;
 
@@ -35,10 +36,24 @@ protected:
 	/** Pointer to the mobile controls widget */
 	TObjectPtr<UUserWidget> MobileControlsWidget;
 
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UUserWidget> InventoryMenuClass;
+
+	// 运行时保存的实例
+	UPROPERTY()
+	UUserWidget* InventoryMenuInstance;
+
 	/** Gameplay initialization */
 	virtual void BeginPlay() override;
 
 	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
+
+	// 辅助函数：专门用来开关
+	void SetInventoryVisibility(bool bVisible);
+public:
+	UFUNCTION()
+	void ToggleInventoryUI();
+
 
 };

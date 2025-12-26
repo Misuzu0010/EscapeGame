@@ -26,4 +26,12 @@ public:
 	// 返回 true 表示拾取成功
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	bool AttemptPickUp(APawn* InstigatorPawn);
+
+	// 检查是否可交互
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	bool CanPickUp(AActor* Interactor) const;
+
+	// 获取交互显示文本
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
+	FText GetPickUpText(AActor* Interactor) const;
 };

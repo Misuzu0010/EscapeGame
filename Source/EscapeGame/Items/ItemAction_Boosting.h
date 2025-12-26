@@ -15,5 +15,16 @@ UCLASS()
 class ESCAPEGAME_API UItemAction_Boosting : public UItemDefinition
 {
 	GENERATED_BODY()
+public:
+	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category = "SpringBuff")
+	float SpeedMultiplier = 1.5f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "SpringBuff")
+	float Duration = 15.0f;
+
+	// --- ÖØÐ´º¯Êý (Override) ---
+	virtual void OnUse_Implementation(AActor* User) override;
+
+
 	
 };
