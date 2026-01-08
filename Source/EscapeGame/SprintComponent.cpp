@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SprintComponent.h"
@@ -24,10 +24,10 @@ void USprintComponent::SetSpeedBuffMultiplier(float NewMultiplier)
 {
 	CurrentBuffMultiplier = NewMultiplier;
 
-	// Ã¿´Î Buff ¸Ä±ä£¬Á¢¿Ì¸üĞÂµ±Ç°ËÙ¶È
+	// æ¯æ¬¡ Buff æ”¹å˜ï¼Œç«‹åˆ»æ›´æ–°å½“å‰é€Ÿåº¦
 	UpdateMovementSpeed();
 
-	UE_LOG(LogTemp, Log, TEXT("ß÷£¡ËÙ¶È±¶ÂÊ±äÁË: %f"), CurrentBuffMultiplier);
+	UE_LOG(LogTemp, Log, TEXT("å–µï¼é€Ÿåº¦å€ç‡å˜äº†: %f"), CurrentBuffMultiplier);
 }
 
 void USprintComponent::UpdateMovementSpeed() 
@@ -47,12 +47,12 @@ void USprintComponent::UpdateMovementSpeed()
 
 void USprintComponent::StartSpeedBuff(float Duration, float Multiplier)
 {
-	// 1. ÉèÖÃ±¶ÂÊ
+	// 1. è®¾ç½®å€ç‡
 	SetSpeedBuffMultiplier(Multiplier);
 
-	// 2. ÉèÖÃÄÖÖÓ£ºÊ±¼äµ½ÁË¾Í°Ñ±¶ÂÊ¸Ä»Ø 1.0
+	// 2. è®¾ç½®é—¹é’Ÿï¼šæ—¶é—´åˆ°äº†å°±æŠŠå€ç‡æ”¹å› 1.0
 	FTimerDelegate TimerDel;
-	TimerDel.BindUObject(this, &USprintComponent::SetSpeedBuffMultiplier, 1.0f); // »Ö¸´³É 1.0
+	TimerDel.BindUObject(this, &USprintComponent::SetSpeedBuffMultiplier, 1.0f); // æ¢å¤æˆ 1.0
 
 	GetWorld()->GetTimerManager().SetTimer(TimerHandle_Buff, TimerDel, Duration, false);
 }
@@ -67,7 +67,7 @@ void USprintComponent::BeginPlay()
 	if (OwnerCharacter) 
 	{
 		MovementComp=OwnerCharacter->GetCharacterMovement();
-		// ³õÊ¼»¯ËÙ¶È
+		// åˆå§‹åŒ–é€Ÿåº¦
 		if (MovementComp) 
 		{
 			MovementComp->MaxWalkSpeed = WalkSpeed;
@@ -93,19 +93,19 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 		CurrentStamina = 0.0f;
 
 		bStaminaDrained = true;
-		//// Í£Ö¹³å´Ì
+		//// åœæ­¢å†²åˆº
 		MovementComp->MaxWalkSpeed = WalkSpeed;
 		StateMachine->SetState(ECharacterState::Idle);
 		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Stamina Depleted!"));
 	}
 
 
-	//ÅĞ¶ÏÊÇ·ñ³å´Ì
+	//åˆ¤æ–­æ˜¯å¦å†²åˆº
 	ECharacterState CurrentState = StateMachine->GetCurrentState();
-	//½öµ±ÒÆ¶¯»òÕß¿ÕÏĞ ÇÒÓĞËÙ¶È ÔÊĞí³å´Ì
+	//ä»…å½“ç§»åŠ¨æˆ–è€…ç©ºé—² ä¸”æœ‰é€Ÿåº¦ å…è®¸å†²åˆº
 	bool bCanSprint = ((CurrentState == ECharacterState::Moving || CurrentState == ECharacterState::Idle) && !OwnerCharacter->GetVelocity().IsZero());
 
-	// Êµ¼Ê³å´ÌÌõ¼ş
+	// å®é™…å†²åˆºæ¡ä»¶
 	bIsActurallySprinting = bSprintRequested && bCanSprint && !bStaminaDrained && MovementComp->IsMovingOnGround()&&!OwnerCharacter->bIsCrouched;
 
 	
@@ -116,14 +116,14 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 		StaminaRegenDelay = MaxStaminaRegenDelay;
 
-		//ÒÆ¶¯×é¼ş ÉèÖÃÎª³å´ÌËÙ¶È
-		MovementComp->MaxWalkSpeed = SprintSpeed;
+		//ç§»åŠ¨ç»„ä»¶ è®¾ç½®ä¸ºå†²åˆºé€Ÿåº¦
+		MovementComp->MaxWalkSpeed = SprintSpeed*CurrentBuffMultiplier;
 		GEngine->AddOnScreenDebugMessage(4, 0.f, FColor::Purple,
 			FString::Printf(TEXT("Actual Velocity: %.1f"), OwnerCharacter->GetVelocity().Size()));
 		GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Red,
 			FString::Printf(TEXT("MovementMode: %d"), (int32)MovementComp->MovementMode));
 
-		// ÉèÖÃ×´Ì¬»ú (·ÀÖ¹Ã¿Ö¡ÖØ¸´Set£¬¼Ó¸öÅĞ¶Ï)
+		// è®¾ç½®çŠ¶æ€æœº (é˜²æ­¢æ¯å¸§é‡å¤Setï¼ŒåŠ ä¸ªåˆ¤æ–­)
 		if (CurrentState != ECharacterState::Sprinting)
 		{
 			StateMachine->SetState(ECharacterState::Sprinting);
@@ -135,7 +135,7 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	{
 		if (!bSprintRequested) 
 		{
-			MovementComp->MaxWalkSpeed = WalkSpeed;
+			MovementComp->MaxWalkSpeed = WalkSpeed*CurrentBuffMultiplier;
 			if (StaminaRegenDelay > 0.0f) 
 			{
 				StaminaRegenDelay -= DeltaTime;		
@@ -167,16 +167,16 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 				if (CurrentStamina > 10.0f)bStaminaDrained = false;
 			}
 		}
-		// ÏŞÖÆ·¶Î§
+		// é™åˆ¶èŒƒå›´
 		CurrentStamina = FMath::Clamp(CurrentStamina, 0.0f, MaxStamina);
 
 		// =======================
-		//      ×´Ì¬»ØÍËÂß¼­
+		//      çŠ¶æ€å›é€€é€»è¾‘
 		// =======================
-		// Ö»ÓĞµ±Ç°ÊÇ Sprinting ²ÅĞèÒª»ØÍË£¬²»Òª¸ÉÈÅ Jumping/Attacking
+		// åªæœ‰å½“å‰æ˜¯ Sprinting æ‰éœ€è¦å›é€€ï¼Œä¸è¦å¹²æ‰° Jumping/Attacking
 		if (CurrentState == ECharacterState::Sprinting)
 		{
-			// Èç¹ûËÙ¶ÈºÜĞ¡£¬ÇĞ»Ø Idle£¬·ñÔòÇĞ»Ø Moving
+			// å¦‚æœé€Ÿåº¦å¾ˆå°ï¼Œåˆ‡å› Idleï¼Œå¦åˆ™åˆ‡å› Moving
 			if (OwnerCharacter->GetVelocity().SizeSquared() < 10.0f)
 			{
 				StateMachine->SetState(ECharacterState::Idle);
@@ -189,10 +189,10 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 	if (!FMath::IsNearlyEqual(OldStamina, CurrentStamina, 0.01f))
 	{
-		// Ö»ÓĞÕæµÄ±äÁË£¬²ÅÍ¨Öª UI
+		// åªæœ‰çœŸçš„å˜äº†ï¼Œæ‰é€šçŸ¥ UI
 		ApplyStaminaChange();
 
-		// µ÷ÊÔÓÃ£ºÖ»ÓĞ±ä»¯Ê±²Å»á´òÓ¡£¬Ë¢ÆÁ»áÉÙºÜ¶à
+		// è°ƒè¯•ç”¨ï¼šåªæœ‰å˜åŒ–æ—¶æ‰ä¼šæ‰“å°ï¼Œåˆ·å±ä¼šå°‘å¾ˆå¤š
 		// UE_LOG(LogTemp, Warning, TEXT("Stamina Changed: %.2f"), CurrentStamina);
 	}
 

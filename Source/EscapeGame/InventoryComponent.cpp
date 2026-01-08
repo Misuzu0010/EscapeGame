@@ -2,8 +2,6 @@
 
 
 #include "InventoryComponent.h"
-#include"HealthController/AttributeComponent.h"
-#include"SprintComponent.h"
 #include"ItemDefinition.h"
 
 // Sets default values for this component's properties
@@ -65,20 +63,30 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 	//当我们发现剩余物品>99*k时候，就要开始开拓新的格子
 	while (LeftoverCount > 0) 
 	{
-		//创建一个新的物品格子
-		FItemStack NewStack;
-		NewStack.ItemData = InItemData;
+		int32 EmptySlotIndex = -1;
+		for (int32 i = 0; i < Items.Num(); i++) 
+		{
+			if (Items[i].Count <= 0) 
+			{
+				EmptySlotIndex = i;
+				break;
+			}
+		}
+		if (EmptySlotIndex == -1)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("背包满了"));
+		}
+		// 填入数据
+		FItemStack& TargetStack = Items[EmptySlotIndex];
+		TargetStack.ItemData = InItemData;
+		//如果不能堆叠 移动<=99 或者1个
+		int32 AmountToMove = bCanStack ? FMath::Min(LeftoverCount, MaxStackSize) : 1;
+		TargetStack.Count = AmountToMove;
 
-		//计算新格子里放多少
-		int32 AmountForNewSlot = bCanStack ? FMath::Min(LeftoverCount, MaxStackSize) : 1;
-		//放进去
-		NewStack.Count = AmountForNewSlot;
-
-		Items.Add(NewStack);
-
-		LeftoverCount -= AmountForNewSlot;
+		LeftoverCount -= AmountToMove;
 
 	}
+
 	//广播更新事件，发现有物品被成功添加
 	if (LeftoverCount < InCount) 
 	{
@@ -88,6 +96,30 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 	return LeftoverCount;
 }
 
+void UInventoryComponent::SwapSlots(int32 IndexA, int32 IndexB)
+{
+	// 1. 安全检查
+	if (!Items.IsValidIndex(IndexA) || !Items.IsValidIndex(IndexB)) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("无效的背包槽位索引！IndexA: %d, IndexB: %d"), IndexA, IndexB);
+		return;
+	}
+	if (IndexA == IndexB) 
+	{
+		// 相同槽位，不需要交换
+		UE_LOG(LogTemp,Warning,TEXT("这是一样的槽位捏"))
+		return;
+	}
+
+	// 2. 原地交换 (TArray 自带的高效交换)
+	Items.Swap(IndexA, IndexB);
+
+	// 3. 告诉 UI 刷新
+	if (OnInventoryUpdated.IsBound())
+	{
+		OnInventoryUpdated.Broadcast();
+	}
+}
 void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount) 
 {
 	if (InCount <= 0)return;
@@ -107,7 +139,7 @@ void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount)
 				if (LeftoverToRemove == 0)
 				{
 					//如果该格子被清空了，移除该格子
-					Items.RemoveAt(i);
+					Items[i] = FItemStack();
 					//break;
 				}
 				break;
@@ -116,7 +148,7 @@ void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount)
 			{
 				//不够被移除，清空该格子，继续往前找
 				LeftoverToRemove -= Items[i].Count;
-				Items.RemoveAt(i);
+				Items[i] = FItemStack();
 				break;
 			}
 		}
@@ -141,6 +173,7 @@ void UInventoryComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
+	Items.SetNum(InventoryCapacity);
 	
 }
 
@@ -170,17 +203,27 @@ void UInventoryComponent::UseItem(int32 SlotIndex)
 	}
 
 	UItemDefinition* LogicAsset = ItemStack.ItemData.ItemLogic;
-
 	if (LogicAsset) 
 	{
-		LogicAsset->OnUse(GetOwner());
-
-		if (LogicAsset->bConsumeOnUse)
+		const bool bUsedSuccessfully = LogicAsset->OnUse(GetOwner());
+		// 5. 数量归零处理
+		
+		if (bUsedSuccessfully) 
 		{
-			// 调用之前写好的按索引移除
-			//这里的1应该是物品定义里的消耗数量
-			//但是 一次只消耗一个 所以我觉得 没啥问题
-			RemoveItem(ItemStack.ItemData, 1);
+			ItemStack.Count -= 1;
+
+			UE_LOG(LogTemp, Warning, TEXT("使用成功！！"));
+
+			if (ItemStack.Count <= 0) 
+			{
+				Items[SlotIndex] = FItemStack(); // 重置为默认空结构体
+				UE_LOG(LogTemp, Warning, TEXT("用完啦"));
+			}
+
+			if (OnInventoryUpdated.IsBound()) 
+			{
+				OnInventoryUpdated.Broadcast();
+			}
 		}
 	}
 

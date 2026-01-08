@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "HealthController/AttributeComponent.h"
@@ -49,4 +49,9 @@ void UAttributeComponent::ApplyHealthChange(float Delta)
 float UAttributeComponent::GetCurrentHealthPercent() const 
 {
 	return(MaxHealth > 0.0f) ? (CurrentHealth / MaxHealth) : 0.0f;
+}
+
+bool UAttributeComponent::IsFullHealth() const 
+{
+	return FMath::IsNearlyEqual(CurrentHealth, MaxHealth);
 }

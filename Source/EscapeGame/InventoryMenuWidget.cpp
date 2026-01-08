@@ -24,23 +24,19 @@ void UInventoryMenuWidget::RefreshInventory()
 
 	ItemGrid ->ClearChildren();
 	
-	int32 MaxCapacity =30;
-	for (int32 i = -0; i < MaxCapacity; i++) 
+	int32 MaxCapacity =InventoryRef->InventoryCapacity;
+	for (int32 i = 0; i < MaxCapacity; i++) 
 	{
 		UInventorySlotWidget* NewSlot = CreateWidget<UInventorySlotWidget>(this, SlotWidgetClass);
 
 		if (NewSlot) 
 		{
 			
-			if (InventoryRef->Items.IsValidIndex(i)) 
+			NewSlot->InitSlot(InventoryRef.Get(), i);
+
+			if (InventoryRef->Items.IsValidIndex(i))
 			{
 				NewSlot->SetItem(InventoryRef->Items[i]);
-			}
-
-			else 
-			{
-				FItemStack EmptyItem;
-				NewSlot->SetItem(EmptyItem);
 			}
 			//添加到格子里
 			ItemGrid->AddChild(NewSlot);

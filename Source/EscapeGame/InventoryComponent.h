@@ -53,5 +53,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void UseItem(int32 SlotIndex);
 
+	/*UPROPERTY(BlueprintReadWrite,Category="Inventory")
+	TMap<FGameplayTag, double>LastUseTime;*/
+
+	// 背包容量 (比如 20 格)
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+	int32 InventoryCapacity = 30;
+
+	// ?? 核心功能：交换两个格子的物品
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SwapSlots(int32 IndexA, int32 IndexB);
+
 		
 };

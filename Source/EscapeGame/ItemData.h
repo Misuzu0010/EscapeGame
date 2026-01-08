@@ -1,29 +1,29 @@
-#pragma once
+ï»¿#pragma once
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
 #include "ItemData.generated.h"
 
-class UItemDefinition; // Ö¸ÏòµÀ¾ßÂß¼­/×ÊÔ´µÄDataAsset
+class UItemDefinition; // æŒ‡å‘é“å…·é€»è¾‘/èµ„æºçš„DataAsset
 
 UENUM(BlueprintType)
 enum class EItemType : uint8
 {
-    // ¹¤¾ßÀà£ºÓÃÀ´½âÃÕ¡¢´¥·¢»ú¹Ø
-    Key        UMETA(DisplayName = "Key"),           // Ô¿³×
-    Tool       UMETA(DisplayName = "Tool"),          // Ò»°ã¹¤¾ß£¨ÊÖµçÍ²¡¢ÇË¹÷µÈ£©
+    // å·¥å…·ç±»ï¼šç”¨æ¥è§£è°œã€è§¦å‘æœºå…³
+    Key        UMETA(DisplayName = "Key"),           // é’¥åŒ™
+    Tool       UMETA(DisplayName = "Tool"),          // ä¸€èˆ¬å·¥å…·ï¼ˆæ‰‹ç”µç­’ã€æ’¬æ£ç­‰ï¼‰
 
-    // ÏûºÄÆ·£º»ØÑª¡¢ÔöÒæ¡¢ÁÙÊ±µÀ¾ß
-    Consumable UMETA(DisplayName = "Consumable"),    // Ò©Ë®¡¢Ê³Îï
-    BuffItem   UMETA(DisplayName = "Buff Item"),     // ÔİÊ±ÔöÇ¿ÄÜÁ¦£¨¼ÓËÙ¶È¡¢Ò¹ÊÓµÈ£©
+    // æ¶ˆè€—å“ï¼šå›è¡€ã€å¢ç›Šã€ä¸´æ—¶é“å…·
+    Consumable UMETA(DisplayName = "Consumable"),    // è¯æ°´ã€é£Ÿç‰©
+    BuffItem   UMETA(DisplayName = "Buff Item"),     // æš‚æ—¶å¢å¼ºèƒ½åŠ›ï¼ˆåŠ é€Ÿåº¦ã€å¤œè§†ç­‰ï¼‰
 
-    // ×°±¸Àà£ºÎäÆ÷/·À¾ß/»¤·û
-    Weapon     UMETA(DisplayName = "Weapon"),        // ÎäÆ÷£¨½üÕ½»òÔ¶³Ì£©
-    Armor      UMETA(DisplayName = "Armor"),         // ·À¾ß
-    Accessory  UMETA(DisplayName = "Accessory"),    // ÊÎÆ·/»¤·û£¨ÔöÇ¿ÊôĞÔ£©
+    // è£…å¤‡ç±»ï¼šæ­¦å™¨/é˜²å…·/æŠ¤ç¬¦
+    Weapon     UMETA(DisplayName = "Weapon"),        // æ­¦å™¨ï¼ˆè¿‘æˆ˜æˆ–è¿œç¨‹ï¼‰
+    Armor      UMETA(DisplayName = "Armor"),         // é˜²å…·
+    Accessory  UMETA(DisplayName = "Accessory"),    // é¥°å“/æŠ¤ç¬¦ï¼ˆå¢å¼ºå±æ€§ï¼‰
 
-    // ÈÎÎñµÀ¾ß£º¾çÇé»ò½âÃÕ±ØĞèÆ·
-    QuestItem  UMETA(DisplayName = "Quest Item")     // ¹Ø¼üÈÎÎñÎïÆ·
+    // ä»»åŠ¡é“å…·ï¼šå‰§æƒ…æˆ–è§£è°œå¿…éœ€å“
+    QuestItem  UMETA(DisplayName = "Quest Item")     // å…³é”®ä»»åŠ¡ç‰©å“
 };
 
 USTRUCT(BlueprintType)
@@ -32,10 +32,10 @@ struct FItemText
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere, Category = "Item Text")
-    FText Name;         // µÀ¾ßÃû×Ö
+    FText Name;         // é“å…·åå­—
 
     UPROPERTY(EditAnywhere, Category = "Item Text")
-    FText Description;  // µÀ¾ßÃèÊö
+    FText Description;  // é“å…·æè¿°
 };
 
 USTRUCT(BlueprintType)
@@ -43,48 +43,43 @@ struct FItemData : public FTableRowBase
 {
     GENERATED_BODY()
 
-    // µÀ¾ßÀàĞÍ
+    // é“å…·ç±»å‹
     UPROPERTY(EditAnywhere, Category = "Item Data")
     EItemType ItemType;
 
-    // µÀ¾ßÎ¨Ò»ID
+    // é“å…·å”¯ä¸€ID
     UPROPERTY(EditAnywhere, Category = "Item Data")
     FName ID;
 
-    // µÀ¾ßÃû×Ö/ÃèÊö
+    // é“å…·åå­—/æè¿°
     UPROPERTY(EditAnywhere, Category = "Item Data")
     FItemText ItemText;
 
-    // µÀ¾ßÍ¼±ê
+    // é“å…·å›¾æ ‡
     UPROPERTY(EditAnywhere, Category = "Item Data")
     UTexture2D* Icon=nullptr;
 
-    // µÀ¾ßÊıÁ¿£¨Ä¬ÈÏ1£©
+    // é“å…·æ•°é‡ï¼ˆé»˜è®¤1ï¼‰
     UPROPERTY(EditAnywhere, Category = "Item Data")
     int32 DefaultCount = 1;
 
-    // µÀ¾ßÂß¼­/ĞĞÎªDataAsset
+    // é“å…·é€»è¾‘/è¡Œä¸ºDataAsset
     UPROPERTY(EditAnywhere, Category = "Item Data")
     TObjectPtr<UItemDefinition> ItemLogic;
 
-
-    // Ê¹ÓÃºóĞ§¹ûÎÄ±¾£¨¿ÉÑ¡£©
-    UPROPERTY(EditAnywhere, Category = "Item Data")
-    FText UseEffectDescription;
-
-    // »Ø¸´¶àÉÙÑª£¿
+    // å›å¤å¤šå°‘è¡€ï¼Ÿ
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Usage", meta = (EditCondition = "ItemType==EItemType::Consumable"))
     float RestoreHealthAmount=0;
 
-    // Ôö¼Ó¶àÉÙÒÆ¶¯ËÙ¶È£¿
+    // å¢åŠ å¤šå°‘ç§»åŠ¨é€Ÿåº¦ï¼Ÿ
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Usage", meta = (EditCondition = "ItemType==EItemType::Consumable"))
     float SpeedBoostAmount=0;
 
-    // Ôö¼Ó¶àÉÙÒÆ¶¯ËÙ¶È£¿
+    // å¢åŠ å¤šå°‘ç§»åŠ¨é€Ÿåº¦ï¼Ÿ
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Usage", meta = (EditCondition = "ItemType==EItemType::Consumable"))
     float DamageBoostAmount = 0;
 
-    // ³ÖĞø¶à³¤Ê±¼ä
+    // æŒç»­å¤šé•¿æ—¶é—´
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Usage", meta = (EditCondition = "ItemType==EItemType::Consumable"))
     float DamageBoostTime = 0.0f;
 
@@ -92,7 +87,7 @@ struct FItemData : public FTableRowBase
     TObjectPtr<UStaticMesh> WorldMesh;
 
 };
-// --- ±ØĞë²¹ÉÏÕâ¸ö£º±³°üÀïµÄ¶ÑµşÊı¾İ ---
+// --- å¿…é¡»è¡¥ä¸Šè¿™ä¸ªï¼šèƒŒåŒ…é‡Œçš„å †å æ•°æ® ---
 USTRUCT(BlueprintType)
 struct FItemStack
 {

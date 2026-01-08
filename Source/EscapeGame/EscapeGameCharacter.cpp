@@ -102,28 +102,22 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		
 		
 		
-			// 在 SetupPlayerInputComponent 里绑定
+		// 在 SetupPlayerInputComponent 里绑定
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::StartCrouch);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AEscapeGameCharacter::StopCrouch);
 		
 		
-			// 注意第三个参数是 InterectComp，第四个参数是组件的函数地址			
+		// 注意第三个参数是 InterectComp，第四个参数是组件的函数地址			
 		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::RequestToggleInventory);
 
-			// 交互键也是同理
+		// 交互键也是同理
 		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::OnInteract);
-		
-
-		//捡起物品
 
 		//切换视角
 		EnhancedInputComponent->BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::ToggleCameraMode);
-		// === 你需要在这里绑定冲刺和攻击 ===
-	    //假设你有 SprintAction 和 AttackAction
-	    //EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, SprintComp, &USprintComponent::StartSprinting);
-	    //EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, SprintComp, &USprintComponent::StopSprinting);
-	    //EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &ECharacterState::);
-	
+		//使用物品
+		EnhancedInputComponent->BindAction(UseItemAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::Input_UseItem);
+	    
 	}
 	else
 	{
@@ -246,5 +240,18 @@ void AEscapeGameCharacter::ToggleCameraMode()
 		FollowCamera->SetActive(true);
 		FirstPersonCameraComponent->SetActive(false);
 		bUseControllerRotationYaw = false;
+	}
+}
+
+void AEscapeGameCharacter::Input_UseItem(const FInputActionValue& Value)
+{
+	// 1. 先判断布尔值，确保按键确实触发了 (虽然 Started 肯定是触发了)
+	const bool bIsPressed = Value.Get<bool>();
+
+	if (bIsPressed && InventoryComp) // 别忘了判空！
+	{
+		// 2. 这里就是“桥梁”！
+		// 角色知道 CurrentSelectedSlotIndex 是多少，把它传给组件
+		InventoryComp->UseItem(CurrentSelectedSlotIndex);
 	}
 }

@@ -1,25 +1,27 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Items/ItemAction_Boosting.h"
 #include "EscapeGame/SprintComponent.h"
-void UItemAction_Boosting::OnUse_Implementation(AActor* User)
+bool UItemAction_Boosting::OnUse_Implementation(AActor* TargetActor)
 {
-    if (!User) return;
+    if (!TargetActor) return false;
 
-    // 1. ³¢ÊÔÕÒµ½Ö÷ÈËµÄÍÈ£¨SprintComponent£©
-    USprintComponent* SprintComp = User->FindComponentByClass<USprintComponent>();
+    // 1. å°è¯•æ‰¾åˆ°ä¸»äººçš„è…¿ï¼ˆSprintComponentï¼‰
+    USprintComponent* SprintComp = TargetActor->FindComponentByClass<USprintComponent>();
 
     if (SprintComp)
     {
-        // 2. ·¢ºÅÊ©Áî£¡
-        // µ÷ÓÃÎÒÃÇÔÚ SprintComponent ÀïĞ´ºÃµÄÄÇ¸ö´ø Timer µÄº¯Êı
+        // 2. å‘å·æ–½ä»¤ï¼
+        // è°ƒç”¨æˆ‘ä»¬åœ¨ SprintComponent é‡Œå†™å¥½çš„é‚£ä¸ªå¸¦ Timer çš„å‡½æ•°
         SprintComp->StartSpeedBuff(Duration, SpeedMultiplier);
 
-        UE_LOG(LogTemp, Log, TEXT("ß÷£¡Ê¹ÓÃÁË¼ÓËÙÒ©Ë®£¡±¶ÂÊ: %f, ³ÖĞø: %f Ãë"), SpeedMultiplier, Duration);
+        UE_LOG(LogTemp, Log, TEXT("å–µï¼ä½¿ç”¨äº†åŠ é€Ÿè¯æ°´ %sï¼å€ç‡: %f, æŒç»­: %f ç§’"),*ItemName.Name.ToString(), SpeedMultiplier, Duration);
+		return true;
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("Ê¹ÓÃÁË¼ÓËÙÒ©Ë®£¬µ«ÉíÉÏÃ»ÓĞ SprintComponent£¡ÎŞ·¨¼ÓËÙ£¡"));
+        UE_LOG(LogTemp, Warning, TEXT("ä½¿ç”¨äº†åŠ é€Ÿè¯æ°´ %sï¼Œä½†èº«ä¸Šæ²¡æœ‰ SprintComponentï¼æ— æ³•åŠ é€Ÿï¼"), *ItemName.Name.ToString());
+		return false;
     }
 }

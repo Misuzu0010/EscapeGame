@@ -54,6 +54,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
+	// 下蹲输入动作 ctrl
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* CrouchAction;
 
@@ -61,14 +62,39 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* InventoryAction;
 
+	// 2. 捡起物品/交互键：按 E 键
 	UPROPERTY(EditAnywhere,Category="Input")
 	UInputAction* InteractAction;
 
+	// 切换视角
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* ToggleCameraAction;
 
+	// 使用物品
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* UseItemAction;
+
+	// 丢弃物品
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* DropItemAction;
+
+	// 装备物品
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* EquipItemAction;
+
+	// 取消装备物品
+	UPROPERTY(EditAnywhere, Category = "Input")
+	UInputAction* UnequipItemAction;
+
+	//esc暂停游戏
+	UPROPERTY(EditAnywhere,Category="Input")
+	UInputAction* PauseAction;
+	
+	
+
 public:
 	// ... 其他输入变量 ...
+	int32 CurrentSelectedSlotIndex = 0;
 
 	/** 声明冲刺的输入动作插槽 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -95,6 +121,10 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	
+
+	void Input_UseItem(const FInputActionValue& Value);
 	
 
 

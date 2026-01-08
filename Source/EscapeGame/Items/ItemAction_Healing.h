@@ -18,7 +18,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Heal")
 	float HealAmount = 25.0f;
 
+	// 暴露给编辑器的变量：道具名字
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")
+	FItemText ItemName;
 	// 重写使用逻辑
-	virtual void OnUse_Implementation(AActor* User) override;
+	virtual bool OnUse_Implementation(AActor* TargetActor) override;
+
+
+
 	
 };
