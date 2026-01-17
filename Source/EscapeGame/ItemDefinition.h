@@ -31,14 +31,8 @@ public:
 
 	// 【核心】当物品被使用时触发。
 	// 传入 User (玩家)，这样物品就知道给谁加血/加速。
-	virtual bool OnUse(AActor* TargetActor);
-
-	// 默认实现返回 true，防止那些不需要判断逻辑的道具无法使用
-	virtual bool OnUse_Implementation(AActor* TargetActor)
-	{
-		return true;
-	}
-
+	UFUNCTION(BlueprintNativeEvent)
+	bool OnUse(AActor* TargetActor);
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Logic")

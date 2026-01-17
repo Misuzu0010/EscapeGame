@@ -9,9 +9,23 @@
 /**
  * 
  */
+class USprintComponent;
+
 UCLASS()
 class ESCAPEGAME_API UItemAction_RestoreStamina : public UItemDefinition
 {
 	GENERATED_BODY()
+public:
+	UPROPERTY(EditDefaultsOnly, Category = "Heal")
+	float StaminaHealing = 25.0f;
+
+	// 暴露给编辑器的变量：道具名字
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")
+	FItemText ItemName;
+	// 重写使用逻辑
+
+	virtual bool OnUse_Implementation(AActor* TargetActor) override;
+
+
 	
 };

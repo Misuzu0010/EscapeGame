@@ -3,8 +3,8 @@
 
 #include "ItemDefinition.h"
 
-bool UItemDefinition::OnUse(AActor* User)
+bool UItemDefinition::OnUse_Implementation(AActor* User)
 {
 	// 默认实现为空，可以在子类中重写
-	return OnUse_Implementation(User);
+	return true;
 }

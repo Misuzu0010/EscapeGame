@@ -191,7 +191,6 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	{
 		// 只有真的变了，才通知 UI
 		ApplyStaminaChange();
-
 		// 调试用：只有变化时才会打印，刷屏会少很多
 		// UE_LOG(LogTemp, Warning, TEXT("Stamina Changed: %.2f"), CurrentStamina);
 	}

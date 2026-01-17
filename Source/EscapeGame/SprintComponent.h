@@ -42,8 +42,6 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Sprint")
 	void StaminaChange(float Delta);
 
- 
-
     UFUNCTION(BlueprintCallable, Category = "Sprint")
     void ApplyMaxChange(float Delta);
 
