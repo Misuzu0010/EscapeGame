@@ -22,7 +22,8 @@ public class EscapeGame : ModuleRules
             "Niagara",
 			"NiagaraCore",
 			"NiagaraShader",
-			"VectorVM"
+			"VectorVM",
+			"GameplayTags"
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {

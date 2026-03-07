@@ -109,4 +109,6 @@ public:
     FTimerHandle TimerHandle_Buff;
 
     void StartSpeedBuff(float Duration, float Multiplier);
+
+    bool RetuenSprintState() { return bIsActurallySprinting; }
 };
