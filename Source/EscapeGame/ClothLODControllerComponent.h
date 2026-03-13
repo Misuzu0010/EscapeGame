@@ -1,10 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "ClothLODControllerComponent.generated.h"
+
 
 class USkeletalMeshComponent;
 
@@ -45,7 +46,7 @@ struct FClothLODProfile
  *
  * 输出的 LODFactor 可在 AnimBP 中用于同步缩放 Kawaii Physics 参数。
  */
-UCLASS(ClassGroup=(Physics), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Physics), meta = (BlueprintSpawnableComponent))
 class ESCAPEGAME_API UClothLODControllerComponent : public UActorComponent
 {
 	GENERATED_BODY()

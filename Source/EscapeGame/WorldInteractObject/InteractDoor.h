@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Interface/InteractableInterface.h"
+#include"ItemData.h"
 #include "InteractDoor.generated.h"
 
 UCLASS()
@@ -28,7 +29,7 @@ public:
 	UStaticMeshComponent* DoorMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door Logic")
-	FName RequireKeyID;
+	FItemData RequireKeyID;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door Logic")
 	bool bConsumeKey = true;

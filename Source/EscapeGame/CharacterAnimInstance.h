@@ -12,6 +12,7 @@
 class ACharacter;
 class UCharacterMovementComponent;
 class UWindSimulationComponent;
+class UClothLODControllerComponent;
 UCLASS()
 class ESCAPEGAME_API UCharacterAnimInstance : public UAnimInstance
 {
@@ -29,8 +30,13 @@ protected:
 	TObjectPtr<UCharacterMovementComponent>MovementComponent;
 	// --- 输出给 Kawaii Physics 的变量 ---
 
-	// 控制物理开启程度 (0=完全关闭, 1=完全开启)
-	// 比如：当武器穿模严重时，可以通过代码降低这个值
+	// --- 线程安全数据中转站 (GameThread 写入, WorkerThread 读取) ---
+	// 【修改点】：缓存完整的速度向量，而不仅仅是标量
+	UPROPERTY(Transient)
+	FVector CachedVelocity = FVector::ZeroVector;
+
+	UPROPERTY(Transient)
+	float CachedClothLODFactor = 0.0f; // 缓存LOD因子
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Output")
 	float PhysicsAlpha = 1.0f;
@@ -41,8 +47,18 @@ protected:
 
 	// 动态阻尼：跑得越快，阻尼越大，防止乱甩
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Output")
-	float DynamicDamping = 0.1f;
+	float DynamicDamping = 1.35f;
+	// 动态阻尼：跑得越快，阻尼越大，防止乱甩
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Output")
+	float DynamicDampingForIdle = 1.35f;
+	// 动态阻尼：跑得越快，阻尼越大，防止乱甩
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Output")
+	float DynamicDampingForMoving = 1.05f;
 
-	UPROPERTY(Transient)
-	TObjectPtr<UWindSimulationComponent>WindComponent;
+	// --- 线程安全数据中转站 (GameThread 写入, WorkerThread 读取) ---
+	float CurrentFrameSpeed = 0.0f;
+
+	// --- 内部缓存的组件指针 ---
+	TWeakObjectPtr<UWindSimulationComponent>WindComponent;
+	TWeakObjectPtr<UClothLODControllerComponent> ClothLODComponent; // 【新增】缓存LOD组件
 };

@@ -25,9 +25,37 @@ struct FActionDefinition
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float PlayRate = 1.0f;
 
-	// 伤害倍率 (给战斗逻辑用的)
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Trace")
+	float TraceDistance = 150.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Trace")
+	float TraceRadius = 40.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Damage")
+	float BaseDamage = 20.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Damage")
 	float DamageMultiplier = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Physics")
+	float KnockbackImpulse = 600.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Physics")
+	float LaunchImpulse = 300.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Input")
+	float AttackInputCacheTolerance = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Input")
+	float ComboInputCacheTolerance = 0.45f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Dodge")
+	float DodgeStaminaCost = 15.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Dodge")
+	float DodgeInvisibilityDuration = 0.35f;
+
+
 };
 //动画数据库
 

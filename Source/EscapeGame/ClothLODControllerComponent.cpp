@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ClothLODControllerComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -48,9 +48,9 @@ void UClothLODControllerComponent::BeginPlay()
 	}
 
 	LODProfiles.Sort([](const FClothLODProfile& A, const FClothLODProfile& B)
-	{
-		return A.MaxDistance < B.MaxDistance;
-	});
+		{
+			return A.MaxDistance < B.MaxDistance;
+		});
 
 	CachedDistanceSqThresholds.Reset(LODProfiles.Num());
 	for (const FClothLODProfile& Profile : LODProfiles)

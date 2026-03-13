@@ -183,8 +183,7 @@ void AEscapeGameCharacter::DoMove(float Right, float Forward)
 		// add movement 
 		AddMovementInput(ForwardDirection, Forward);
 		AddMovementInput(RightDirection, Right);
-		GEngine->AddOnScreenDebugMessage(7, 0.f, FColor::White,
-			FString::Printf(TEXT("Input - Right: %.2f | Forward: %.2f"), Right, Forward));
+		
 	}
 }
 

@@ -35,6 +35,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Wind|Settings")
 	float CurvePlayRate;
 
+	// 移动风力控制
+	UPROPERTY(EditAnywhere, Category = "Wind|Settings")
+	float MaxVelocityWindForce;// 【新增】无论跑多快，向后的风力绝不能超过这个值！
+
 	// 噪声更新频率：多久计算一次柏林噪声（例如 0.05 表示每秒20次）
 	UPROPERTY(EditDefaultsOnly, Category = "Wind|Optimization")
 	float NoiseUpdateInterval;
@@ -63,6 +67,7 @@ private:
 	FVector CachedNoiseWind;
 	UPROPERTY(Transient)
 	AActor* CachedOwner;
-	float TimeSinceLastWindUpdate;
+	float TimerSettings;
+	
 		
 };

@@ -75,6 +75,7 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 		if (EmptySlotIndex == -1)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("背包满了"));
+			break;
 		}
 		// 填入数据
 		FItemStack& TargetStack = Items[EmptySlotIndex];
@@ -149,9 +150,13 @@ void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount)
 				//不够被移除，清空该格子，继续往前找
 				LeftoverToRemove -= Items[i].Count;
 				Items[i] = FItemStack();
-				break;
+				continue;
 			}
 		}
+	}
+	if (OnInventoryUpdated.IsBound())
+	{
+		OnInventoryUpdated.Broadcast();
 	}
 }
 

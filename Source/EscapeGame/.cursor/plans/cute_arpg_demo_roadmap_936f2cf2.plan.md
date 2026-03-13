@@ -313,7 +313,7 @@ AnimNotify_DoAttackTrace/CheckCombo/CheckChargedAttack：
 
 **目标**：将 `UEscapeCombatComponent` 从"动画播放器"升级为完整的战斗状态管理器。
 
-**4.2.1 新增成员变量**
+**4.2.1 新增成员变量**、
 
 文件：`EscapeCombatComponent.h`
 

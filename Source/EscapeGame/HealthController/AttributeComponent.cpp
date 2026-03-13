@@ -19,6 +19,8 @@ UAttributeComponent::UAttributeComponent()
 void UAttributeComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	
+
 
 	// ...
 	
@@ -36,7 +38,7 @@ void UAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 void UAttributeComponent::ApplyHealthChange(float Delta)
 {
 	CurrentHealth = FMath::Clamp(CurrentHealth + Delta, 0.0f, MaxHealth);
-	if (CurrentHealth > 100.0f)CurrentHealth = 100.0f;
+	if (CurrentHealth > MaxHealth)CurrentHealth = MaxHealth;
 
 	if (OnHealthChanged.IsBound()) 
 	{

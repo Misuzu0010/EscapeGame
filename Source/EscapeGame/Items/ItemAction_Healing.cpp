@@ -10,6 +10,7 @@ bool UItemAction_Healing::OnUse_Implementation(AActor* TargetActor)
 	if (!TargetActor) 
 	{
 		UE_LOG(LogTemp, Warning, TEXT("使用了治疗道具: %s,但是没东西喵"),*ItemName.Name.ToString());
+		return false;
 	}
 	UAttributeComponent* AttributeComp = TargetActor->FindComponentByClass<UAttributeComponent>();
 

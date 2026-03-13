@@ -1,73 +1,186 @@
-#include "EscapeCombatComponent.h"
-#include "CharacterAnimData.h"      // ±ØĞëÒıÓÃ£¬²»È»¿´²»¶® FActionDefinition
+ï»¿#include "EscapeCombatComponent.h"
+#include "CharacterAnimData.h"      // å¿…é¡»å¼•ç”¨ï¼Œä¸ç„¶çœ‹ä¸æ‡‚ FActionDefinition
 #include "GameFramework/Character.h"
-#include "Animation/AnimMontage.h"  // ÒıÓÃ Montage Àà
+#include"HealthController/AttributeComponent.h"
+#include "SprintComponent.h"
+#include "Animation/AnimMontage.h"  // å¼•ç”¨ Montage ç±»
 
 
 UEscapeCombatComponent::UEscapeCombatComponent()
 {
-    PrimaryComponentTick.bCanEverTick = false; // Õ½¶·×é¼şÍ¨³£²»ĞèÒªÃ¿Ö¡ Tick£¬Ê¡ĞÔÄÜ
+    PrimaryComponentTick.bCanEverTick = false; // æˆ˜æ–—ç»„ä»¶é€šå¸¸ä¸éœ€è¦æ¯å¸§ Tickï¼Œçœæ€§èƒ½
 }
 
 void UEscapeCombatComponent::BeginPlay()
 {
     Super::BeginPlay();
-
-    // ¿ÉÒÔÔÚÕâÀï¼ì²éÒ»ÏÂÓĞÃ»ÓĞÂ©Ìî DataAsset£¬¸ø¸ö¾¯¸æ
+    
+	OwnerCharacter = Cast<ACharacter>(GetOwner());
+    if (OwnerCharacter) 
+    {
+        AttributeComp = OwnerCharacter->FindComponentByClass<UAttributeComponent>();
+		SprintComp = OwnerCharacter->FindComponentByClass<USprintComponent>();
+        if (!SprintComp)
+        {
+            UE_LOG(LogTemp, Error, TEXT("é¦™å­å…°è­¦å‘Šï¼šä¸»äººï¼è¿™ä¸ªè§’è‰²èº«ä¸Šæ²¡æœ‰å†²åˆºç»„ä»¶ï¼Œé—ªé¿è¦æŠ¥é”™å•¦ï¼"));
+        }
+        if (!AttributeComp)
+        {
+            UE_LOG(LogTemp, Error, TEXT("é¦™å­å…°è­¦å‘Šï¼šä¸»äººï¼è¿™ä¸ªè§’è‰²èº«ä¸Šæ²¡æœ‰HealthLifeBarç»„ä»¶ï¼Œé—ªé¿è¦æŠ¥é”™å•¦ï¼"));
+        }
+    }
+    // å¯ä»¥åœ¨è¿™é‡Œæ£€æŸ¥ä¸€ä¸‹æœ‰æ²¡æœ‰æ¼å¡« DataAssetï¼Œç»™ä¸ªè­¦å‘Š
     if (!CharacterAnimData)
     {
-        UE_LOG(LogTemp, Error, TEXT("ÔÓÓãÖ÷ÈË£¡ÄãµÄ %s ÍüÁËÔÚÀ¶Í¼ÀïÅäÖÃ CharacterAnimData£¡¶¯×÷Ã»·¨²¥À²£¡"), *GetName());
+        UE_LOG(LogTemp, Error, TEXT("æ‚é±¼ä¸»äººï¼ä½ çš„ %s å¿˜äº†åœ¨è“å›¾é‡Œé…ç½® CharacterAnimDataï¼åŠ¨ä½œæ²¡æ³•æ’­å•¦ï¼"), *GetName());
     }
     
 }
 
 void UEscapeCombatComponent::TryPlayActionByTag(FGameplayTag ActionTag)
 {
-    // 1. °²È«¼ì²é
+    // 1. å®‰å…¨æ£€æŸ¥
     if (!CharacterAnimData) return;
     ACharacter* OwnerChar = GetOwnerCharacter();
-    if (!OwnerChar) return;
-
-    // 2. È¥ DataAsset Àï²é±í
-    // ActionMap ÊÇÎÒÃÇÔÚ DataAsset Àï¶¨ÒåµÄÄÇ¸ö TMap
-    const FActionDefinition* ActionDef = CharacterAnimData->ActionMap.Find(ActionTag);
-
-    // 3. Èç¹ûÕÒµ½ÁËÅäÖÃ
-    if (ActionDef)
+    // 1. ç¼“å­˜æ‹¥æœ‰è€… (å¼ºå¼•ç”¨ï¼ŒåŒç”Ÿå…±æ­»)
+    OwnerCharacter = Cast<ACharacter>(GetOwner());
+    if (OwnerCharacter)
     {
-        // [½ø½×Ô¤ÁôÎ»]: ÕâÀïÒÔºó¿ÉÒÔÅĞ¶Ï ÌåÁ¦¹»²»¹»£¿ÊÇ·ñÔÚÀäÈ´ÖĞ£¿
-        
-
-        // 4. ¼ÓÔØ×ÊÔ´ (Í¬²½¼ÓÔØ)
-        // ÒòÎªÎÒÃÇÔÚ DataAsset ÀïÓÃµÄÊÇ TSoftObjectPtr£¬ËùÒÔ±ØĞë LoadSynchronous() ²ÅÄÜ±ä³ÉÕæÕıµÄ UAnimMontage*
-        UAnimMontage* MontageToPlay = ActionDef->Montage.LoadSynchronous();
-
-        // 5. ²¥·Å¶¯»­£¡
-        if (MontageToPlay)
+        // 2. ç¼“å­˜åŠ¨ç”»å®ä¾‹å¹¶ç»‘å®šæ ¸å¿ƒå§”æ‰˜
+        if (USkeletalMeshComponent* Mesh = OwnerCharacter->GetMesh())
         {
-            // PlayAnimMontage »á·µ»Ø¶¯»­×ÜÊ±³¤£¬Èç¹û·µ»Ø 0 ËµÃ÷²¥·ÅÊ§°Ü
-            float Duration = OwnerChar->PlayAnimMontage(MontageToPlay, ActionDef->PlayRate);
-
-            if (Duration > 0.f)
+            CachedAnimInstance = Mesh->GetAnimInstance();
+            if (CachedAnimInstance)
             {
-                // [µ÷ÊÔĞÅÏ¢] ·½±ãÄã¿´µ½µ½µ×²¥ÁËÉ¶
-                UE_LOG(LogTemp, Log, TEXT("³É¹¦²¥·Å¶¯×÷: %s (Tag: %s)"), *MontageToPlay->GetName(), *ActionTag.ToString());
-
-                // [½ø½×Ô¤ÁôÎ»]: ÕâÀïÒÔºóÒª¼ÓÉÏ CurrentActiveTags.AddTag(ActionTag) À´Ëø×´Ì¬
+                // åŠ¨æ€ç»‘å®šåŠ¨ç”»ç»“æŸäº‹ä»¶ï¼Œè¿™æ˜¯åŠ¨ä½œæ¸¸æˆçŠ¶æ€æœºçš„æ ¸å¿ƒé˜²å¡æ­»æœºåˆ¶ï¼
+                CachedAnimInstance->OnMontageEnded.AddDynamic(this, &UEscapeCombatComponent::HandleAttackMontageEnded);
             }
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("¶¯×÷ Tag [%s] ÕÒµ½ÁËÅäÖÃ£¬µ«ÊÇ Montage ×ÊÔ´ÊÇ¿ÕµÄ£¡"), *ActionTag.ToString());
         }
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("DataAsset ÀïÕÒ²»µ½ Tag [%s] ¶ÔÓ¦µÄ¶¯×÷£¡ÊÇ²»ÊÇÍüÁËÅä±í£¿"), *ActionTag.ToString());
+        UE_LOG(LogTemp, Error, TEXT("é¦™å­å…°è­¦å‘Šï¼šä¸»äººï¼æˆ˜æ–—ç»„ä»¶æ²¡æœ‰æŒ‚è½½åˆ° Character èº«ä¸Šå“¦ï¼"));
+    }
+
+    // 2. å» DataAsset é‡ŒæŸ¥è¡¨
+    // ActionMap æ˜¯æˆ‘ä»¬åœ¨ DataAsset é‡Œå®šä¹‰çš„é‚£ä¸ª TMap
+    const FActionDefinition* ActionDef = CharacterAnimData->ActionMap.Find(ActionTag);
+
+    // 3. å¦‚æœæ‰¾åˆ°äº†é…ç½®
+    if (ActionDef)
+    {
+        // [è¿›é˜¶é¢„ç•™ä½]: è¿™é‡Œä»¥åå¯ä»¥åˆ¤æ–­ ä½“åŠ›å¤Ÿä¸å¤Ÿï¼Ÿæ˜¯å¦åœ¨å†·å´ä¸­ï¼Ÿ
+		float CurrentStamina = SprintComp ? SprintComp->GetCurrentStamina() : 0.f;
+        if (CurrentStamina<10.0f) 
+        {
+			UE_LOG(LogTemp, Warning, TEXT("ä½“åŠ›ä¸è¶³ï¼Œæ— æ³•æ‰§è¡ŒåŠ¨ä½œ [%s]ï¼"), *ActionTag.ToString());
+        }
+
+        // 4. åŠ è½½èµ„æº (åŒæ­¥åŠ è½½)
+        // å› ä¸ºæˆ‘ä»¬åœ¨ DataAsset é‡Œç”¨çš„æ˜¯ TSoftObjectPtrï¼Œæ‰€ä»¥å¿…é¡» LoadSynchronous() æ‰èƒ½å˜æˆçœŸæ­£çš„ UAnimMontage*
+        UAnimMontage* MontageToPlay = ActionDef->Montage.LoadSynchronous();
+
+        // 5. æ’­æ”¾åŠ¨ç”»ï¼
+        if (MontageToPlay)
+        {
+            // PlayAnimMontage ä¼šè¿”å›åŠ¨ç”»æ€»æ—¶é•¿ï¼Œå¦‚æœè¿”å› 0 è¯´æ˜æ’­æ”¾å¤±è´¥
+            float Duration = OwnerChar->PlayAnimMontage(MontageToPlay, ActionDef->PlayRate);
+
+            if (Duration > 0.f)
+            {
+                // [è°ƒè¯•ä¿¡æ¯] æ–¹ä¾¿ä½ çœ‹åˆ°åˆ°åº•æ’­äº†å•¥
+                UE_LOG(LogTemp, Log, TEXT("æˆåŠŸæ’­æ”¾åŠ¨ä½œ: %s (Tag: %s)"), *MontageToPlay->GetName(), *ActionTag.ToString());
+
+                // [è¿›é˜¶é¢„ç•™ä½]: è¿™é‡Œä»¥åè¦åŠ ä¸Š CurrentActiveTags.AddTag(ActionTag) æ¥é”çŠ¶æ€
+
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("åŠ¨ä½œ Tag [%s] æ‰¾åˆ°äº†é…ç½®ï¼Œä½†æ˜¯ Montage èµ„æºæ˜¯ç©ºçš„ï¼"), *ActionTag.ToString());
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("DataAsset é‡Œæ‰¾ä¸åˆ° Tag [%s] å¯¹åº”çš„åŠ¨ä½œï¼æ˜¯ä¸æ˜¯å¿˜äº†é…è¡¨ï¼Ÿ"), *ActionTag.ToString());
     }
 }
 
 ACharacter* UEscapeCombatComponent::GetOwnerCharacter() const
 {
     return Cast<ACharacter>(GetOwner());
+}
+void UEscapeCombatComponent::ApplyDamage(float DamageValue, AActor* Instigator, const FVector& HitLocation, const FVector& HitDirection) 
+{
+
+}
+
+void UEscapeCombatComponent::BroadcastComboChange(int32 NewCount) 
+{
+
+}
+
+void UEscapeCombatComponent::CheckChargedAttack() 
+{
+    
+}
+
+void UEscapeCombatComponent::CheckCombo() 
+{
+    
+}
+
+void UEscapeCombatComponent::HandleAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted) 
+{
+   
+}
+void UEscapeCombatComponent::DoAttackTrace(FName DamageSourceBone)
+{
+	ACharacter* OwnerChar = GetOwnerCharacter();
+    if (!OwnerChar || !CharacterAnimData) 
+    {
+		UE_LOG(LogTemp, Warning, TEXT("DoAttackTrace å¤±è´¥ï¼šæ²¡æœ‰æ‰¾åˆ°æ‹¥æœ‰è€…è§’è‰²æˆ–è€… CharacterAnimDataï¼Line137"));
+        return;
+    }
+    USkeletalMeshComponent* Mesh = OwnerChar->GetMesh();
+	const FActionDefinition* ActionDef = CharacterAnimData->ActionMap.Find(CurrentActionTag);
+    if (!Mesh || !ActionDef) 
+    {
+		UE_LOG(LogTemp, Warning, TEXT("DoAttackTrace å¤±è´¥ï¼šæ²¡æœ‰æ‰¾åˆ° Mesh ç»„ä»¶æˆ–è€…å½“å‰åŠ¨ä½œå®šä¹‰ï¼Line143"));
+        return;
+    }
+
+    FVector TraceStart = Mesh->GetSocketLocation(DamageSourceBone);
+	FVector TraceEnd = TraceStart + OwnerChar->GetActorForwardVector() * ActionDef->TraceRadius;
+    FCollisionShape SphereShape = FCollisionShape::MakeSphere(ActionDef->TraceRadius);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(OwnerChar); // ä¸è¦ç¢°åˆ°è‡ªå·±
+
+    FCollisionObjectQueryParams ObjectParams;
+    ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+    ObjectParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+
+    TArray<FHitResult> OutHits;
+    bool bHit = GetWorld()->SweepMultiByObjectType(
+        OutHits, TraceStart, TraceEnd, FQuat::Identity, ObjectParams, SphereShape, QueryParams
+    );
+    if (bHit)
+    {
+        TSet<AActor*, DefaultKeyFuncs<AActor*>, TInlineSetAllocator<8>> ProcessedActors;
+
+        for (const FHitResult& Hit : OutHits) 
+        {
+			AActor* HitActor = Hit.GetActor();
+            if (IsValid(HitActor) && !ProcessedActors.Contains(HitActor)) 
+            {
+                ProcessedActors.Add(HitActor);
+
+				// è§¦å‘æ”»å‡»å‘½ä¸­äº‹ä»¶ï¼Œä¼ é€’ä¼¤å®³ä¿¡æ¯
+                FVector Impulse = (Hit.ImpactNormal * -ActionDef->KnockbackImpulse) + (FVector::UpVector * ActionDef->LaunchImpulse);
+				float FinalDamage = ActionDef->BaseDamage * ActionDef->DamageMultiplier;
+            }
+        }
+    
+    }
 }

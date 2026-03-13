@@ -30,7 +30,7 @@ FText AInteractDoor::GetInteractText_Implementation(AActor* Interactor) const
 {
 	if (!bIsInteractable)return FText::GetEmpty();
 
-	if (!RequireKeyID.IsNone()) 
+	if (!RequireKeyID.ID.IsNone()) 
 	{
 		return FText::FromString("Use Key to Open Door");
 	}
@@ -42,7 +42,7 @@ bool AInteractDoor::Interact_Implementation(APawn* InstigatorPawn)
 {
 	if (!InstigatorPawn || !bIsInteractable)return false;
 
-	if (RequireKeyID.IsNone()) 
+	if (RequireKeyID.ID.IsNone()) 
 	{
 		bIsOpen = true;
 		OnDoorOpen();
@@ -53,7 +53,7 @@ bool AInteractDoor::Interact_Implementation(APawn* InstigatorPawn)
 
 	if (InventoryComp) 
 	{
-		if (InventoryComp->GetTotalCountOfItem(RequireKeyID) > 0) 
+		if (InventoryComp->GetTotalCountOfItem(RequireKeyID.ID) > 0) 
 		{
 			bIsOpen = true;
 			OnDoorOpen();
@@ -61,7 +61,7 @@ bool AInteractDoor::Interact_Implementation(APawn* InstigatorPawn)
 
 			if (bConsumeKey) 
 			{
-				
+				InventoryComp->RemoveItem(RequireKeyID, 1);
 			}
 			return true;
 

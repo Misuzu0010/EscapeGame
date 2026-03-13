@@ -37,6 +37,9 @@ public:
 	float GetCurrentStaminaPercent() const;
 
     UFUNCTION(BlueprintCallable, Category = "Sprint")
+    float GetCurrentStamina() const;
+
+    UFUNCTION(BlueprintCallable, Category = "Sprint")
     void ApplyStaminaChange();
 
     UFUNCTION(BlueprintCallable, Category = "Sprint")
@@ -73,7 +76,7 @@ public:
 
     bool bStaminaDrained;//是否耗尽
 
-    float StaminaRegenDelay;//体力恢复延迟计时器
+    float StaminaRegenDelay=0.0f;//体力恢复延迟计时器
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
     float MaxStaminaRegenDelay = 1.0f; //体力恢复延迟时间

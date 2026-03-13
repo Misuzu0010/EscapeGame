@@ -10,6 +10,8 @@
 #include "Logging/LogMacros.h"
 #include"InterectComponent.h"
 #include"HealthController/AttributeComponent.h"
+//#include "Variant_Combat/Interfaces/CombatAttacker.h"
+//#include "Variant_Combat/Interfaces/CombatDamageable.h"
 #include "EscapeGameCharacter.generated.h"
 
 class USpringArmComponent;
@@ -122,12 +124,8 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	
-
 	void Input_UseItem(const FInputActionValue& Value);
 	
-
-
 public:
 
 	/** Handles move inputs from either controls or UI interfaces */
@@ -151,7 +149,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void StopCrouch();
-	
+
 	// 注意：这里只是声明“我有个背包”，背包里具体有啥，这里不管
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStateMachineComponent* StateMachineComp;

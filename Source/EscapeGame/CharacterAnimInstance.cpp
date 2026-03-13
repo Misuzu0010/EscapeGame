@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "WindSimulationComponent.h" // 用于获取风力数据
 #include "Kismet/KismetMathLibrary.h" // 用于数学计算
+#include"ClothLODControllerComponent.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -16,42 +17,59 @@ void UCharacterAnimInstance::NativeInitializeAnimation()
     if (OwnerCharacter)
     {
         MovementComponent = OwnerCharacter->GetCharacterMovement();
+
+        WindComponent = OwnerCharacter->FindComponentByClass<UWindSimulationComponent>();
+
+        // 【新增】获取我们的布料LOD控制器
+		ClothLODComponent = OwnerCharacter->FindComponentByClass<UClothLODControllerComponent>();
     }
 }
+
+// ==========================================
+// 基础写法：在游戏线程更新 (Game Thread)
+// 逻辑：【绝对安全】在这里只做一件事：从组件提取数据并存入 Cached 变量！绝不做复杂运算！
+// ==========================================
 
 void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
     UAnimInstance::NativeUpdateAnimation(DeltaSeconds);
 
-    if (WindComponent)
+    // 1. 安全提取速度，存入普通变量
+    if (MovementComponent)
     {
-        // 直接从风力组件获取算好的柏林噪声风力 + 移动风力！
-        KawaiiWind = WindComponent->GetCurrentWind();
+        CachedVelocity = MovementComponent->Velocity;
+    }
+
+    // 2. 安全提取风力，弱指针必须用 IsValid() 判断
+    if (WindComponent.IsValid())
+    {
+		float KawaiiMultiplier = 5.0f;// 这个值可以根据需要调整，增加风力的影响程度
+        KawaiiWind = WindComponent->GetCurrentWind()*KawaiiMultiplier;
+    }
+    if (ClothLODComponent.IsValid())
+    {
+        CachedClothLODFactor = ClothLODComponent->GetLODFactor();
     }
 }
 
 void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaTime)
 {
     UAnimInstance::NativeThreadSafeUpdateAnimation(DeltaTime);
-    if (!OwnerCharacter || !MovementComponent)
-    {
-        return;
-	}
-    FVector Velocity = MovementComponent->Velocity;
-    float Speed = Velocity.Size();
-    // 3. 计算动态阻尼 (Dynamic Damping)
-    // 逻辑：站立时软一点(0.1)，跑起来硬一点(0.5)防止穿模
-    float TargetDamping = (Speed > 10.0f) ? 0.4f : 0.1f;
+    
+    float Speed = CachedVelocity.Size();
+    float TargetDamping = (Speed > 10.0f) ? DynamicDampingForIdle : DynamicDampingForMoving;
     DynamicDamping = FMath::FInterpTo(DynamicDamping, TargetDamping, DeltaTime, 5.0f);
-
-    // 4. (可选) 如果角色瞬移或死亡，重置 Alpha
-    // 这里简单演示：如果速度极快（可能是传送），暂时关闭物理
+    float TargetPhysicsAlpha = 1.0f;
+	//传送检测：如果速度过快，直接关闭物理模拟，防止布料乱飞
     if (Speed > 2000.0f)
     {
         PhysicsAlpha = 0.0f;
     }
     else
     {
-        PhysicsAlpha = FMath::FInterpTo(PhysicsAlpha, 1.0f, DeltaTime, 2.0f);
+        // 使用缓存的 LOD Factor，不再调用外部组件的方法
+        float LODMultiplier = 1.0f - CachedClothLODFactor;
+        TargetPhysicsAlpha *= LODMultiplier;
     }
-}
+    PhysicsAlpha = FMath::FInterpTo(PhysicsAlpha, TargetPhysicsAlpha, DeltaTime, 2.0f);
+};

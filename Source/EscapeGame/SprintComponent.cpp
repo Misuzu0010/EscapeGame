@@ -94,7 +94,7 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 		bStaminaDrained = true;
 		//// 停止冲刺
-		MovementComp->MaxWalkSpeed = WalkSpeed;
+		MovementComp->MaxWalkSpeed = WalkSpeed*CurrentBuffMultiplier;
 		StateMachine->SetState(ECharacterState::Idle);
 		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Stamina Depleted!"));
 	}
@@ -118,10 +118,7 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 		//移动组件 设置为冲刺速度
 		MovementComp->MaxWalkSpeed = SprintSpeed*CurrentBuffMultiplier;
-		GEngine->AddOnScreenDebugMessage(4, 0.f, FColor::Purple,
-			FString::Printf(TEXT("Actual Velocity: %.1f"), OwnerCharacter->GetVelocity().Size()));
-		GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Red,
-			FString::Printf(TEXT("MovementMode: %d"), (int32)MovementComp->MovementMode));
+		
 
 		// 设置状态机 (防止每帧重复Set，加个判断)
 		if (CurrentState != ECharacterState::Sprinting)
@@ -146,22 +143,6 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 				if (CurrentStamina < MaxStamina) 
 				{
 					CurrentStamina += StaminaRegenRate * DeltaTime;
-					GEngine->AddOnScreenDebugMessage(-1, 0.0f, FColor::Green, FString::Printf(TEXT("Recovering.....: %.2f"), CurrentStamina));
-					GEngine->AddOnScreenDebugMessage(0, 0.f, FColor::Cyan,
-						FString::Printf(TEXT("WalkSpeed: %.1f | SprintSpeed: %.1f"), WalkSpeed, SprintSpeed));
-
-					GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Yellow,
-						FString::Printf(TEXT("Actual MaxWalkSpeed: %.1f"), MovementComp->MaxWalkSpeed));
-
-					GEngine->AddOnScreenDebugMessage(2, 0.f, FColor::Green,
-						FString::Printf(TEXT("bSprintRequested: %s | bStaminaDrained: %s"),
-							bSprintRequested ? TEXT("true") : TEXT("false"),
-							bStaminaDrained ? TEXT("true") : TEXT("false")));
-					GEngine->AddOnScreenDebugMessage(4, 0.f, FColor::Purple,
-						FString::Printf(TEXT("Actual Velocity: %.1f"), OwnerCharacter->GetVelocity().Size()));
-					GEngine->AddOnScreenDebugMessage(3, 0.f, FColor::Red,
-						FString::Printf(TEXT("MovementMode: %d"), (int32)MovementComp->MovementMode));
-
 				}
 
 				if (CurrentStamina > 10.0f)bStaminaDrained = false;
@@ -211,14 +192,18 @@ float USprintComponent::GetCurrentStaminaPercent() const
 {
 	return CurrentStamina / MaxStamina;
 
+}
 
+float USprintComponent::GetCurrentStamina() const
+{
+	return CurrentStamina;
 }
 void USprintComponent::StaminaChange(float Delta)
 {
 	// ...
 
 	CurrentStamina += Delta;
-	if (CurrentStamina > 100.0f)CurrentStamina = 100.0f;
+	if (CurrentStamina > MaxStamina)CurrentStamina = MaxStamina;
 	if (OnStaminaChanged.IsBound())
 	{
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
