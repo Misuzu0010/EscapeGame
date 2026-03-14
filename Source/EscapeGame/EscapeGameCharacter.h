@@ -10,8 +10,7 @@
 #include "Logging/LogMacros.h"
 #include"InterectComponent.h"
 #include"HealthController/AttributeComponent.h"
-//#include "Variant_Combat/Interfaces/CombatAttacker.h"
-//#include "Variant_Combat/Interfaces/CombatDamageable.h"
+#include"Interface/EscapeCombatDamageable.h"
 #include "EscapeGameCharacter.generated.h"
 
 class USpringArmComponent;
@@ -26,7 +25,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class AEscapeGameCharacter : public ACharacter
+class AEscapeGameCharacter : public ACharacter, public IEscapeCombatDamageable
 {
 	GENERATED_BODY()
 

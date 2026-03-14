@@ -1,7 +1,7 @@
 ---
 name: ""
 overview: ""
-todos: []
+todos: [] 
 isProject: false
 ---
 

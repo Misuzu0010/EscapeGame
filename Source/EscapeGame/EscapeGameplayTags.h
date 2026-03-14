@@ -77,6 +77,8 @@ public:
     FGameplayTag Cooldown_Skill_1;
     FGameplayTag Cooldown_Dodge;
 
+
+
     
 
 

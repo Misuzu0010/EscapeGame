@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include"GameplayTagContainer.h"
+#include "Interface/EscapeCombatDamageable.h"
 #include "EscapeCombatComponent.generated.h"
 class UCharacterAnimData;
 class ACharacter;
@@ -27,13 +28,13 @@ struct FAttackHitPayload
     UPROPERTY(BlueprintReadWrite, Category = "Combat|Hit")
     FVector DamageImpulse = FVector::ZeroVector;
 };
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttackHitSignature, const FAttackHitPayload&, HitData);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttackHitSignature, FAttackHitPayload, HitData);
 // 传递连击数变化
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnComboCountChangedSignature, int32, NewComboCount);
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class ESCAPEGAME_API UEscapeCombatComponent : public UActorComponent
+class ESCAPEGAME_API UEscapeCombatComponent : public UActorComponent, public IEscapeCombatDamageable
 {
 	GENERATED_BODY()
 
@@ -49,7 +50,7 @@ public:
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
     TObjectPtr<UCharacterAnimData> CharacterAnimData;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintAssignable, Category = "Combat|Events")
+    UPROPERTY(BlueprintAssignable, Category = "Combat|Events")
 	FOnAttackHitSignature OnAttackHit;
 
     UPROPERTY(BlueprintAssignable, Category = "Combat|Events")
@@ -75,10 +76,6 @@ public:
 	//检查蓄力按键是否持续按住，决定循环或释放
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void CheckChargedAttack();
-
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void ApplyDamage(float DamageValue, AActor* Instigator, const FVector&HitLocation, const FVector& HitDirection);
-
 	
 	// 3. 触发函数 (Trigger Function) - 可选，用于封装 Broadcast
 	// 范式：Broadcast + [事件名] 或 Notify + [事件名]
