@@ -1,5 +1,5 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-//¸÷ÖÖUIµÄ¸Ä±äÂß¼­¼¯³É
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
+//å„ç§UIçš„æ”¹å˜é€»è¾‘é›†æˆ
 #pragma once
 
 #include "CoreMinimal.h"
@@ -28,15 +28,15 @@ public:
 
 
 protected:
-	//±äÁ¿Ãû³Æ±ØĞëÒªºÍUIÉè¼ÆÆ÷ÖĞµÄ¿Ø¼şÃû³ÆÒ»ÖÂ
+	//å˜é‡åç§°å¿…é¡»è¦å’ŒUIè®¾è®¡å™¨ä¸­çš„æ§ä»¶åç§°ä¸€è‡´
 	UPROPERTY(meta=(BindWidget))
 	UProgressBar* HealthProgressBar;
 
-	//Í¬Àí£¬°ó¶¨ÑªÁ¿ÎÄ±¾£¬ÎÄ¼şÃûÒ²±ØĞëÒ»ÖÂ
+	//åŒç†ï¼Œç»‘å®šè¡€é‡æ–‡æœ¬ï¼Œæ–‡ä»¶åä¹Ÿå¿…é¡»ä¸€è‡´
 	UPROPERTY(meta=(BindWidget))
 	UTextBlock* HealthText;
 
-	//°ó¶¨ÌåÁ¦ÖµÎÄ±¾
+	//ç»‘å®šä½“åŠ›å€¼æ–‡æœ¬
 	UPROPERTY(meta=(BindWidget))
 	UProgressBar* StaminaProgressBar;
 
@@ -47,7 +47,7 @@ protected:
 	UInventoryHotbarWidget* HotbarWidget;
 
 private:
-	//»Øµ÷º¯Êı£¬ÊÕµ½¹ã²¥Ê±¸üĞÂÑªÌõ
+	//å›è°ƒå‡½æ•°ï¼Œæ”¶åˆ°å¹¿æ’­æ—¶æ›´æ–°è¡€æ¡
 	UFUNCTION()
 	void OnHealthUpdate(float CurrentHealth, float MaxHealth);
 

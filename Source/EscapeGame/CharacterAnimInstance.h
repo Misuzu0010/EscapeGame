@@ -32,8 +32,17 @@ protected:
 
 	// --- 线程安全数据中转站 (GameThread 写入, WorkerThread 读取) ---
 	// 【修改点】：缓存完整的速度向量，而不仅仅是标量
-	UPROPERTY(Transient)
+	// 极致优化：既不存盘（Transient），又允许蓝图读取（BlueprintReadOnly），还保证了 C++ 的封装性（AllowPrivateAccess）
+	
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	FVector CachedVelocity = FVector::ZeroVector;
+
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float VerticalVelocity = 0.0f;
+
+
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float GroundSpeed = 0.0f;
 
 	UPROPERTY(Transient)
 	float CachedClothLODFactor = 0.0f; // 缓存LOD因子
@@ -57,6 +66,32 @@ protected:
 
 	// --- 线程安全数据中转站 (GameThread 写入, WorkerThread 读取) ---
 	float CurrentFrameSpeed = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bShouldMove= false;
+
+	// 是否在空中
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsFalling = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsRunning = false;
+
+	// --- 动画匹配专用缓存 ---
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	FRotator CachedRotation = FRotator::ZeroRotator;
+
+	// 当前移动角度 (-180 到 180)
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float LocomotionAngle = 0.0f;
+
+	// 动态播放速率 (用于对齐脚步)
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float LocomotionPlayRate = 1.0f;
+
+	// 动画资产的标准奔跑速度 (TA 需要根据具体的跑步动画位移速度来设定此值)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement|Config")
+	float AuthoredRunSpeed = 300.0f;
 
 	// --- 内部缓存的组件指针 ---
 	TWeakObjectPtr<UWindSimulationComponent>WindComponent;

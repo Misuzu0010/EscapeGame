@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -27,9 +27,9 @@ protected:
 	TObjectPtr<UStaticMeshComponent>MeshComp;
 
 	UPROPERTY(VisibleAnywhere, Category = "Components")
-	TObjectPtr<USphereComponent> SphereComp; // ÓÃÓÚ¼ì²âÅö×²
+	TObjectPtr<USphereComponent> SphereComp; // ç”¨äºæ£€æµ‹ç¢°æ’
 
-	// 1. Ö¸¶¨Êı¾İ±í (±ØĞëÌî£¡·ñÔò²»ÖªµÀ ID ¶ÔÓ¦Ê²Ã´)
+	// 1. æŒ‡å®šæ•°æ®è¡¨ (å¿…é¡»å¡«ï¼å¦åˆ™ä¸çŸ¥é“ ID å¯¹åº”ä»€ä¹ˆ)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Data")
 	TObjectPtr<UDataTable> ItemDataTable;
 
@@ -37,20 +37,20 @@ protected:
 	FName ItemID;
 
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Pickup")
-	int32 ItemCount = 1; // Ê°È¡ÎïÆ·µÄÊıÁ¿
+	int32 ItemCount = 1; // æ‹¾å–ç‰©å“çš„æ•°é‡
 
 public:	
 	// Called every frame
 	//virtual void Tick(float DeltaTime) override;
 
-	// --- ½Ó¿ÚÊµÏÖ ---
-	// ÕâÊÇºËĞÄ£¡µ±½ÇÉ«°´ E »òÕß²ÈÉÏÈ¥Ê±£¬µ÷ÓÃÕâ¸ö
+	// --- æ¥å£å®ç° ---
+	// è¿™æ˜¯æ ¸å¿ƒï¼å½“è§’è‰²æŒ‰ E æˆ–è€…è¸©ä¸Šå»æ—¶ï¼Œè°ƒç”¨è¿™ä¸ª
 	virtual bool AttemptPickUp_Implementation(APawn* InstigatorPawn) override;
 
-	// µ±ÎÒÃÇÔÚ±à¼­Æ÷ÀïĞŞ¸Ä ItemContent Ê±£¬×Ô¶¯¸üĞÂÄ£ĞÍ£¡(ÕâÊÇ¸ö³¬¼¶ºÃÓÃµÄ¹¦ÄÜ)
+	// å½“æˆ‘ä»¬åœ¨ç¼–è¾‘å™¨é‡Œä¿®æ”¹ ItemContent æ—¶ï¼Œè‡ªåŠ¨æ›´æ–°æ¨¡å‹ï¼(è¿™æ˜¯ä¸ªè¶…çº§å¥½ç”¨çš„åŠŸèƒ½)
 	
 	virtual void OnConstruction(const FTransform& Transform) override;
-	// OnConstruction ±È PostEditChangeProperty ¸üÍ¨ÓÃ£¬ÍÏ×§Ê±Ò²ÄÜÉúĞ§
+	// OnConstruction æ¯” PostEditChangeProperty æ›´é€šç”¨ï¼Œæ‹–æ‹½æ—¶ä¹Ÿèƒ½ç”Ÿæ•ˆ
  
 
 

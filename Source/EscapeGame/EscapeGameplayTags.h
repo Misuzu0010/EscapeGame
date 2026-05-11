@@ -1,92 +1,75 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "NativeGameplayTags.h" // 香子兰认证：这个头文件是神！
 
-class UGameplayTagsManager;
-/**
- * 
- */
-
-struct ESCAPEGAME_API FEscapeGameplayTags
+// 绝对命令：这里必须用 namespace，不能用 struct 喵！
+namespace EscapeGameplayTags
 {
-public:
-    static const FEscapeGameplayTags& Get() { return GameplayTags; }
-    static void InitializeNativeTags();
-    // === 声明标签变量 ===
-
-  // ==========================================
-    // 1. 输入标签 (Input) - 玩家想要干什么
     // ==========================================
-    FGameplayTag Input_Action_LightAttack;
-    FGameplayTag Input_Action_HeavyAttack;
-    FGameplayTag Input_Action_Dodge;
-    FGameplayTag Input_Action_Jump;
-    FGameplayTag Input_Action_Skill_1;
-    FGameplayTag Input_Action_Skill_2;
-    FGameplayTag Input_Action_UseItem;
+    // 1. 输入标签 (Input)
+    // ==========================================
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Action_LightAttack);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Action_HeavyAttack);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Action_Dodge);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Action_Jump);
+    //1技能
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Action_Skill_1);
+    //2技能
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Action_Skill_2);
+    //用药水
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Input_Action_UseItem);
 
     // ==========================================
-    // 2. 动作标签 (Actions) - 正在执行什么
+    // 2. 动作标签 (Actions)
     // ==========================================
-    FGameplayTag Action_State_Attacking;    // 只要在攻击中，就有这个标签
-    FGameplayTag Action_State_Dodging;      // 正在闪避
-    FGameplayTag Action_State_Dead;         // 死了
-
-    // 具体的招式 (用于 DataAsset 查表)
-    FGameplayTag Action_Combat_Light_1;
-    FGameplayTag Action_Combat_Light_2;
-    FGameplayTag Action_Combat_Light_3;
-    FGameplayTag Action_Combat_Heavy_Charge;
-    FGameplayTag Action_Combat_AirAttack;
+    
+    //攻击
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_State_Attacking);
+    //闪避
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_State_Dodging);
+    //死亡
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_State_Dead);
+    //4轻击
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Combat_Light_1);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Combat_Light_2);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Combat_Light_3);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Combat_Light_4);
+    //释放
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_ChargedAttack_Release);
+    //重击蓄力
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Combat_Heavy_Charge);
+    //跳劈
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Action_Combat_AirAttack);
 
     // ==========================================
-    // 3. 角色状态 (States) - Buff/Debuff/环境
+    // 3. 角色状态 (States)
     // ==========================================
-    // 移动状态
-    FGameplayTag State_Movement_Grounded;
-    FGameplayTag State_Movement_Airborne;
-
-    // 正面状态
-    FGameplayTag State_Status_Invincible;   // 无敌 (翻滚帧)
-    FGameplayTag State_Status_HyperArmor;   // 霸体 (不会被打断)
-    FGameplayTag State_Status_Blocking;     // 格挡中
-
-    // 负面状态 (Debuff)
-    FGameplayTag State_Debuff_Stun;         // 眩晕 (硬直)
-    FGameplayTag State_Debuff_Knockdown;    // 击倒
-    FGameplayTag State_Debuff_Burn;         // 燃烧
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Movement_Grounded);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Movement_Airborne);
+    //无敌帧
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Status_Invincible);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Status_HyperArmor);
+    //被控
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Status_Blocking);
+    //减速
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Debuff_Stun);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Debuff_Knockdown);
+    //燃烧
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Debuff_Burn);
 
     // ==========================================
     // 4. 事件与属性 (Events & Data)
     // ==========================================
-    // 动画通知事件 (用于 AnimNotify)
-    FGameplayTag Event_Montage_ComboWindow_Open;
-    FGameplayTag Event_Montage_ComboWindow_Close;
-    FGameplayTag Event_Combat_Hit;          // 造成了伤害
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Montage_ComboWindow_Open);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Montage_ComboWindow_Close);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Event_Combat_Hit);
 
-    // 属性 (用于计算伤害)
-    FGameplayTag Data_Damage_Physical;
-    FGameplayTag Data_Damage_Fire;
-    FGameplayTag Data_HitDirection_Front;
-    FGameplayTag Data_HitDirection_Back;
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Damage_Physical);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Damage_Fire);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_HitDirection_Front);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_HitDirection_Back);
 
-    // 冷却时间 (Cooldowns)
-    FGameplayTag Cooldown_Skill_1;
-    FGameplayTag Cooldown_Dodge;
-
-
-
-    
-
-
-protected:
-    // 注册函数
-    void AddAllTags(UGameplayTagsManager& Manager);
-
-
-private:
-    static FEscapeGameplayTags GameplayTags;
-};
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Skill_1);
+    ESCAPEGAME_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Cooldown_Dodge);
+}

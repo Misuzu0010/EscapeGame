@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -18,7 +18,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DragDrop")
 	int32 SourceSlotIndex;
 
-	// ?? À´Ô´×é¼ş (ÈõÖ¸ÕëÒıÓÃ£¬·ÀÖ¹×é¼şÏú»Ùºó±ÀÀ£)
+	// ?? æ¥æºç»„ä»¶ (å¼±æŒ‡é’ˆå¼•ç”¨ï¼Œé˜²æ­¢ç»„ä»¶é”€æ¯åå´©æºƒ)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DragDrop")
 	TWeakObjectPtr<UInventoryComponent> SourceComponent;
 };

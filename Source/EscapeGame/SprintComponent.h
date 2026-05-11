@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -6,7 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "SprintComponent.generated.h"
 
-// ÌåÁ¦Öµ¸Ä±ä¹ã²¥ (ÓÃÓÚUI¸üĞÂ)
+// ä½“åŠ›å€¼æ”¹å˜å¹¿æ’­ (ç”¨äºUIæ›´æ–°)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStaminaChanged, float, CurrentStamina, float, MaxStamina);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -26,7 +26,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-    // Start/Stop sprint (¿ÉÒÔÔÚ Character ÖĞµ÷ÓÃ)
+    // Start/Stop sprint (å¯ä»¥åœ¨ Character ä¸­è°ƒç”¨)
     UFUNCTION(BlueprintCallable, Category = "Sprint")
     void StartSprinting();
 
@@ -48,16 +48,16 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Sprint")
     void ApplyMaxChange(float Delta);
 
-    // === ÊôĞÔÅäÖÃ ===
+    // === å±æ€§é…ç½® ===
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
     float MaxStamina = 100.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    float StaminaConsumeRate = 20.0f; // Ã¿ÃëÏûºÄ
+    float StaminaConsumeRate = 20.0f; // æ¯ç§’æ¶ˆè€—
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    float StaminaRegenRate = 10.0f; // Ã¿Ãë»Ö¸´
-	//issprinting=true£¬²»ÆôÓÃ»Ö¸´
+    float StaminaRegenRate = 10.0f; // æ¯ç§’æ¢å¤
+	//issprinting=trueï¼Œä¸å¯ç”¨æ¢å¤
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
     float WalkSpeed = 600.0f;
@@ -65,30 +65,30 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
     float SprintSpeed = 1000.0f;
 
-    // ¹ã²¥´úÀí
+    // å¹¿æ’­ä»£ç†
     UPROPERTY(BlueprintAssignable, Category = "Sprint")
     FOnStaminaChanged OnStaminaChanged;
 
-    /** ³å´ÌÊäÈë¶¯×÷ (²å×ù) */
+    /** å†²åˆºè¾“å…¥åŠ¨ä½œ (æ’åº§) */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-    class UInputAction* SprintAction; // <--- ¼ÓÉÏÕâĞĞ£¡
-    // ¹© Character Ê¹ÓÃ£º»ñÈ¡Ä¿±êËÙ¶È
+    class UInputAction* SprintAction; // <--- åŠ ä¸Šè¿™è¡Œï¼
+    // ä¾› Character ä½¿ç”¨ï¼šè·å–ç›®æ ‡é€Ÿåº¦
 
-    bool bStaminaDrained;//ÊÇ·ñºÄ¾¡
+    bool bStaminaDrained;//æ˜¯å¦è€—å°½
 
-    float StaminaRegenDelay=0.0f;//ÌåÁ¦»Ö¸´ÑÓ³Ù¼ÆÊ±Æ÷
+    float StaminaRegenDelay=0.0f;//ä½“åŠ›æ¢å¤å»¶è¿Ÿè®¡æ—¶å™¨
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
-    float MaxStaminaRegenDelay = 1.0f; //ÌåÁ¦»Ö¸´ÑÓ³ÙÊ±¼ä
+    float MaxStaminaRegenDelay = 1.0f; //ä½“åŠ›æ¢å¤å»¶è¿Ÿæ—¶é—´
 
 public:
     float CurrentStamina;
 
-    bool bSprintRequested; // Íæ¼ÒÊÇ·ñ°´ÏÂÁË Shift
+    bool bSprintRequested; // ç©å®¶æ˜¯å¦æŒ‰ä¸‹äº† Shift
 
-	bool bIsActurallySprinting; // Êµ¼ÊÊÇ·ñÔÚ³å´Ì
+	bool bIsActurallySprinting; // å®é™…æ˜¯å¦åœ¨å†²åˆº
 
-    // »º´æÒıÓÃ
+    // ç¼“å­˜å¼•ç”¨
     UPROPERTY()
     class ACharacter* OwnerCharacter;
 
@@ -99,14 +99,14 @@ public:
     class UStateMachineComponent* StateMachine;
 
 
-    // ĞŞ¸ÄÖ®Ç°µÄ Buff º¯Êı½Ó¿Ú£¬²»ĞèÒª´«Ê±¼ä£¬Ö»´«±¶ÂÊ
+    // ä¿®æ”¹ä¹‹å‰çš„ Buff å‡½æ•°æ¥å£ï¼Œä¸éœ€è¦ä¼ æ—¶é—´ï¼Œåªä¼ å€ç‡
     UFUNCTION(BlueprintCallable, Category = "Buff")
     void SetSpeedBuffMultiplier(float NewMultiplier);
 
-    //ĞÂÔö£º¸üĞÂËÙ¶ÈµÄ¹¤¾ßº¯Êı (DRYÔ­Ôò)
+    //æ–°å¢ï¼šæ›´æ–°é€Ÿåº¦çš„å·¥å…·å‡½æ•° (DRYåŸåˆ™)
     void UpdateMovementSpeed();
 
-    // ÏÖÔÚµÄ Buff ±¶ÂÊ (1.0 ±íÊ¾Ã» Buff)
+    // ç°åœ¨çš„ Buff å€ç‡ (1.0 è¡¨ç¤ºæ²¡ Buff)
     float CurrentBuffMultiplier = 1.0f;
 
     FTimerHandle TimerHandle_Buff;

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -19,20 +19,20 @@ class ESCAPEGAME_API UInventoryHotbarWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
-	//³õÊ¼»¯ °ó¶¨×é¼ş
+	//åˆå§‹åŒ– ç»‘å®šç»„ä»¶
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void InitializeHotbar(UInventoryComponent* InventoryComp);
 
 protected:
-	//ºáÏòÅÅ
+	//æ¨ªå‘æ’
 	UPROPERTY(meta = (BindWidget))
 	UHorizontalBox* HotbarGrid;
 
-	//¸ñ×ÓÏÔÊ¾¸öÊı
+	//æ ¼å­æ˜¾ç¤ºä¸ªæ•°
 	UPROPERTY(EditDefaultsOnly,Category="Inventory")
 	int32 NumSlot = 5;
 
-	//¸ñ×ÓUIÀà 
+	//æ ¼å­UIç±» 
 	UPROPERTY(EditDefaultsOnly,Category="Inventory")
 	TSubclassOf<UInventorySlotWidget>SlotWidgetClass;
 

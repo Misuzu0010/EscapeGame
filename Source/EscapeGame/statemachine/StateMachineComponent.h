@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
@@ -8,7 +8,7 @@
 #include "Animation/AnimMontage.h"
 #include "StateMachineComponent.generated.h"
 
-// Ç°ÖÃÉùÃ÷£¬·ÀÖ¹Ñ­»·ÒıÓÃ
+// å‰ç½®å£°æ˜ï¼Œé˜²æ­¢å¾ªç¯å¼•ç”¨
 class ACharacter; 
 class UBoxComponent;
 class UNiagaraComponent;
@@ -20,7 +20,7 @@ enum class ECharacterState : uint8
 	Idle        UMETA(DisplayName = "Idle"),
 	Moving      UMETA(DisplayName = "Moving"),
 	Attacking   UMETA(DisplayName = "Attacking"),
-	Sprinting   UMETA(DisplayName = "Sprinting"), // ¼ÇµÃºÍ SprintComponent Í¬²½
+	Sprinting   UMETA(DisplayName = "Sprinting"), // è®°å¾—å’Œ SprintComponent åŒæ­¥
 	Stunned     UMETA(DisplayName = "Stunned"),
 	Dead        UMETA(DisplayName = "Dead")
 };
@@ -41,33 +41,33 @@ protected:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-    // === ºËĞÄ×´Ì¬Âß¼­ ===
+    // === æ ¸å¿ƒçŠ¶æ€é€»è¾‘ ===
     
-	// »ñÈ¡µ±Ç°×´Ì¬
+	// è·å–å½“å‰çŠ¶æ€
 	UFUNCTION(BlueprintPure, Category = "State Machine")
 	ECharacterState GetCurrentState() const { return CurrentState; }
 
-	// ¼ì²éÊÇ·ñ´¦ÓÚÄ³ÖÖ×´Ì¬
+	// æ£€æŸ¥æ˜¯å¦å¤„äºæŸç§çŠ¶æ€
 	UFUNCTION(BlueprintPure, Category = "State Machine")
 	bool IsState(ECharacterState StateToCheck) const { return CurrentState == StateToCheck; }
 
-    // ÕâÊÇÒ»¸ö´úÀí£¬À¶Í¼¿ÉÒÔ°ó¶¨ËüÀ´¸üĞÂUI
+    // è¿™æ˜¯ä¸€ä¸ªä»£ç†ï¼Œè“å›¾å¯ä»¥ç»‘å®šå®ƒæ¥æ›´æ–°UI
     UPROPERTY(BlueprintAssignable, Category = "State Machine")
     FOnStateChanged OnStateChanged;
 
-	//×´Ì¬»úºËĞÄº¯Êı
+	//çŠ¶æ€æœºæ ¸å¿ƒå‡½æ•°
 	UFUNCTION(BlueprintCallable, Category = "State Machine")
 	void SetState(ECharacterState NewState);
 
-	// ÉêÇë½øÈëÑ£ÔÎ£¨Íâ²¿µ÷ÓÃ£¬±ÈÈç±»¹Ö´òÁË£©
+	// ç”³è¯·è¿›å…¥çœ©æ™•ï¼ˆå¤–éƒ¨è°ƒç”¨ï¼Œæ¯”å¦‚è¢«æ€ªæ‰“äº†ï¼‰
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void ApplyStun(float Duration);
 
-	// ÉêÇëËÀÍö
+	// ç”³è¯·æ­»äº¡
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void ApplyDeath();
 
-    // === »º´æµÄÒıÓÃ (¹Ø¼ü£¡ÒÔºó¾Í¿¿ËüÖ¸»Ó½ÇÉ«) ===
+    // === ç¼“å­˜çš„å¼•ç”¨ (å…³é”®ï¼ä»¥åå°±é å®ƒæŒ‡æŒ¥è§’è‰²) ===
 protected:
 	
 	void OnStunFinished();

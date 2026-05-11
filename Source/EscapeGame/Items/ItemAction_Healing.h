@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -18,10 +18,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Heal")
 	float HealAmount = 25.0f;
 
-	// ±©Â¶¸ø±à¼­Æ÷µÄ±äÁ¿£ºµÀ¾ßÃû×Ö
+	// æš´éœ²ç»™ç¼–è¾‘å™¨çš„å˜é‡ï¼šé“å…·åå­—
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Config")
 	FItemText ItemName;
-	// ÖØĞ´Ê¹ÓÃÂß¼­
+	// é‡å†™ä½¿ç”¨é€»è¾‘
 	virtual bool OnUse_Implementation(AActor* TargetActor) override;
 
 

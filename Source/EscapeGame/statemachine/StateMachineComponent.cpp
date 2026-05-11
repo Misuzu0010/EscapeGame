@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "statemachine/StateMachineComponent.h"
@@ -45,17 +45,17 @@ void UStateMachineComponent::SetState(ECharacterState NewState)
 
 	ECharacterState OldState = CurrentState;
 
-	//×´Ì¬±£»¤Âß¼­
-	//Èç¹ûµ±Ç°ÊÇËÀÍö×´Ì¬£¬²»ÄÜÇĞ»»µ½ÆäËû×´Ì¬
+	//çŠ¶æ€ä¿æŠ¤é€»è¾‘
+	//å¦‚æœå½“å‰æ˜¯æ­»äº¡çŠ¶æ€ï¼Œä¸èƒ½åˆ‡æ¢åˆ°å…¶ä»–çŠ¶æ€
 	if (CurrentState == ECharacterState::Dead)return;
 
-	//Ñ£ÔÎ×´Ì¬ ²»¿ÉÇĞ»»ÎªËÀÍö/Ä¬ÈÏ×´Ì¬
+	//çœ©æ™•çŠ¶æ€ ä¸å¯åˆ‡æ¢ä¸ºæ­»äº¡/é»˜è®¤çŠ¶æ€
 	if (CurrentState == ECharacterState::Stunned && NewState != ECharacterState::Dead && NewState != ECharacterState::Idle)return;
 
-	//¸üĞÂ×´Ì¬
+	//æ›´æ–°çŠ¶æ€
 	CurrentState = NewState;
 
-	//¹ã²¥×´Ì¬±ä»¯ÊÂ¼ş
+	//å¹¿æ’­çŠ¶æ€å˜åŒ–äº‹ä»¶
 	if (OnStateChanged.IsBound()) 
 	{
 		OnStateChanged.Broadcast(NewState, OldState);
@@ -66,14 +66,14 @@ void UStateMachineComponent::SetState(ECharacterState NewState)
 		ACharacter* OwnCharacter = Cast<ACharacter>(GetOwner());
 		if (OwnCharacter) 
 		{
-			// 1. »ñÈ¡ÒÆ¶¯×é¼ş
+			// 1. è·å–ç§»åŠ¨ç»„ä»¶
 			UCharacterMovementComponent* CharMoveComp = OwnCharacter->GetCharacterMovement();
 
-			// 2. Èç¹û×é¼ş´æÔÚ£¬¾Í´ò¶ÏÍÈ£¨½ûÖ¹ÒÆ¶¯£©
+			// 2. å¦‚æœç»„ä»¶å­˜åœ¨ï¼Œå°±æ‰“æ–­è…¿ï¼ˆç¦æ­¢ç§»åŠ¨ï¼‰
 			if (CharMoveComp)
 			{
 				CharMoveComp->DisableMovement();
-				CharMoveComp->StopMovementImmediately(); // Ë³±ã°Ñµ±Ç°µÄ¹ßĞÔÒ²Í£µô£¬¸ü¸É´à
+				CharMoveComp->StopMovementImmediately(); // é¡ºä¾¿æŠŠå½“å‰çš„æƒ¯æ€§ä¹Ÿåœæ‰ï¼Œæ›´å¹²è„†
 			}
 
 		}
@@ -101,7 +101,7 @@ void UStateMachineComponent::ApplyDeath()
 
 void UStateMachineComponent::OnStunFinished()
 {
-	// Ö»ÓĞµ±Ç°»¹ÊÇÑ£ÔÎ×´Ì¬²Å»Ö¸´£¨·ÀÖ¹ÖĞÍ¾±»´òËÀ£©
+	// åªæœ‰å½“å‰è¿˜æ˜¯çœ©æ™•çŠ¶æ€æ‰æ¢å¤ï¼ˆé˜²æ­¢ä¸­é€”è¢«æ‰“æ­»ï¼‰
 	if (CurrentState == ECharacterState::Stunned)
 	{
 		SetState(ECharacterState::Idle);

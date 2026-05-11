@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "GameHUDWidget.h"
@@ -14,7 +14,7 @@ void UGameHUDWidget::InitializeWidget(UAttributeComponent* NewAttributeComp,USpr
 	{
 		AttributeCompRef = NewAttributeComp;
 
-		//°ó¶¨Î¯ÍÐ
+		//ç»‘å®šå§”æ‰˜
 		NewAttributeComp->OnHealthChanged.AddDynamic(this, &UGameHUDWidget::OnHealthUpdate);
 
 

@@ -14,6 +14,14 @@ class UAnimInstance;
 class UAttributeComponent;
 class USprintComponent;
 
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	Idle            UMETA(DisplayName = "空闲"),
+	Attacking       UMETA(DisplayName = "轻击连招中"),
+	Charging        UMETA(DisplayName = "蓄力中"),
+	HeavyAttacking  UMETA(DisplayName = "重击释放中")
+};
 USTRUCT(BlueprintType)
 struct FAttackHitPayload
 {
@@ -28,6 +36,7 @@ struct FAttackHitPayload
     UPROPERTY(BlueprintReadWrite, Category = "Combat|Hit")
     FVector DamageImpulse = FVector::ZeroVector;
 };
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttackHitSignature, FAttackHitPayload, HitData);
 // 传递连击数变化
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnComboCountChangedSignature, int32, NewComboCount);
@@ -73,27 +82,49 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void CheckCombo();
 
-	//检查蓄力按键是否持续按住，决定循环或释放
-	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void CheckChargedAttack();
+    // 蓝图 Enhanced Input 的 Started 或 Triggered 引脚调用此函数
+    UFUNCTION(BlueprintCallable, Category = "Combat")
+    void BeginOrUpdateChargedAttack();
+
+    // 蓝图 Enhanced Input 的 Completed 或 Canceled 引脚调用此函数
+    UFUNCTION(BlueprintCallable, Category = "Combat")
+    void ReleaseChargedAttack();
+    
+    UFUNCTION(BlueprintCallable, Category = "Combat")
+    void RequestLightAttack();
+	
+	
+	UFUNCTION(BlueprintCallable, Category = "Combat|Tags")
+	bool HasCombatTag(FGameplayTag TagToCheck) const
+	{
+		// 真正调用底层容器的 HasTag 函数！
+		return ActiveTags.HasTag(TagToCheck);
+	}
+	
 	
 	// 3. 触发函数 (Trigger Function) - 可选，用于封装 Broadcast
 	// 范式：Broadcast + [事件名] 或 Notify + [事件名]
 	void BroadcastComboChange(int32 NewCount);
+	
+	
+	// 只需要这两个绑定函数
+	void Input_AttackStarted();
+	void Input_AttackCompleted();
 
 
 private:
 
-    // EscapeCombatComponent.h
+    
 
     UFUNCTION()
     void HandleAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
     UPROPERTY(Transient)
     int32 ComboCount = 0;
-
+	
+	//
     UPROPERTY(Transient)
-    float CachedAttackInputTime = 0.0f;
+	bool bHasSavedComboInput = false;
 
     UPROPERTY(Transient)
 	FGameplayTag CurrentActionTag;
@@ -112,6 +143,13 @@ private:
 
     UPROPERTY(Transient)
     TObjectPtr<USprintComponent>SprintComp;
+	
+	UPROPERTY(Transient)
+	TObjectPtr<UAnimMontage> CurrentPlayingMontage;
+	
+	// 增加一个定时器句柄，用来记录按下的时间
+	UPROPERTY(Transient)
+	FTimerHandle InputBufferTimer;
 
 
 

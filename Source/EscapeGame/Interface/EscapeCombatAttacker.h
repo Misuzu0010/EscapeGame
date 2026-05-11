@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -22,21 +22,21 @@ class ESCAPEGAME_API IEscapeCombatAttacker
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-    /** * »ñÈ¡¹¥»÷ÕßµÄ»ù´¡ÉËº¦
-     * ÓÃÓÚÊÜ»÷·½ÔÚ¼ÆËã×îÖÕÉËº¦Ç°½øĞĞ¶ş´ÎĞŞÕı£¨±ÈÈçÄ³Ğ©¹Ö¶ÔÌØ¶¨¹¥»÷ÕßÓĞ·ÀÓù¼Ó³É£©
+    /** * è·å–æ”»å‡»è€…çš„åŸºç¡€ä¼¤å®³
+     * ç”¨äºå—å‡»æ–¹åœ¨è®¡ç®—æœ€ç»ˆä¼¤å®³å‰è¿›è¡ŒäºŒæ¬¡ä¿®æ­£ï¼ˆæ¯”å¦‚æŸäº›æ€ªå¯¹ç‰¹å®šæ”»å‡»è€…æœ‰é˜²å¾¡åŠ æˆï¼‰
      */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat|Attacker")
     float GetBaseDamage() const;
 
-    /** * »ñÈ¡µ±Ç°µÄÁ¬»÷Êı
-     * ÊÜ»÷·½¿ÉÒÔ¸ù¾İÄãµÄÁ¬»÷Êı²¥·Å²»Í¬µÄÊÜ»÷¶¯»­£¨±ÈÈçµÚ3¶Î¹¥»÷´¥·¢´ó»÷ÍË£©
+    /** * è·å–å½“å‰çš„è¿å‡»æ•°
+     * å—å‡»æ–¹å¯ä»¥æ ¹æ®ä½ çš„è¿å‡»æ•°æ’­æ”¾ä¸åŒçš„å—å‡»åŠ¨ç”»ï¼ˆæ¯”å¦‚ç¬¬3æ®µæ”»å‡»è§¦å‘å¤§å‡»é€€ï¼‰
      */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat|Attacker")
     int32 GetCurrentComboCount() const;
 
-    /** * ÃüÖĞ·´À¡Í¨Öª
-     * µ± Damageable È·Êµ¿ÛÑªºó£¬·´Ïòµ÷ÓÃ´Ëº¯Êı¡£
-     * ÕâÊÇÄã´¥·¢¡°¿¨Èâ¶ÙÖ¡£¨HitStop£©¡±»ò¡°ÎüÑªĞ§¹û¡±µÄ×î¼ÑÊ±»ú£¡
+    /** * å‘½ä¸­åé¦ˆé€šçŸ¥
+     * å½“ Damageable ç¡®å®æ‰£è¡€åï¼Œåå‘è°ƒç”¨æ­¤å‡½æ•°ã€‚
+     * è¿™æ˜¯ä½ è§¦å‘â€œå¡è‚‰é¡¿å¸§ï¼ˆHitStopï¼‰â€æˆ–â€œå¸è¡€æ•ˆæœâ€çš„æœ€ä½³æ—¶æœºï¼
      */
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat|Attacker")
     void NotifyHitConfirmed(AActor* HitTarget, const FHitResult& HitResult);

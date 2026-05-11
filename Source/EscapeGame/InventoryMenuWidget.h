@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -10,7 +10,7 @@
  * 
  */
 
-class UWrapBox; // ×Ô¶¯»»ĞĞµÄÈİÆ÷£¬×îÊÊºÏ×öÍø¸ñ±³°ü
+class UWrapBox; // è‡ªåŠ¨æ¢è¡Œçš„å®¹å™¨ï¼Œæœ€é€‚åˆåšç½‘æ ¼èƒŒåŒ…
 class UInventoryComponent;
 class UInventorySlotWidget;
 
@@ -27,7 +27,7 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	UWrapBox* ItemGrid;
 
-	//ÅäÖÃÏî UIÀà
+	//é…ç½®é¡¹ UIç±»
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	TSubclassOf<UInventorySlotWidget>SlotWidgetClass;
 

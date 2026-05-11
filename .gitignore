@@ -39,6 +39,7 @@ Thumbs.db
 *~
 *.tmp
 *.temp
+*.md
 
 # UE4/UE5 specific
 *.opensdf

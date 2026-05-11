@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -26,11 +26,11 @@ public:
 	bool Interact(APawn* InstigatorPawn);
 
 
-    // ¼ì²éÊÇ·ñ¿É½»»¥
+    // æ£€æŸ¥æ˜¯å¦å¯äº¤äº’
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
     bool CanInteract(AActor* Interactor) const;
 
-    // »ñÈ¡½»»¥ÏÔÊ¾ÎÄ±¾
+    // è·å–äº¤äº’æ˜¾ç¤ºæ–‡æœ¬
     UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
     FText GetInteractText(AActor* Interactor) const;
 

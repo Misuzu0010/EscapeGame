@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -19,13 +19,13 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	//»ù´¡È«¾Ö·çÁ¦
+	//åŸºç¡€å…¨å±€é£åŠ›
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wind|Settings")
 	FVector BasicGlobalWind;
-	//½ÇÉ«ÒÆ¶¯¶Ô·çµÄÓ°Ïì³Ì¶È£¨¸ºÊı±íÊ¾Ó­·ç£¬ÕıÊı±íÊ¾Ë³·ç£©
+	//è§’è‰²ç§»åŠ¨å¯¹é£çš„å½±å“ç¨‹åº¦ï¼ˆè´Ÿæ•°è¡¨ç¤ºè¿é£ï¼Œæ­£æ•°è¡¨ç¤ºé¡ºé£ï¼‰
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wind|Settings")
 	float MovementWindScale;
-	//·çÁ¦±ä»¯µÄ²åÖµËÙ¶È£¬ÊıÖµÔ½´ó±ä»¯Ô½¿ì£¬ÊıÖµÔ½Ğ¡±ä»¯Ô½Æ½»¬
+	//é£åŠ›å˜åŒ–çš„æ’å€¼é€Ÿåº¦ï¼Œæ•°å€¼è¶Šå¤§å˜åŒ–è¶Šå¿«ï¼Œæ•°å€¼è¶Šå°å˜åŒ–è¶Šå¹³æ»‘
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wind|Settings")
 	float WindInterpSpeed;
 
@@ -35,23 +35,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Wind|Settings")
 	float CurvePlayRate;
 
-	// ÒÆ¶¯·çÁ¦¿ØÖÆ
+	// ç§»åŠ¨é£åŠ›æ§åˆ¶
 	UPROPERTY(EditAnywhere, Category = "Wind|Settings")
-	float MaxVelocityWindForce;// ¡¾ĞÂÔö¡¿ÎŞÂÛÅÜ¶à¿ì£¬ÏòºóµÄ·çÁ¦¾ø²»ÄÜ³¬¹ıÕâ¸öÖµ£¡
+	float MaxVelocityWindForce;// ã€æ–°å¢ã€‘æ— è®ºè·‘å¤šå¿«ï¼Œå‘åçš„é£åŠ›ç»ä¸èƒ½è¶…è¿‡è¿™ä¸ªå€¼ï¼
 
-	// ÔëÉù¸üĞÂÆµÂÊ£º¶à¾Ã¼ÆËãÒ»´Î°ØÁÖÔëÉù£¨ÀıÈç 0.05 ±íÊ¾Ã¿Ãë20´Î£©
+	// å™ªå£°æ›´æ–°é¢‘ç‡ï¼šå¤šä¹…è®¡ç®—ä¸€æ¬¡æŸæ—å™ªå£°ï¼ˆä¾‹å¦‚ 0.05 è¡¨ç¤ºæ¯ç§’20æ¬¡ï¼‰
 	UPROPERTY(EditDefaultsOnly, Category = "Wind|Optimization")
 	float NoiseUpdateInterval;
 
-	// ¿Õ¼äËõ·Å£º¾ö¶¨²»Í¬Î»ÖÃ·çÁ¦µÄ²îÒì³Ì¶È£¨ÖµÔ½Ğ¡£¬´ó·¶Î§ÄÚµÄ·çÏòÔ½Ò»ÖÂ£©
+	// ç©ºé—´ç¼©æ”¾ï¼šå†³å®šä¸åŒä½ç½®é£åŠ›çš„å·®å¼‚ç¨‹åº¦ï¼ˆå€¼è¶Šå°ï¼Œå¤§èŒƒå›´å†…çš„é£å‘è¶Šä¸€è‡´ï¼‰
 	UPROPERTY(EditAnywhere, Category = "Wind|Noise")
 	float NoiseSpatialScale;
 
-	// Ê±¼äËõ·Å£º¾ö¶¨·çÁ¦ËæÊ±¼ä±ä»¯µÄËÙ¶È
+	// æ—¶é—´ç¼©æ”¾ï¼šå†³å®šé£åŠ›éšæ—¶é—´å˜åŒ–çš„é€Ÿåº¦
 	UPROPERTY(EditAnywhere, Category = "Wind|Noise")
 	float NoiseTimeScale;
 
-	// ÔëÉùÇ¿¶È£ºÈÅ¶¯·çÁ¦µÄ×î´ó·ù¶È
+	// å™ªå£°å¼ºåº¦ï¼šæ‰°åŠ¨é£åŠ›çš„æœ€å¤§å¹…åº¦
 	UPROPERTY(EditAnywhere, Category = "Wind|Noise")
 	float NoiseIntensity;
 

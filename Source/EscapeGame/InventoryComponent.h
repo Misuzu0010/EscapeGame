@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -33,20 +33,20 @@ public:
 	FOnInventoryUpdated OnInventoryUpdated;
 
 	/**
-	 * Ìí¼ÓÎïÆ·µ½±³°ü (×î¸´ÔÓµÄÂß¼­¶¼ÔÚÕâÀï£¡)
-	 * @param InItemData - ÒªÌí¼ÓµÄÎïÆ·	Êı¾İ
-	 * @param InCount - Ìí¼Ó¶àÉÙ¸ö£¿
-	 * @return Ê£ÏÂµÄÃ»´æÏÂµÄÊıÁ¿ (0±íÊ¾È«´æ½øÈ¥ÁË)
+	 * æ·»åŠ ç‰©å“åˆ°èƒŒåŒ… (æœ€å¤æ‚çš„é€»è¾‘éƒ½åœ¨è¿™é‡Œï¼)
+	 * @param InItemData - è¦æ·»åŠ çš„ç‰©å“	æ•°æ®
+	 * @param InCount - æ·»åŠ å¤šå°‘ä¸ªï¼Ÿ
+	 * @return å‰©ä¸‹çš„æ²¡å­˜ä¸‹çš„æ•°é‡ (0è¡¨ç¤ºå…¨å­˜è¿›å»äº†)
 	 */
-	//ÒıÓÃ´«µİ ±ÜÃâ¿½±´¿ªÏú
-	//Ïàµ±ÓÚÖ±½ÓÕÒµ½¶ÔÓ¦µÄÄÚ´æµØÖ·
+	//å¼•ç”¨ä¼ é€’ é¿å…æ‹·è´å¼€é”€
+	//ç›¸å½“äºç›´æ¥æ‰¾åˆ°å¯¹åº”çš„å†…å­˜åœ°å€
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 AddItem(const FItemData &InItemData, int32 InCount);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void RemoveItem(const FItemData &InItemData, int32 InCount);
 
-	// ¸¨Öú£º»ñÈ¡ÎïÆ·ÊıÁ¿
+	// è¾…åŠ©ï¼šè·å–ç‰©å“æ•°é‡
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	int32 GetTotalCountOfItem(FName ItemID);
 	
@@ -56,11 +56,11 @@ public:
 	/*UPROPERTY(BlueprintReadWrite,Category="Inventory")
 	TMap<FGameplayTag, double>LastUseTime;*/
 
-	// ±³°üÈİÁ¿ (±ÈÈç 20 ¸ñ)
+	// èƒŒåŒ…å®¹é‡ (æ¯”å¦‚ 20 æ ¼)
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	int32 InventoryCapacity = 30;
 
-	// ?? ºËĞÄ¹¦ÄÜ£º½»»»Á½¸ö¸ñ×ÓµÄÎïÆ·
+	// ?? æ ¸å¿ƒåŠŸèƒ½ï¼šäº¤æ¢ä¸¤ä¸ªæ ¼å­çš„ç‰©å“
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SwapSlots(int32 IndexA, int32 IndexB);
 

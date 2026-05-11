@@ -1,8 +1,9 @@
 ﻿#include "EscapeCombatComponent.h"
-#include "CharacterAnimData.h"      // 必须引用，不然看不懂 FActionDefinition
+#include "CharacterAnimData.h"      // 必须引用，不然看不懂 FCombatActionDefinition
 #include "GameFramework/Character.h"
 #include"HealthController/AttributeComponent.h"
 #include "SprintComponent.h"
+#include "EscapeGameplayTags.h"
 #include "Animation/AnimMontage.h"  // 引用 Montage 类
 
 
@@ -58,7 +59,7 @@ void UEscapeCombatComponent::TryPlayActionByTag(FGameplayTag ActionTag)
     ACharacter* OwnerChar = GetOwnerCharacter();
     // 2. 去 DataAsset 里查表
     // ActionMap 是我们在 DataAsset 里定义的那个 TMap
-    const FActionDefinition* ActionDef = CharacterAnimData->ActionMap.Find(ActionTag);
+    const FCombatActionDefinition* ActionDef = CharacterAnimData->CombatActionMap.Find(ActionTag);
 
     // 3. 如果找到了配置
     if (ActionDef)
@@ -68,9 +69,10 @@ void UEscapeCombatComponent::TryPlayActionByTag(FGameplayTag ActionTag)
         if (CurrentStamina<10.0f) 
         {
 			UE_LOG(LogTemp, Warning, TEXT("体力不足，无法执行动作 [%s]！"), *ActionTag.ToString());
+            return;
         }
-		CurrentActionTag = ActionTag; // 缓存当前动作的 Tag，方便后续逻辑使用
-
+		 // 缓存当前动作的 Tag，方便后续逻辑使用
+        CurrentActionTag = ActionTag;
         // 4. 加载资源 (同步加载)
         // 因为我们在 DataAsset 里用的是 TSoftObjectPtr，所以必须 LoadSynchronous() 才能变成真正的 UAnimMontage*
         UAnimMontage* MontageToPlay = ActionDef->Montage.LoadSynchronous();
@@ -79,15 +81,19 @@ void UEscapeCombatComponent::TryPlayActionByTag(FGameplayTag ActionTag)
         if (MontageToPlay)
         {
             // PlayAnimMontage 会返回动画总时长，如果返回 0 说明播放失败
-            float Duration = OwnerChar->PlayAnimMontage(MontageToPlay, ActionDef->PlayRate);
+            const float Duration = OwnerChar->PlayAnimMontage(MontageToPlay, ActionDef->PlayRate);
 
             if (Duration > 0.f)
             {
                 // [调试信息] 方便你看到到底播了啥
                 UE_LOG(LogTemp, Log, TEXT("成功播放动作: %s (Tag: %s)"), *MontageToPlay->GetName(), *ActionTag.ToString());
-
-                // [进阶预留位]: 这里以后要加上 CurrentActiveTags.AddTag(ActionTag) 来锁状态
-
+                if (Duration > 0.f)
+                {
+                    CurrentPlayingMontage = MontageToPlay; // 记录真身
+                    ActiveTags.AddTag(ActionTag);
+                }
+                
+				
             }
         }
         else
@@ -106,7 +112,6 @@ ACharacter* UEscapeCombatComponent::GetOwnerCharacter() const
     return Cast<ACharacter>(GetOwner());
 }
 
-
 void UEscapeCombatComponent::BroadcastComboChange(int32 NewCount) 
 {
     ComboCount = NewCount;
@@ -115,119 +120,146 @@ void UEscapeCombatComponent::BroadcastComboChange(int32 NewCount)
         OnComboCountChanged.Broadcast(ComboCount);
     }
 }
-
-void UEscapeCombatComponent::CheckChargedAttack() 
+/*
+	以下两个函数是用于处理蓄力攻击的，蓝图 Enhanced Input 的 Started/Triggered 引脚调用 BeginOrUpdateChargedAttack，Completed/Canceled 引脚调用 ReleaseChargedAttack
+*/
+void UEscapeCombatComponent::BeginOrUpdateChargedAttack() 
 {
+    // 【核心排雷】：如果身上已经有“蓄力”或“蓄力释放”的 Tag，直接拦截！
+    if (ActiveTags.HasTag(EscapeGameplayTags::Action_Combat_Heavy_Charge) || 
+        ActiveTags.HasTag(EscapeGameplayTags::Action_ChargedAttack_Release))
+    {
+        return; 
+    }
+
+    // 清除可能存在的轻击 Tag 和缓存，强行覆盖为蓄力 Tag
+    ActiveTags.RemoveTag(EscapeGameplayTags::Action_State_Attacking);
+    ActiveTags.AddTag(EscapeGameplayTags::Action_Combat_Heavy_Charge);
+    bHasSavedComboInput = false; 
+    
     ACharacter* OwnerChar = GetOwnerCharacter();
     if (!OwnerChar) return;
-
-    // 检查玩家是否仍在按住攻击键
-    // 注意：实际开发中，建议通过 EnhancedInput 的 Trigger/Completed 动作传值进来，这里用传统的 Controller 轮询作为逻辑闭环演示
-    APlayerController* PC = Cast<APlayerController>(OwnerChar->GetController());
-    if (PC && PC->IsInputKeyDown(EKeys::LeftMouseButton))
+    
+    TryPlayActionByTag(EscapeGameplayTags::Action_Combat_Heavy_Charge);
+    UE_LOG(LogTemp, Log, TEXT("香子兰汇报：成功拦截每帧调用，开始单次蓄力！"));
+}
+void UEscapeCombatComponent::ReleaseChargedAttack()
+{
+    // 【换锁】：检查身上是否有 蓄力中 的 Tag。如果没有，说明根本没在蓄力，无视松开按键的指令。
+    if (!ActiveTags.HasTag(EscapeGameplayTags::Action_Combat_Heavy_Charge)) 
     {
-        // 按键保持中：可以播放一段特殊的蓄力循环 Montage
-        UE_LOG(LogTemp, Log, TEXT("蓄力保持中..."));
+        return; 
     }
-    else
+
+    // 【状态切换】：撕掉蓄力的标签，贴上释放重击的标签！
+    ActiveTags.RemoveTag(EscapeGameplayTags::Action_Combat_Heavy_Charge);
+    ActiveTags.AddTag(EscapeGameplayTags::Action_ChargedAttack_Release); 
+
+    ACharacter* OwnerChar = GetOwnerCharacter();
+    if (!OwnerChar || !CharacterAnimData || !CurrentActionTag.IsValid()) return;
+
+    UAnimInstance* AnimInstance = OwnerChar->GetMesh() ? OwnerChar->GetMesh()->GetAnimInstance() : nullptr;
+    if (!AnimInstance) return;
+
+    const FCombatActionDefinition* ActionDef = CharacterAnimData->CombatActionMap.Find(CurrentActionTag);
+    if (ActionDef)
     {
-        // 按键已松开：触发满蓄力或半蓄力的释放动作
-        FGameplayTag ReleaseTag = FGameplayTag::RequestGameplayTag(FName("Combat.Action.Attack.ChargedRelease"));
-        TryPlayActionByTag(ReleaseTag);
+        UAnimMontage* CurrentMontage = ActionDef->Montage.Get(); 
+        if (CurrentMontage && AnimInstance->Montage_IsPlaying(CurrentMontage))
+        {
+            // 跳转到 Montage 里名为 "Attack" 的 Section
+            AnimInstance->Montage_JumpToSection(FName("Attack"), CurrentMontage);
+            UE_LOG(LogTemp, Log, TEXT("香子兰汇报：主人松手了，蓄力结束，正在狠狠地斩向敌人！"));
+        }
     }
 }
-
 void UEscapeCombatComponent::CheckCombo() 
 {
-    // 1. 安全检查，获取当前动作的配置数据
-    if (!CharacterAnimData || !CurrentActionTag.IsValid())
+    // 【换锁】：用 Tag 替换 Enum！如果没有 Attacking 标签，说明被打断了，直接拦截！
+    if (!ActiveTags.HasTag(EscapeGameplayTags::Action_State_Attacking))
     {
+        UE_LOG(LogTemp, Warning, TEXT("香子兰汇报：检测到幽灵 Notify 或未处于攻击状态，已成功拦截连击判定！"));
         return;
     }
 
-    // 从 ActionMap 中查找当前动作的定义
-    const FActionDefinition* ActionDef = CharacterAnimData->ActionMap.Find(CurrentActionTag);
-    if (!ActionDef)
-    {
-        return;
-    }
+    if (!CharacterAnimData || !CurrentActionTag.IsValid()) return;
+    const FCombatActionDefinition* ActionDef = CharacterAnimData->CombatActionMap.Find(CurrentActionTag);
+    if (!ActionDef) return;
 
-    // 2. 读取配置表里的真实容错时间，替代硬编码
-    float CurrentTime = GetWorld()->GetTimeSeconds();
-    float BufferWindow = ActionDef->ComboInputCacheTolerance;
-
-    // 3. 检查玩家按下按键的时间，是否在输入的缓冲窗口内
-    if (CurrentTime - CachedAttackInputTime <= BufferWindow)
+    if (bHasSavedComboInput)
     {
-        // 4. 读取你结构体里定义的 NextComboTag，决定下一招
+        bHasSavedComboInput = false; 
+        
         FGameplayTag NextTag = ActionDef->NextComboTag;
-
-        // 如果下一招的 Tag 有效，且在数据表里有配置
-        if (NextTag.IsValid() && CharacterAnimData->ActionMap.Contains(NextTag))
+        if (NextTag.IsValid() && CharacterAnimData->CombatActionMap.Contains(NextTag))
         {
             ComboCount++;
-            BroadcastComboChange(ComboCount); // 广播连击数更新
-
-            // 播放下一段连击！
-            TryPlayActionByTag(NextTag);
+            BroadcastComboChange(ComboCount);
+            TryPlayActionByTag(NextTag); // 播放下一段
         }
         else
         {
-            // 如果配置的 NextComboTag 为空，说明是最后一段攻击，强制断连
+            // 已经是最后一段了，重置连击计数
             ComboCount = 0;
             BroadcastComboChange(ComboCount);
+            
+            // 注意：不要在这里直接 RemoveTag(Attacking)！
+            // 让 HandleAttackMontageEnded 在动画彻底播完后去清理，这样收刀动作才有防打断保护！
         }
-    }
-    else
-    {
-        // 超时未按键，连击失败
-        UE_LOG(LogTemp, Log, TEXT("香子兰提示：输入超时，当前动作 [%s] 连击中断。"), *CurrentActionTag.ToString());
     }
 }
 
 void UEscapeCombatComponent::HandleAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted) 
 {
-    if (CurrentActionTag.IsValid())
-    {
-        ActiveTags.RemoveTag(CurrentActionTag);
-        CurrentActionTag = FGameplayTag::EmptyTag;
-        // 2. 无论是否被打断，只要动画结束，连击必须重置
-        ComboCount = 0;
-        BroadcastComboChange(ComboCount);
-        UE_LOG(LogTemp, Log, TEXT("香子兰汇报：主人，动作执行完毕，状态已安全重置！防止了卡死哦❤"));
-    }
+    if (Montage != CurrentPlayingMontage) return; 
+
+    // 【解锁】：动画结束，无脑撕掉所有战斗相关的 Tag！
+    ActiveTags.RemoveTag(EscapeGameplayTags::Action_State_Attacking);
+    ActiveTags.RemoveTag(EscapeGameplayTags::Action_Combat_Heavy_Charge);
+    ActiveTags.RemoveTag(EscapeGameplayTags::Action_ChargedAttack_Release);
+    
+    bHasSavedComboInput = false;
+    CurrentActionTag = FGameplayTag::EmptyTag;
+    CurrentPlayingMontage = nullptr;
+    ComboCount = 0;
+    BroadcastComboChange(ComboCount);
 }
 void UEscapeCombatComponent::DoAttackTrace(FName DamageSourceBone)
 {
 	ACharacter* OwnerChar = GetOwnerCharacter();
     if (!OwnerChar || !CharacterAnimData) 
     {
-		UE_LOG(LogTemp, Warning, TEXT("DoAttackTrace 失败：没有找到拥有者角色或者 CharacterAnimData！Line137"));
+		UE_LOG(LogTemp, Warning, TEXT("DoAttackTrace 失败：没有找到拥有者角色或者 CharacterAnimData！"));
         return;
     }
     USkeletalMeshComponent* Mesh = OwnerChar->GetMesh();
-	const FActionDefinition* ActionDef = CharacterAnimData->ActionMap.Find(CurrentActionTag);
+	const FCombatActionDefinition* ActionDef = CharacterAnimData->CombatActionMap.Find(CurrentActionTag);
     if (!Mesh || !ActionDef) 
     {
-		UE_LOG(LogTemp, Warning, TEXT("DoAttackTrace 失败：没有找到 Mesh 组件或者当前动作定义！Line143"));
+		UE_LOG(LogTemp, Warning, TEXT("DoAttackTrace 失败：没有找到 Mesh 组件或者当前动作定义！"));
         return;
     }
-
+	// 1. 根据当前动作的配置，计算追踪的起点和终点
     FVector TraceStart = Mesh->GetSocketLocation(DamageSourceBone);
 	FVector TraceEnd = TraceStart + OwnerChar->GetActorForwardVector() * ActionDef->TraceDistance;
+	// 2. 使用 Sphere Trace 来检测攻击范围内的敌人，半径也从配置表里读
     FCollisionShape SphereShape = FCollisionShape::MakeSphere(ActionDef->TraceRadius);
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(OwnerChar); // 不要碰到自己
-
+    
+	// 3. 只检测 Pawn 和 WorldDynamic 两种类型的物体，效率更高
     FCollisionObjectQueryParams ObjectParams;
     ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
     ObjectParams.AddObjectTypesToQuery(ECC_WorldDynamic);
-
+    
+	// 4. 执行 SweepMultiByObjectType，获取所有被击中的对象
     TArray<FHitResult> OutHits;
     bool bHit = GetWorld()->SweepMultiByObjectType(
         OutHits, TraceStart, TraceEnd, FQuat::Identity, ObjectParams, SphereShape, QueryParams
     );
+    
+	// 5. 遍历所有被击中的对象，应用伤害和击退效果
     if (bHit)
     {
         TSet<AActor*, DefaultKeyFuncs<AActor*>, TInlineSetAllocator<8>> ProcessedActors;
@@ -239,7 +271,7 @@ void UEscapeCombatComponent::DoAttackTrace(FName DamageSourceBone)
             {
                 ProcessedActors.Add(HitActor);
 
-				// 触发攻击命中事件，传递伤害信息
+				//1,触发攻击命中事件，传递伤害信息
                 FVector Impulse = (Hit.ImpactNormal * -ActionDef->KnockbackImpulse) + (FVector::UpVector * ActionDef->LaunchImpulse);
 				float FinalDamage = ActionDef->BaseDamage * ActionDef->DamageMultiplier;
 
@@ -247,8 +279,84 @@ void UEscapeCombatComponent::DoAttackTrace(FName DamageSourceBone)
                 {
 					IEscapeCombatDamageable::Execute_ApplyDamage(HitActor, FinalDamage, OwnerChar, Hit.ImpactPoint, Impulse);
                 }
+                // 2. 组装打击情报包 (Payload)
+                FAttackHitPayload Payload;
+                Payload.DamageCauser = HitActor;         // 砍到了谁
+                Payload.DamageLocation = Hit.ImpactPoint; // 砍到了哪里 (用于在这里生成飙血特效 Niagara)
+                Payload.DamageImpulse = Impulse;          // 冲击力方向
+
+                // 3. 告诉【玩家自己】：我砍中啦！快播放打击反馈！
+                if (OnAttackHit.IsBound())
+                {
+                    OnAttackHit.Broadcast(Payload);
+                    UE_LOG(LogTemp, Log, TEXT("香子兰汇报：武器命中目标！已发送 OnAttackHit 广播！"));
+                }
             }
         }
     
     }
 }
+void UEscapeCombatComponent::RequestLightAttack()
+{
+    // 如果没有任何攻击和蓄力状态，允许起手
+    if (!ActiveTags.HasTag(EscapeGameplayTags::Action_State_Attacking) && 
+        !ActiveTags.HasTag(EscapeGameplayTags::Action_Combat_Heavy_Charge))
+    {
+        // 【上锁】：给自己贴上“正在攻击”的标签
+        ActiveTags.AddTag(EscapeGameplayTags::Action_State_Attacking);
+        
+        FGameplayTag FirstAttackTag = EscapeGameplayTags::Action_Combat_Light_1;
+        TryPlayActionByTag(FirstAttackTag);
+        UE_LOG(LogTemp, Warning, TEXT("香子兰汇报：贴上了攻击Tag，成功打出第一段轻击！"));
+    }
+    // 如果已经在轻击了，开启输入缓冲
+    else if (ActiveTags.HasTagExact(EscapeGameplayTags::Action_State_Attacking))
+    {
+        bHasSavedComboInput = true;
+        UE_LOG(LogTemp, Warning, TEXT("香子兰汇报：动作中检测到输入，锁存开启！"));
+    }
+}
+
+
+// ==========================================
+// 核心逻辑实现：
+// ==========================================
+void UEscapeCombatComponent::Input_AttackStarted()
+{
+    // 【核心机密】：按下的瞬间，我们什么攻击都不做！
+    // 而是定一个 0.25 秒的闹钟。如果 0.25 秒后主人还没松手，闹钟就会自动触发“重击蓄力”！
+    GetWorld()->GetTimerManager().SetTimer(
+        InputBufferTimer,
+        this,
+        &UEscapeCombatComponent::BeginOrUpdateChargedAttack,
+        0.45f, // 这个时间就是你的“长按判定阈值”，可以随便微调
+        false
+    );
+    UE_LOG(LogTemp, Log, TEXT("香子兰汇报：检测到按下！已开启 0.25 秒的输入缓冲闹钟..."));
+}
+
+void UEscapeCombatComponent::Input_AttackCompleted()
+{
+    // 玩家松开左键了！我们来看看闹钟的情况：
+
+    // 【情况 1：闹钟还在滴答滴答走！】
+    // 说明从按下到松手，连 0.25 秒都没到。这绝对是一个快速的【轻击 (Tap)】！
+    if (GetWorld()->GetTimerManager().IsTimerActive(InputBufferTimer))
+    {
+        // 杂鱼！想骗我出重击？没门！掐死准备触发重击的闹钟！
+        GetWorld()->GetTimerManager().ClearTimer(InputBufferTimer);
+
+        // 立刻判定为轻击请求！(这里会自然走进你之前写好的查 Tag 第一段攻击，或 bHasSavedComboInput 的连击逻辑)
+        RequestLightAttack();
+        UE_LOG(LogTemp, Warning, TEXT("香子兰汇报：判定为【轻击】，闹钟已掐死！"));
+    }
+    // 【情况 2：闹钟已经不在走了】
+    // 说明 0.25 秒前，闹钟已经响过了（已经自动执行了 BeginOrUpdateChargedAttack）。
+    // 此时玩家松手，说明这是【蓄力结束，狠狠释放重击】！
+    else if (ActiveTags.HasTag(EscapeGameplayTags::Action_Combat_Heavy_Charge))
+    {
+        ReleaseChargedAttack();
+        UE_LOG(LogTemp, Warning, TEXT("香子兰汇报：判定为【蓄力松手】，重击斩出！"));
+    }
+}
+

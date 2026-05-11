@@ -1,11 +1,11 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+ï»¿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "statemachine/StateMachineComponent.h"  // °üº¬Ã¶¾ÙºÍ×é¼şÀà
-#include "SprintComponent.h"                      // °üº¬³å´Ì×é¼ş
+#include "statemachine/StateMachineComponent.h"  // åŒ…å«æšä¸¾å’Œç»„ä»¶ç±»
+#include "SprintComponent.h"                      // åŒ…å«å†²åˆºç»„ä»¶
 #include "InventoryComponent.h"
 #include "Logging/LogMacros.h"
 #include"InterectComponent.h"
@@ -15,6 +15,7 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class UEscapeCombatComponent;
 class UInputAction;
 struct FInputActionValue;
 
@@ -55,49 +56,52 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
-	// ÏÂ¶×ÊäÈë¶¯×÷ ctrl
+	// ä¸‹è¹²è¾“å…¥åŠ¨ä½œ ctrl
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* CrouchAction;
 
-	// 1. ÊäÈë¶¯×÷£º°´ I ¼ü
+	// 1. è¾“å…¥åŠ¨ä½œï¼šæŒ‰ I é”®
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* InventoryAction;
 
-	// 2. ¼ñÆğÎïÆ·/½»»¥¼ü£º°´ E ¼ü
+	// 2. æ¡èµ·ç‰©å“/äº¤äº’é”®ï¼šæŒ‰ E é”®
 	UPROPERTY(EditAnywhere,Category="Input")
 	UInputAction* InteractAction;
 
-	// ÇĞ»»ÊÓ½Ç
+	// åˆ‡æ¢è§†è§’
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* ToggleCameraAction;
 
-	// Ê¹ÓÃÎïÆ·
+	UPROPERTY(EditAnywhere,  Category = "Input")
+	UInputAction* AttackAction;
+
+	// ä½¿ç”¨ç‰©å“
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* UseItemAction;
 
-	// ¶ªÆúÎïÆ·
+	// ä¸¢å¼ƒç‰©å“
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* DropItemAction;
 
-	// ×°±¸ÎïÆ·
+	// è£…å¤‡ç‰©å“
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* EquipItemAction;
 
-	// È¡Ïû×°±¸ÎïÆ·
+	// å–æ¶ˆè£…å¤‡ç‰©å“
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* UnequipItemAction;
 
-	//escÔİÍ£ÓÎÏ·
+	//escæš‚åœæ¸¸æˆ
 	UPROPERTY(EditAnywhere,Category="Input")
 	UInputAction* PauseAction;
 	
 	
 
 public:
-	// ... ÆäËûÊäÈë±äÁ¿ ...
+	// ... å…¶ä»–è¾“å…¥å˜é‡ ...
 	int32 CurrentSelectedSlotIndex = 0;
 
-	/** ÉùÃ÷³å´ÌµÄÊäÈë¶¯×÷²å²Û */
+	/** å£°æ˜å†²åˆºçš„è¾“å…¥åŠ¨ä½œæ’æ§½ */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* SprintAction;
 
@@ -148,8 +152,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void StopCrouch();
+	
+	
 
-	// ×¢Òâ£ºÕâÀïÖ»ÊÇÉùÃ÷¡°ÎÒÓĞ¸ö±³°ü¡±£¬±³°üÀï¾ßÌåÓĞÉ¶£¬ÕâÀï²»¹Ü
+	// æ³¨æ„ï¼šè¿™é‡Œåªæ˜¯å£°æ˜â€œæˆ‘æœ‰ä¸ªèƒŒåŒ…â€ï¼ŒèƒŒåŒ…é‡Œå…·ä½“æœ‰å•¥ï¼Œè¿™é‡Œä¸ç®¡
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStateMachineComponent* StateMachineComp;
 
@@ -167,6 +173,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Component")
 	UInterectComponent* InteractComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
+	UEscapeCombatComponent* EscapeCombatComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf < class UUserWidget > HUDWidgetClass;

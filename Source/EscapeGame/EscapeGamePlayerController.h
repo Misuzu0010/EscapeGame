@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+ï»¿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -39,7 +39,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UUserWidget> InventoryMenuClass;
 
-	// ÔËĞĞÊ±±£´æµÄÊµÀı
+	// è¿è¡Œæ—¶ä¿å­˜çš„å®ä¾‹
 	UPROPERTY()
 	UUserWidget* InventoryMenuInstance;
 
@@ -49,7 +49,7 @@ protected:
 	/** Input mapping context setup */
 	virtual void SetupInputComponent() override;
 
-	// ¸¨Öúº¯Êı£º×¨ÃÅÓÃÀ´¿ª¹Ø
+	// è¾…åŠ©å‡½æ•°ï¼šä¸“é—¨ç”¨æ¥å¼€å…³
 	void SetInventoryVisibility(bool bVisible);
 public:
 	UFUNCTION()

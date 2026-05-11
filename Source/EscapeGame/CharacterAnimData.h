@@ -1,10 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "GameplayTagContainer.h"
+#include "NiagaraSystem.h"
 #include "CharacterAnimData.generated.h"
 
 class UAnimMontage;
@@ -13,62 +14,107 @@ class UBlendSpace;
  * 
  */
 USTRUCT(BlueprintType)
-struct FActionDefinition
+struct FCombatActionDefinition
 {
 	GENERATED_BODY()
 
-	// ¶ÔÓ¦µÄ¶¯»­ÃÉÌ«Ææ (ÈíÒıÓÃ£¬ÓÅ»¯ÄÚ´æ)
+	// å¯¹åº”çš„åŠ¨ç”»è’™å¤ªå¥‡ (è½¯å¼•ç”¨ï¼Œä¼˜åŒ–å†…å­˜)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSoftObjectPtr<UAnimMontage> Montage;
 
-	// ²¥·ÅËÙÂÊ (1.0 = Õı³£ËÙ¶È)
+	// æ’­æ”¾é€Ÿç‡ (1.0 = æ­£å¸¸é€Ÿåº¦)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float PlayRate = 1.0f;
-	
+	//å°„çº¿å‘½ä¸­æ£€æµ‹è·ç¦»
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Trace")
-	float TraceDistance = 150.f;
+	float TraceDistance = 75.f;
 
-	// ×·×Ù°ë¾¶ (TraceRadius = 0 Ê±ÎªÏßĞÎ×·×Ù£¬´óÓÚ0Ê±Îª½ºÄÒĞÎ×·×Ù)
+	// è¿½è¸ªåŠå¾„ (TraceRadius = 0 æ—¶ä¸ºçº¿å½¢è¿½è¸ªï¼Œå¤§äº0æ—¶ä¸ºèƒ¶å›Šå½¢è¿½è¸ª
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Trace")
-	float TraceRadius = 40.f;
+	float TraceRadius = 60.f;
 
-	// ÉËº¦ÀàĞÍ (¿ÉÒÔÔÚÀ¶Í¼ÀïÉèÖÃ³É²»Í¬µÄ×ÓÀà£¬´¥·¢²»Í¬µÄÊÜ»÷·´Ó¦)
+	// ä¼¤å®³ç±»å‹ (å¯ä»¥åœ¨è“å›¾é‡Œè®¾ç½®æˆä¸åŒçš„å­ç±»ï¼Œè§¦å‘ä¸åŒçš„å—å‡»ååº”)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Damage")
 	float BaseDamage = 20.f;
 
-	// ÉËº¦±¶ÂÊ (×îÖÕÉËº¦ = BaseDamage * DamageMultiplier£¬¿ÉÒÔÓÃÀ´ÊµÏÖ±©»÷µÈĞ§¹û)
+	//ä¼¤å®³å€ç‡ (æœ€ç»ˆä¼¤å®³ = BaseDamage * DamageMultiplierï¼Œå¯ä»¥ç”¨æ¥å®ç°æš´å‡»ç­‰æ•ˆæœ)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Damage")
 	float DamageMultiplier = 1.0f;
 
-	// »÷ÍËÁ¦¶È (¿ÉÒÔÓÃÀ´ÊµÏÖ»÷·ÉµÈĞ§¹û£¬ÊıÖµÔ½´ó»÷ÍËÔ½Ô¶)
+	// å‡»é€€åŠ›åº¦ (å¯ä»¥ç”¨æ¥å®ç°å‡»é£ç­‰æ•ˆæœï¼Œæ•°å€¼è¶Šå¤§å‡»é€€è¶Šè¿œ)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Physics")
 	float KnockbackImpulse = 600.f;
 
-	// ·¢ÉäÁ¦¶È (¿ÉÒÔÓÃÀ´ÊµÏÖÅ×Í¶µÈĞ§¹û£¬ÊıÖµÔ½´óÅ×µÃÔ½¸ß)
+	// å‘å°„åŠ›åº¦ (å¯ä»¥ç”¨æ¥å®ç°æŠ›æŠ•ç­‰æ•ˆæœï¼Œæ•°å€¼è¶Šå¤§æŠ›å¾—è¶Šé«˜)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Physics")
 	float LaunchImpulse = 300.f;
 
-	// ¹¥»÷ÊäÈë»º´æ¿íÈİ¶È (µ¥Î»£ºÃë£¬±íÊ¾ÔÚ¹¥»÷¶¯»­µÄÄÄ¸öÊ±¼ä´°¿ÚÄÚ°´ÏÂ¹¥»÷¼ü¿ÉÒÔ´¥·¢Á¬ÕĞ)
+	// æ”»å‡»è¾“å…¥ç¼“å­˜å®¹å¿æ—¶é—´ (å•ä½ï¼šç§’ï¼Œè¡¨ç¤ºåœ¨æ”»å‡»åŠ¨ç”»çš„æŸä¸ªçª—å£æœŸå†…ï¼Œç©å®¶è¾“å…¥æ”»å‡»æŒ‡ä»¤ä¼šè¢«ç¼“å­˜å¹¶åœ¨çª—å£æœŸç»“æŸæ—¶æ‰§è¡Œ)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Input")
 	float AttackInputCacheTolerance = 1.0f;
 
-	// Á¬»÷ÊäÈë»º´æ¿íÈİ¶È (µ¥Î»£ºÃë£¬±íÊ¾ÔÚÁ¬»÷¶¯»­µÄÄÄ¸öÊ±¼ä´°¿ÚÄÚ°´ÏÂ¹¥»÷¼ü¿ÉÒÔ´¥·¢ÏÂÒ»¶ÎÁ¬ÕĞ)
+	// è¿å‡»è¾“å…¥ç¼“å­˜å®½å®¹åº¦ (å•ä½ï¼šç§’ï¼Œè¡¨ç¤ºåœ¨è¿å‡»åŠ¨ç”»çš„å“ªä¸ªæ—¶é—´çª—å£å†…æŒ‰ä¸‹æ”»å‡»é”®å¯ä»¥è§¦å‘ä¸‹ä¸€æ®µè¿æ‹›))
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Input")
 	float ComboInputCacheTolerance = 0.45f;
 
-	//Á¬»÷ÄÍÁ¦ÏûºÄ (µ¥Î»£ºµã£¬±íÊ¾Ö´ĞĞ¸Ã¹¥»÷¶¯×÷Ê±ÏûºÄµÄÄÍÁ¦Öµ£¬¿ÉÒÔÓÃÀ´ÏŞÖÆÁ¬Ğø¹¥»÷µÄ´ÎÊı»òÆµÂÊ)
+	//è¿å‡»è€åŠ›æ¶ˆè€— (å•ä½ï¼šç‚¹ï¼Œè¡¨ç¤ºæ‰§è¡Œè¯¥æ”»å‡»åŠ¨ä½œæ—¶æ¶ˆè€—çš„è€åŠ›å€¼ï¼Œå¯ä»¥ç”¨æ¥é™åˆ¶è¿ç»­æ”»å‡»çš„æ¬¡æ•°æˆ–é¢‘ç‡)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Dodge")
 	float DodgeStaminaCost = 15.f;
 
-	// ÉÁ±ÜÎŞµĞ³ÖĞøÊ±¼ä (µ¥Î»£ºÃë£¬±íÊ¾Ö´ĞĞÉÁ±Ü¶¯×÷ºó½ÇÉ«´¦ÓÚÎŞµĞ×´Ì¬µÄ³ÖĞøÊ±¼ä£¬¿ÉÒÔÓÃÀ´Æ½ºâÉÁ±ÜµÄÇ¿¶ÈºÍ·çÏÕ)
+	// é—ªé¿æ— æ•ŒæŒç»­æ—¶é—´ (å•ä½ï¼šç§’ï¼Œè¡¨ç¤ºæ‰§è¡Œé—ªé¿åŠ¨ä½œåè§’è‰²å¤„äºæ— æ•ŒçŠ¶æ€çš„æŒç»­æ—¶é—´ï¼Œå¯ä»¥ç”¨æ¥å¹³è¡¡é—ªé¿çš„å¼ºåº¦å’Œé£é™©)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Dodge")
 	float DodgeInvisibilityDuration = 0.35f;
 
-	// ÏÂÒ»¶ÎÁ¬ÕĞµÄ±êÇ© (¿ÉÒÔÓÃÀ´ÔÚÀ¶Í¼Àï²é±í£¬¾ö¶¨ÏÂÒ»¶ÎÁ¬ÕĞµÄ¶¯×÷¶¨Òå)
+	// æ‰§è¡Œè¯¥åŠ¨ä½œæ—¶æˆäºˆè§’è‰²çš„æ ‡ç­¾ (å¯ä»¥ç”¨æ¥åœ¨è“å›¾é‡ŒæŸ¥è¡¨ï¼Œå†³å®šè§’è‰²åœ¨æ‰§è¡Œè¯¥åŠ¨ä½œæ—¶å…·å¤‡å“ªäº›çŠ¶æ€æˆ–èƒ½åŠ›)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Tags")
+	FGameplayTagContainer GrantedTags;
+	
+	//é¡¿å¸§æ—¶é•¿
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Feedback")
+	float HitStopDuration;
+	
+	//æ‘„åƒæœºéœ‡åŠ¨
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Feedback")
+	float CameraShakeScale;
+	
+	//ç²’å­ç‰¹æ•ˆ
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Feedback")
+	TSoftObjectPtr<UNiagaraSystem> HitImpactAffect;
+	
+	// ä¸‹ä¸€æ®µè¿æ‹›çš„æ ‡ç­¾ (å¯ä»¥ç”¨æ¥åœ¨è“å›¾é‡ŒæŸ¥è¡¨ï¼Œå†³å®šä¸‹ä¸€æ®µè¿æ‹›çš„åŠ¨ä½œå®šä¹‰)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat|Combo")
 	FGameplayTag NextComboTag;
+	
+	//æ˜¯å¦å¯è¢«æ‰“æ–­
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Tags")
+	bool bCanBeInterrupted = true;
+	
 };
-//¶¯»­Êı¾İ¿â
+
+USTRUCT(BlueprintType)
+struct FGeneralActionDefinition
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action|Animation")
+	TSoftObjectPtr<UAnimMontage> Montage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action|Animation")
+	float PlayRate = 1.0f;
+
+	// æ˜¯å¦å¯è¢«æ‰“æ–­ (è¡¨ç¤ºåœ¨æ‰§è¡Œè¯¥åŠ¨ä½œæ—¶æ˜¯å¦å…è®¸è¢«å…¶ä»–åŠ¨ä½œæ‰“æ–­ï¼Œå¯ä»¥ç”¨æ¥æ§åˆ¶åŠ¨ä½œçš„ä¼˜å…ˆçº§å’Œè¿è´¯æ€§)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action|Rules")
+	bool bCanBeInterrupted = true;
+
+	// æ‰§è¡Œè¯¥åŠ¨ä½œæ—¶æˆäºˆè§’è‰²çš„æ ‡ç­¾ (å¯ä»¥ç”¨æ¥åœ¨è“å›¾é‡ŒæŸ¥è¡¨ï¼Œå†³å®šè§’è‰²åœ¨æ‰§è¡Œè¯¥åŠ¨ä½œæ—¶å…·å¤‡å“ªäº›çŠ¶æ€æˆ–èƒ½åŠ›)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Action|Tags")
+	FGameplayTagContainer GrantedTags;
+
+	// è€åŠ›æ¶ˆè€— (å•ä½ï¼šç‚¹ï¼Œè¡¨ç¤ºæ‰§è¡Œè¯¥åŠ¨ä½œæ—¶æ¶ˆè€—çš„è€åŠ›å€¼ï¼Œå¯ä»¥ç”¨æ¥é™åˆ¶åŠ¨ä½œçš„ä½¿ç”¨é¢‘ç‡æˆ–æŒç»­æ—¶é—´)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action|Cost")
+	float StaminaCost = 0.f;
+};
+//åŠ¨ç”»æ•°æ®åº“
 
 UCLASS()
 class ESCAPEGAME_API UCharacterAnimData : public UDataAsset
@@ -77,20 +123,28 @@ public:
 	GENERATED_BODY()
 
 	// ==========================================
-	// 1. »ù´¡ÒÆ¶¯ (¸ø AnimBP ÓÃµÄ)
+	// 1. åŸºç¡€ç§»åŠ¨ (ç»™ AnimBP ç”¨çš„)
 	// ==========================================
-	// ÔË¶¯»ìºÏ¿Õ¼ä (ÈíÒıÓÃ£¬ÓÅ»¯ÄÚ´æ)
+	// è¿åŠ¨æ··åˆç©ºé—´ (è½¯å¼•ç”¨ï¼Œä¼˜åŒ–å†…å­˜)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Locomotion")
 	TSoftObjectPtr<UBlendSpace> MovementBlendSpace;
-	// ¹ÖÎï´ı»ú¶¯»­ (ÈíÒıÓÃ£¬ÓÅ»¯ÄÚ´æ)
+	// æ€ªç‰©å¾…æœºåŠ¨ç”» (è½¯å¼•ç”¨ï¼Œä¼˜åŒ–å†…å­˜)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Locomotion")
 	TSoftObjectPtr<UAnimSequenceBase> IdleAnim;
 
 	// ==========================================
-	// 2. ¶¯×÷Ó³Éä±í (¸ø Component ²é±íÓÃµÄ)
+	// 2. åŠ¨ä½œæ˜ å°„è¡¨ (ç»™ Component æŸ¥è¡¨ç”¨çš„)
 	// ==========================================
-	// Key: GameplayTag (±ÈÈç Action.Attack.Light)
-	// Value: ¶¯×÷¶¨Òå (°üº¬Montage)
+	// Key: GameplayTag (æ¯”å¦‚ Action.Attack.Light)
+	// Value: åŠ¨ä½œå®šä¹‰ (åŒ…å«Montage)
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Actions")
-	TMap<FGameplayTag, FActionDefinition> ActionMap;
+	TMap<FGameplayTag, FCombatActionDefinition> CombatActionMap;
+
+	//æ­£å¸¸åŠ¨ä½œæ˜ å°„è¡¨ï¼ˆéæˆ˜æ–—åŠ¨ä½œï¼Œæ¯”å¦‚ç¿»æ»šã€å—å‡»ã€æ­»äº¡ç­‰ï¼‰
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Actions|General")
+	TMap<FGameplayTag, FGeneralActionDefinition> GeneralActionMap;
+	
+	
+
 };

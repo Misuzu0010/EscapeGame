@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -28,7 +28,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	// 2. ÉùÃ÷»Øµ÷º¯Êý (°´ÏÂ E Ê±Ö´ÐÐµÄÂß¼­)
+	// 2. å£°æ˜Žå›žè°ƒå‡½æ•° (æŒ‰ä¸‹ E æ—¶æ‰§è¡Œçš„é€»è¾‘)
 	UFUNCTION()
 	void OnInteract(const FInputActionValue& Value);
 

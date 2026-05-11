@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -25,7 +25,7 @@ public:
 	UPROPERTY(EditAnyWhere, BlueprintReadWrite,Category ="SprintBuff")
 	FItemText ItemName;
 
-	// --- ÖØĞ´º¯Êı (Override) ---
+	// --- é‡å†™å‡½æ•° (Override) ---
 	virtual bool OnUse_Implementation(AActor* TargetActor) override;
 
 

@@ -4,6 +4,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include"InventoryMenuWidget.h"
+#include"EscapeCombatComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -18,6 +19,7 @@
 #include"EscapeGamePlayerController.h"
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
+#include"EscapeGameplayTags.h"
 #include"Interface/PickupInterface.h"
 #include "statemachine/StateMachineComponent.h"
 
@@ -72,6 +74,8 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 	InventoryComp = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
 
 	InteractComp = CreateDefaultSubobject<UInterectComponent>(TEXT("InteractComp"));
+	
+	EscapeCombatComp=CreateDefaultSubobject<UEscapeCombatComponent>(TEXT("EscapeCombatComp"));
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
@@ -94,15 +98,8 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AEscapeGameCharacter::Look);
-
-		
-		
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, SprintComp, &USprintComponent::StartSprinting);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, SprintComp, &USprintComponent::StopSprinting);
-		
-		
-		
-		// 在 SetupPlayerInputComponent 里绑定
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::StartCrouch);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AEscapeGameCharacter::StopCrouch);
 		
@@ -117,6 +114,10 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::ToggleCameraMode);
 		//使用物品
 		EnhancedInputComponent->BindAction(UseItemAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::Input_UseItem);
+		//连击函数
+		EnhancedInputComponent->BindAction(AttackAction,ETriggerEvent::Started,EscapeCombatComp,&UEscapeCombatComponent::Input_AttackStarted);
+		//EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Triggered, EscapeCombatComp, &UEscapeCombatComponent::BeginOrUpdateChargedAttack);
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Completed, EscapeCombatComp, &UEscapeCombatComponent::Input_AttackCompleted);
 	    
 	}
 	else
@@ -151,6 +152,8 @@ void AEscapeGameCharacter::Move(const FInputActionValue& Value)
 {
 	//if (!StateMachineComp->bCanMove)return;
 	// input is a Vector2D
+	
+	
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
 	// route the input
@@ -204,6 +207,18 @@ void AEscapeGameCharacter::DoJumpStart()
 	{
 		return;
 	}
+	
+	if (EscapeCombatComp)
+	{
+		// 【正确的做法】：通过组件的接口去查 Tag！
+		if (EscapeCombatComp->HasCombatTag(EscapeGameplayTags::Action_State_Attacking) || 
+			EscapeCombatComp->HasCombatTag(EscapeGameplayTags::Action_Combat_Heavy_Charge) ||
+			EscapeCombatComp->HasCombatTag(EscapeGameplayTags::Action_ChargedAttack_Release))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("香子兰嘲讽：正在挥刀呢，跳什么跳！"));
+			return;
+		}
+	}
 	Jump();
 }
 
@@ -254,3 +269,4 @@ void AEscapeGameCharacter::Input_UseItem(const FInputActionValue& Value)
 		InventoryComp->UseItem(CurrentSelectedSlotIndex);
 	}
 }
+

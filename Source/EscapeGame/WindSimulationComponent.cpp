@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WindSimulationComponent.h"
@@ -48,17 +48,17 @@ void UWindSimulationComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	TimerSettings -= DeltaTime;
-	// --- ·ÅÔÚ WindSimulationComponent.cpp µÄ TickComponent º¯Êı×îÇ°Ãæ ---
-	if (!IsValid(CachedOwner)) { UE_LOG(LogTemp, Log, TEXT("·Ç·¨µÄactor£¬Çë²é¿´´úÂëÄÚÈİ")); return; }
-	// Ã¿Ò»Ö¡±Ø×öµÄÇáÁ¿¼¶¼ÆËã£º»ñÈ¡ËÙ¶È¡¢ºÏ²¢Óë²åÖµ
+	// --- æ”¾åœ¨ WindSimulationComponent.cpp çš„ TickComponent å‡½æ•°æœ€å‰é¢ ---
+	if (!IsValid(CachedOwner)) { UE_LOG(LogTemp, Log, TEXT("éæ³•çš„actorï¼Œè¯·æŸ¥çœ‹ä»£ç å†…å®¹")); return; }
+	// æ¯ä¸€å¸§å¿…åšçš„è½»é‡çº§è®¡ç®—ï¼šè·å–é€Ÿåº¦ã€åˆå¹¶ä¸æ’å€¼
 	FVector VelocityWind = CachedOwner->GetVelocity() * MovementWindScale;
-	// ÎŞÂÛÅÜ¶à¿ì£¬ÏòºóµÄ·çÁ¦¾ø²»ÄÜ³¬¹ı MaxVelocityWindForce£¡
+	// æ— è®ºè·‘å¤šå¿«ï¼Œå‘åçš„é£åŠ›ç»ä¸èƒ½è¶…è¿‡ MaxVelocityWindForceï¼
 	FVector ClampedVelocityWind = VelocityWind.GetClampedToMaxSize(MaxVelocityWindForce);
 
-	// ¼ÆËã»ù´¡Ä¿±ê·ç£¨È«¾Ö·ç + °²È«µÄÒÆ¶¯·ç£©
+	// è®¡ç®—åŸºç¡€ç›®æ ‡é£ï¼ˆå…¨å±€é£ + å®‰å…¨çš„ç§»åŠ¨é£ï¼‰
 	FVector BaseTargetWind = BasicGlobalWind + ClampedVelocityWind;
 	
-	// ¡¾¹Ø¼üĞŞÕı¡¿Ö»¶Ô´ó·½ÏòµÄ»ù´¡·ç½øĞĞ VInterpTo ²åÖµ£¬±£³ÖË¿»¬µÄ¹ßĞÔ
+	// ã€å…³é”®ä¿®æ­£ã€‘åªå¯¹å¤§æ–¹å‘çš„åŸºç¡€é£è¿›è¡Œ VInterpTo æ’å€¼ï¼Œä¿æŒä¸æ»‘çš„æƒ¯æ€§
 	CurrentWind = FMath::VInterpTo(CurrentWind, BaseTargetWind, DeltaTime, WindInterpSpeed);
 
 
@@ -67,21 +67,21 @@ void UWindSimulationComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	FVector NoiseInput = WorldLoc * NoiseSpatialScale + FVector(CurrentTime * NoiseTimeScale);
 
-	// 3. ¹¹ÔìÆ®´ø×¨ÓÃµÄ¡°Æğ·ü·ç¡±
-	// X, Y ÖáÊ¹ÓÃ°ØÁÖÔëÉùÌá¹©ÎŞĞòµÄºáÏò°Ú¶¯
+	// 3. æ„é€ é£˜å¸¦ä¸“ç”¨çš„â€œèµ·ä¼é£â€
+	// X, Y è½´ä½¿ç”¨æŸæ—å™ªå£°æä¾›æ— åºçš„æ¨ªå‘æ‘†åŠ¨
 	float NoiseX = FMath::PerlinNoise3D(NoiseInput);
 	float NoiseY = FMath::PerlinNoise3D(NoiseInput + FVector(100.f));
-	// Z Öá£¨´¹Ö±·½Ïò£©ÈÚºÏÕıÏÒ²¨
+	// Z è½´ï¼ˆå‚ç›´æ–¹å‘ï¼‰èåˆæ­£å¼¦æ³¢
 	float SineWaveZ = FMath::Sin(CurrentTime * 3.0f) * 0.5f;
 	float NoiseZ = FMath::PerlinNoise3D(NoiseInput + FVector(200.f)) * 0.5f + SineWaveZ;
 	CachedNoiseWind = FVector(NoiseX, NoiseY, NoiseZ) * NoiseIntensity;
-	// Ä¿±ê·çÁ¦ = »ù´¡·çÁ¦ + »º´æµÄÔëÉù·çÁ¦
+	// ç›®æ ‡é£åŠ› = åŸºç¡€é£åŠ› + ç¼“å­˜çš„å™ªå£°é£åŠ›
 	TargetWind = CurrentWind + CachedNoiseWind;;
 
 	if (TimerSettings<=0.0f) {
 		UE_LOG(LogTemp, Warning, TEXT("TargetWind: X=%.2f Y=%.2f Z=%.2f"),
 			TargetWind.X, TargetWind.Y, TargetWind.Z);
-		TimerSettings = 0.5f;// Ã¿0.5ÃëÊä³öÒ»´ÎÈÕÖ¾£¬±ÜÃâ¹ıÓÚÆµ·±
+		TimerSettings = 0.5f;// æ¯0.5ç§’è¾“å‡ºä¸€æ¬¡æ—¥å¿—ï¼Œé¿å…è¿‡äºé¢‘ç¹
 	}
 	
 

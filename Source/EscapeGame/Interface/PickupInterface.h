@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -22,16 +22,16 @@ class ESCAPEGAME_API IPickupInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	// ÕâÊÇÒ»¸ö Native Event£¬ÔÊĞíÔÚ C++ ºÍ À¶Í¼ ÖĞÍ¬Ê±±»µ÷ÓÃ»òÖØĞ´
-	// ·µ»Ø true ±íÊ¾Ê°È¡³É¹¦
+	// è¿™æ˜¯ä¸€ä¸ª Native Eventï¼Œå…è®¸åœ¨ C++ å’Œ è“å›¾ ä¸­åŒæ—¶è¢«è°ƒç”¨æˆ–é‡å†™
+	// è¿”å› true è¡¨ç¤ºæ‹¾å–æˆåŠŸ
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	bool AttemptPickUp(APawn* InstigatorPawn);
 
-	// ¼ì²éÊÇ·ñ¿É½»»¥
+	// æ£€æŸ¥æ˜¯å¦å¯äº¤äº’
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	bool CanPickUp(AActor* Interactor) const;
 
-	// »ñÈ¡½»»¥ÏÔÊ¾ÎÄ±¾
+	// è·å–äº¤äº’æ˜¾ç¤ºæ–‡æœ¬
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
 	FText GetPickUpText(AActor* Interactor) const;
 };

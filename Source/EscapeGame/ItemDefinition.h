@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -20,17 +20,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Logic")
 	bool bConsumeOnUse = true;
 
-	// ÊÇ·ñ¿É¶Ñµş
+	// æ˜¯å¦å¯å †å 
 	UPROPERTY(EditAnywhere, Category = "Logic")
 	bool bStackable = true;
 
-	// ×î´ó¶ÑµşÊıÁ¿
+	// æœ€å¤§å †å æ•°é‡
 	UPROPERTY(EditAnywhere, Category = "Logic", meta = (EditCondition = "bStackable"))
 	int32 MaxStackCount = 99;
 
 
-	// ¡¾ºËĞÄ¡¿µ±ÎïÆ·±»Ê¹ÓÃÊ±´¥·¢¡£
-	// ´«Èë User (Íæ¼Ò)£¬ÕâÑùÎïÆ·¾ÍÖªµÀ¸øË­¼ÓÑª/¼ÓËÙ¡£
+	// ã€æ ¸å¿ƒã€‘å½“ç‰©å“è¢«ä½¿ç”¨æ—¶è§¦å‘ã€‚
+	// ä¼ å…¥ User (ç©å®¶)ï¼Œè¿™æ ·ç‰©å“å°±çŸ¥é“ç»™è°åŠ è¡€/åŠ é€Ÿã€‚
 	UFUNCTION(BlueprintNativeEvent)
 	bool OnUse(AActor* TargetActor);
 
