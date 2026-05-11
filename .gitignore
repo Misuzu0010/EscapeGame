@@ -4,7 +4,7 @@ Intermediate/
 Saved/
 DerivedDataCache/
 Build/
-Content/
+Content/Katana_Animations/
 
 # Visual Studio files
 .vs/
@@ -41,7 +41,7 @@ Thumbs.db
 *~
 *.tmp
 *.temp
-*.md
+
 
 # UE4/UE5 specific
 *.opensdf
