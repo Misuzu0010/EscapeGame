@@ -4,6 +4,7 @@ Intermediate/
 Saved/
 DerivedDataCache/
 Build/
+Content/
 
 # Visual Studio files
 .vs/
@@ -17,6 +18,7 @@ Build/
 
 # Rider
 .idea/
+Plugins/Developer/RiderLink/
 
 # macOS
 .DS_Store
