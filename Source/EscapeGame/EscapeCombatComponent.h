@@ -114,7 +114,7 @@ public:
 
 private:
 
-    
+	bool TryPlayActionByTagInternal(FGameplayTag ActionTag);
 
     UFUNCTION()
     void HandleAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);

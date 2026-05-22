@@ -30,7 +30,7 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 	if (LogicAsset) 
 	{
 		bCanStack = LogicAsset->bStackable;
-		MaxStackSize = LogicAsset->MaxStackCount;
+		MaxStackSize = LogicAsset? FMath::Max(1,LogicAsset->MaxStackCount):99;
 	}
 
 	if (bCanStack) 
@@ -137,7 +137,7 @@ void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount)
 			{
 				Items[i].Count -= LeftoverToRemove;
 				LeftoverToRemove = 0;
-				if (LeftoverToRemove == 0)
+				if (Items[i].Count<= 0)
 				{
 					//如果该格子被清空了，移除该格子
 					Items[i] = FItemStack();
@@ -213,7 +213,7 @@ void UInventoryComponent::UseItem(int32 SlotIndex)
 		const bool bUsedSuccessfully = LogicAsset->OnUse(GetOwner());
 		// 5. 数量归零处理
 		
-		if (bUsedSuccessfully) 
+		if (bUsedSuccessfully&& LogicAsset->bConsumeOnUse) 
 		{
 			ItemStack.Count -= 1;
 

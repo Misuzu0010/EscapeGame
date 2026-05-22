@@ -13,6 +13,7 @@ class ACharacter;
 class UCharacterMovementComponent;
 class UWindSimulationComponent;
 class UClothLODControllerComponent;
+class USprintComponent;
 UCLASS()
 class ESCAPEGAME_API UCharacterAnimInstance : public UAnimInstance
 {
@@ -76,6 +77,8 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsRunning = false;
+	
+	
 
 	// --- 动画匹配专用缓存 ---
 	UPROPERTY(BlueprintReadOnly, Transient, Category = "Movement", meta = (AllowPrivateAccess = "true"))
@@ -96,4 +99,5 @@ protected:
 	// --- 内部缓存的组件指针 ---
 	TWeakObjectPtr<UWindSimulationComponent>WindComponent;
 	TWeakObjectPtr<UClothLODControllerComponent> ClothLODComponent; // 【新增】缓存LOD组件
+	TWeakObjectPtr<USprintComponent>SprintComp;
 };

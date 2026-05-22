@@ -153,6 +153,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void StopCrouch();
 	
+	virtual void ApplyDamage_Implementation(float DamageValue, AActor* InstigatorActor, const FVector& HitLocation, const FVector& HitImpulse) override;
+	
 	
 
 	// 注意：这里只是声明“我有个背包”，背包里具体有啥，这里不管

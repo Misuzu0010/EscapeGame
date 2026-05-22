@@ -10,6 +10,18 @@
 
 void UGameHUDWidget::InitializeWidget(UAttributeComponent* NewAttributeComp,USprintComponent*NewSprintComponent,UInventoryComponent*NewInventoryComp) 
 {
+	UE_LOG(LogTemp, Warning, TEXT("HUD诊断：InitializeWidget 被调用。Attribute=%s, Sprint=%s, Inventory=%s"),
+		NewAttributeComp ? *NewAttributeComp->GetName() : TEXT("None"),
+		NewSprintComponent ? *NewSprintComponent->GetName() : TEXT("None"),
+		NewInventoryComp ? *NewInventoryComp->GetName() : TEXT("None"));
+
+	UE_LOG(LogTemp, Warning, TEXT("HUD诊断：BindWidget 状态 HealthBar=%s, HealthText=%s, StaminaBar=%s, StaminaText=%s, Hotbar=%s"),
+		HealthProgressBar ? TEXT("OK") : TEXT("None"),
+		HealthText ? TEXT("OK") : TEXT("None"),
+		StaminaProgressBar ? TEXT("OK") : TEXT("None"),
+		StaminaText ? TEXT("OK") : TEXT("None"),
+		HotbarWidget ? TEXT("OK") : TEXT("None"));
+
 	if (NewAttributeComp) 
 	{
 		AttributeCompRef = NewAttributeComp;
@@ -21,6 +33,11 @@ void UGameHUDWidget::InitializeWidget(UAttributeComponent* NewAttributeComp,USpr
 		float Current = NewAttributeComp->GetCurrentHealthPercent() * NewAttributeComp->MaxHealth;
 		OnHealthUpdate(Current, NewAttributeComp->MaxHealth);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("HUD诊断：AttributeComponent 为空，血条不会更新。"));
+	}
+
 	if (NewSprintComponent) 
 	{
 		NewSprintComponent->OnStaminaChanged.AddDynamic(this, &UGameHUDWidget::OnStaminaUpdate);
@@ -28,10 +45,20 @@ void UGameHUDWidget::InitializeWidget(UAttributeComponent* NewAttributeComp,USpr
 
 		OnStaminaUpdate(CurrentStamina, NewSprintComponent->MaxStamina);
 	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("HUD诊断：SprintComponent 为空，体力条不会更新。"));
+	}
 
 	if (HotbarWidget && AttributeCompRef.IsValid()) 
 	{
 		HotbarWidget->InitializeHotbar(NewInventoryComp);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("HUD诊断：快捷栏未初始化。HotbarWidget=%s, AttributeRefValid=%s"),
+			HotbarWidget ? TEXT("OK") : TEXT("None"),
+			AttributeCompRef.IsValid() ? TEXT("true") : TEXT("false"));
 	}
 }
 

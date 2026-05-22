@@ -7,6 +7,7 @@
 #include "WindSimulationComponent.h" // 用于获取风力数据
 #include "Kismet/KismetMathLibrary.h" // 用于数学计算
 #include"ClothLODControllerComponent.h"
+#include"SprintComponent.h"
 
 void UCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -22,6 +23,8 @@ void UCharacterAnimInstance::NativeInitializeAnimation()
 
         // 【新增】获取我们的布料LOD控制器
 		ClothLODComponent = OwnerCharacter->FindComponentByClass<UClothLODControllerComponent>();
+        
+        SprintComp=OwnerCharacter->FindComponentByClass<USprintComponent>();
     }
 }
 
@@ -42,7 +45,17 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		GroundSpeed = CachedVelocity.Size2D();
         bIsFalling = MovementComponent->IsFalling();
 		bShouldMove = (MovementComponent->GetCurrentAcceleration().Size2D() > 0.f) && (GroundSpeed > 3.0f);
-		bIsRunning = bShouldMove && (GroundSpeed > 300.0f); // 300 是一个经验值，可以根据需要调整
+        if (SprintComp.IsValid())
+        {
+            // 用你写好的状态判断，直接驱动动画蓝图的变量
+            bIsRunning = SprintComp->ReturnSprintState();
+        }
+        else
+        {
+            // 容错降级逻辑
+            
+            bIsRunning = bShouldMove && (GroundSpeed > 300.0f);
+        }
         CachedRotation = OwnerCharacter->GetActorRotation();
     }
 

@@ -81,6 +81,8 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
 
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
+
+
 }
 
 void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -128,35 +130,103 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 
 void AEscapeGameCharacter::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 
-	// 只有本地玩家才创建UI
-	if (IsLocallyControlled() && HUDWidgetClass)
-	{
-		AEscapeGamePlayerController* PC = Cast<AEscapeGamePlayerController>(GetController());
-		UGameHUDWidget* HUD = CreateWidget<UGameHUDWidget>(GetWorld(), HUDWidgetClass);
-		if (HUD)
-		{
-			HUD->AddToViewport(); // 【关键】这句没写就是隐形的！
-			HUD->InitializeWidget(AttributeComp,SprintComp,InventoryComp);
-		}
-		if (PC && InteractComp)
-		{
-			// 【关键连线】
-			// 当组件喊话时 -> 自动调用控制器的 ToggleInventoryUI
-			InteractComp->OnRequestToggleInventory.AddDynamic(PC, &AEscapeGamePlayerController::ToggleInventoryUI);
-		}
-	}
+    // ==========================================
+    // 🛠️ 【基础调试】核心挂载组件状态大排查
+    // ==========================================
+    UE_LOG(LogTemp, Warning, TEXT("=========== 香子兰组件体检开始 ==========="));
+
+    if (StateMachineComp)
+    {
+        UE_LOG(LogTemp, Log, TEXT("✅ 状态机组件挂载成功！类名: %s"), *StateMachineComp->GetClass()->GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("❌ 警报！StateMachineComp 是空指针(nullptr)喵！"));
+    }
+
+    if (SprintComp)
+    {
+        UE_LOG(LogTemp, Log, TEXT("✅ 冲刺组件挂载成功！类名: %s"), *SprintComp->GetClass()->GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("❌ 警报！SprintComp 是空指针(nullptr)喵！"));
+    }
+
+    if (AttributeComp)
+    {
+        UE_LOG(LogTemp, Log, TEXT("✅ 属性组件挂载成功！类名: %s"), *AttributeComp->GetClass()->GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("❌ 警报！AttributeComp 是空指针(nullptr)喵！"));
+    }
+
+    if (InventoryComp)
+    {
+        UE_LOG(LogTemp, Log, TEXT("✅ 背包组件挂载成功！类名: %s"), *InventoryComp->GetClass()->GetName());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("❌ 警报！InventoryComp 是空指针(nullptr)喵！"));
+    }
+
+    UE_LOG(LogTemp, Warning, TEXT("========================================"));
+
+
+    // ==========================================
+    // 基础业务逻辑层：本地玩家创建 UI
+    // ==========================================
+    UE_LOG(LogTemp, Warning, TEXT("HUD诊断：IsLocallyControlled=%s, HUDWidgetClass=%s, Controller=%s"),
+        IsLocallyControlled() ? TEXT("true") : TEXT("false"),
+        HUDWidgetClass ? *HUDWidgetClass->GetName() : TEXT("None"),
+        GetController() ? *GetController()->GetName() : TEXT("None"));
+
+    if (IsLocallyControlled() && HUDWidgetClass)
+    {
+        AEscapeGamePlayerController* PC = Cast<AEscapeGamePlayerController>(GetController());
+        UGameHUDWidget* HUD = CreateWidget<UGameHUDWidget>(GetWorld(), HUDWidgetClass);
+        if (HUD)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("HUD诊断：CreateWidget 成功，准备 AddToViewport。Widget=%s"), *HUD->GetName());
+            HUD->AddToViewport(); //
+            UE_LOG(LogTemp, Warning, TEXT("HUD诊断：AddToViewport 已执行，准备 InitializeWidget。"));
+            HUD->InitializeWidget(AttributeComp, SprintComp, InventoryComp); //
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("HUD诊断：CreateWidget 失败。请检查 HUDWidgetClass 是否继承自 GameHUDWidget。"));
+        }
+
+        if (PC && InteractComp)
+        {
+            // 当组件喊话时 -> 自动调用控制器的 ToggleInventoryUI
+            InteractComp->OnRequestToggleInventory.AddDynamic(PC, &AEscapeGamePlayerController::ToggleInventoryUI); //
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("HUD诊断：跳过 HUD 创建。原因可能是非本地控制角色，或 HUDWidgetClass 未配置。"));
+    }
 }
 void AEscapeGameCharacter::Move(const FInputActionValue& Value)
 {
-	//if (!StateMachineComp->bCanMove)return;
-	// input is a Vector2D
-	
-	
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	// route the input
+	// 【核心修复】：只要轴向有输入，说明玩家正在尝试位移
+	if (!MovementVector.IsZero() && StateMachineComp)
+	{
+		ECharacterState CurrentState = StateMachineComp->GetCurrentState();
+		// 只有当前是 Idle 时才切为 Moving，绝对不能打断 Attacking、Sprinting、Stunned 等高优先级状态
+		if (CurrentState == ECharacterState::Idle)
+		{
+			StateMachineComp->SetState(ECharacterState::Moving);
+		}
+	}
+
+	// 保持原有的底层移动路由不变
 	DoMove(MovementVector.X, MovementVector.Y);
 }
 
@@ -230,8 +300,16 @@ void AEscapeGameCharacter::DoJumpEnd()
 
 void AEscapeGameCharacter::StartCrouch()
 {
-	if (GetCharacterMovement()->IsFalling())return;
-	if (SprintComp->bSprintRequested)return;
+	// 【安全检查1】获取 CharacterMovement，必须判空
+	UCharacterMovementComponent* MovementComp = GetCharacterMovement();
+	if (!MovementComp) return;
+
+	// 【安全检查2】只有在非下落时才能蹲伏
+	if (MovementComp->IsFalling()) return;
+
+	// 【安全检查3】检查 SprintComp 是否有效
+	if (SprintComp && SprintComp->bSprintRequested) return;
+
 	Crouch();
 }
 
@@ -270,3 +348,14 @@ void AEscapeGameCharacter::Input_UseItem(const FInputActionValue& Value)
 	}
 }
 
+void AEscapeGameCharacter::ApplyDamage_Implementation(float DamageValue, AActor* InstigatorActor, const FVector& HitLocation, const FVector& HitImpulse)
+{
+	AttributeComp->ApplyHealthChange(-FMath::Max(0.f,DamageValue));
+	if (AttributeComp->CurrentHealth<=0)
+	{
+		StateMachineComp->ApplyDeath();
+	}
+	GetCharacterMovement()->AddImpulse(HitImpulse);
+
+
+}

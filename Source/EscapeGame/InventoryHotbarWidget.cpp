@@ -49,6 +49,7 @@ void UInventoryHotbarWidget::RefreshHotbar()
 			{
 				// 3. 尝试从背包里获取数据
 				// 注意：我们要检查背包里的物品够不够
+				NewSlot->InitSlot(InventoryRef.Get(),i);
 				NewSlot->SetItem(InventoryRef->Items[i]);
 			}
 

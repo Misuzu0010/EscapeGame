@@ -54,57 +54,68 @@ void UEscapeCombatComponent::BeginPlay()
 
 void UEscapeCombatComponent::TryPlayActionByTag(FGameplayTag ActionTag)
 {
-    // 1. 安全检查
-    if (!CharacterAnimData) return;
+    TryPlayActionByTagInternal(ActionTag);
+}
+
+bool UEscapeCombatComponent::TryPlayActionByTagInternal(FGameplayTag ActionTag)
+{
     ACharacter* OwnerChar = GetOwnerCharacter();
+    if (!CharacterAnimData)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("无法执行动作 [%s]：CharacterAnimData 未配置！"), *ActionTag.ToString());
+        return false;
+    }
+
+    if (!OwnerChar)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("无法执行动作 [%s]：没有找到拥有者 Character！"), *ActionTag.ToString());
+        return false;
+    }
+
     // 2. 去 DataAsset 里查表
     // ActionMap 是我们在 DataAsset 里定义的那个 TMap
     const FCombatActionDefinition* ActionDef = CharacterAnimData->CombatActionMap.Find(ActionTag);
 
     // 3. 如果找到了配置
-    if (ActionDef)
-    {
-        // [进阶预留位]: 这里以后可以判断 体力够不够？是否在冷却中？
-		float CurrentStamina = SprintComp ? SprintComp->GetCurrentStamina() : 0.f;
-        if (CurrentStamina<10.0f) 
-        {
-			UE_LOG(LogTemp, Warning, TEXT("体力不足，无法执行动作 [%s]！"), *ActionTag.ToString());
-            return;
-        }
-		 // 缓存当前动作的 Tag，方便后续逻辑使用
-        CurrentActionTag = ActionTag;
-        // 4. 加载资源 (同步加载)
-        // 因为我们在 DataAsset 里用的是 TSoftObjectPtr，所以必须 LoadSynchronous() 才能变成真正的 UAnimMontage*
-        UAnimMontage* MontageToPlay = ActionDef->Montage.LoadSynchronous();
-
-        // 5. 播放动画！
-        if (MontageToPlay)
-        {
-            // PlayAnimMontage 会返回动画总时长，如果返回 0 说明播放失败
-            const float Duration = OwnerChar->PlayAnimMontage(MontageToPlay, ActionDef->PlayRate);
-
-            if (Duration > 0.f)
-            {
-                // [调试信息] 方便你看到到底播了啥
-                UE_LOG(LogTemp, Log, TEXT("成功播放动作: %s (Tag: %s)"), *MontageToPlay->GetName(), *ActionTag.ToString());
-                if (Duration > 0.f)
-                {
-                    CurrentPlayingMontage = MontageToPlay; // 记录真身
-                    ActiveTags.AddTag(ActionTag);
-                }
-                
-				
-            }
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("动作 Tag [%s] 找到了配置，但是 Montage 资源是空的！"), *ActionTag.ToString());
-        }
-    }
-    else
+    if (!ActionDef)
     {
         UE_LOG(LogTemp, Warning, TEXT("DataAsset 里找不到 Tag [%s] 对应的动作！是不是忘了配表？"), *ActionTag.ToString());
+        return false;
     }
+
+    // [进阶预留位]: 这里以后可以判断 体力够不够？是否在冷却中？
+	float CurrentStamina = SprintComp ? SprintComp->GetCurrentStamina() : 0.f;
+    if (CurrentStamina < 10.0f)
+    {
+		UE_LOG(LogTemp, Warning, TEXT("体力不足，无法执行动作 [%s]！"), *ActionTag.ToString());
+        return false;
+    }
+
+    // 4. 加载资源 (同步加载)
+    // 因为我们在 DataAsset 里用的是 TSoftObjectPtr，所以必须 LoadSynchronous() 才能变成真正的 UAnimMontage*
+    UAnimMontage* MontageToPlay = ActionDef->Montage.LoadSynchronous();
+    if (!MontageToPlay)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("动作 Tag [%s] 找到了配置，但是 Montage 资源是空的！"), *ActionTag.ToString());
+        return false;
+    }
+
+    // 5. 播放动画！
+    // PlayAnimMontage 会返回动画总时长，如果返回 0 说明播放失败
+    const float Duration = OwnerChar->PlayAnimMontage(MontageToPlay, ActionDef->PlayRate);
+    if (Duration <= 0.f)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("动作 Montage [%s] 播放失败！Tag: %s"), *MontageToPlay->GetName(), *ActionTag.ToString());
+        return false;
+    }
+
+    // 只有 Montage 真正播放成功后，才提交当前动作状态。
+    CurrentActionTag = ActionTag;
+    CurrentPlayingMontage = MontageToPlay;
+    ActiveTags.AddTag(ActionTag);
+    UE_LOG(LogTemp, Log, TEXT("成功播放动作: %s (Tag: %s)"), *MontageToPlay->GetName(), *ActionTag.ToString());
+
+    return true;
 }
 
 ACharacter* UEscapeCombatComponent::GetOwnerCharacter() const
@@ -132,16 +143,20 @@ void UEscapeCombatComponent::BeginOrUpdateChargedAttack()
         return; 
     }
 
-    // 清除可能存在的轻击 Tag 和缓存，强行覆盖为蓄力 Tag
-    ActiveTags.RemoveTag(EscapeGameplayTags::Action_State_Attacking);
-    ActiveTags.AddTag(EscapeGameplayTags::Action_Combat_Heavy_Charge);
-    bHasSavedComboInput = false; 
-    
     ACharacter* OwnerChar = GetOwnerCharacter();
     if (!OwnerChar) return;
     
-    TryPlayActionByTag(EscapeGameplayTags::Action_Combat_Heavy_Charge);
-    UE_LOG(LogTemp, Log, TEXT("香子兰汇报：成功拦截每帧调用，开始单次蓄力！"));
+    if (TryPlayActionByTagInternal(EscapeGameplayTags::Action_Combat_Heavy_Charge))
+    {
+        // 蓄力 Montage 确认播放成功后，再正式切换状态。
+        ActiveTags.RemoveTag(EscapeGameplayTags::Action_State_Attacking);
+        bHasSavedComboInput = false;
+        UE_LOG(LogTemp, Log, TEXT("香子兰汇报：成功拦截每帧调用，开始单次蓄力！"));
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("蓄力动作播放失败，未进入蓄力状态。"));
+    }
 }
 void UEscapeCombatComponent::ReleaseChargedAttack()
 {
@@ -193,9 +208,15 @@ void UEscapeCombatComponent::CheckCombo()
         FGameplayTag NextTag = ActionDef->NextComboTag;
         if (NextTag.IsValid() && CharacterAnimData->CombatActionMap.Contains(NextTag))
         {
-            ComboCount++;
-            BroadcastComboChange(ComboCount);
-            TryPlayActionByTag(NextTag); // 播放下一段
+            if (TryPlayActionByTagInternal(NextTag))
+            {
+                ComboCount++;
+                BroadcastComboChange(ComboCount);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("下一段连击播放失败，等待当前 Montage 正常结束。"));
+            }
         }
         else
         {
@@ -303,11 +324,17 @@ void UEscapeCombatComponent::RequestLightAttack()
         !ActiveTags.HasTag(EscapeGameplayTags::Action_Combat_Heavy_Charge))
     {
         // 【上锁】：给自己贴上“正在攻击”的标签
-        ActiveTags.AddTag(EscapeGameplayTags::Action_State_Attacking);
         
         FGameplayTag FirstAttackTag = EscapeGameplayTags::Action_Combat_Light_1;
-        TryPlayActionByTag(FirstAttackTag);
-        UE_LOG(LogTemp, Warning, TEXT("香子兰汇报：贴上了攻击Tag，成功打出第一段轻击！"));
+        if (TryPlayActionByTagInternal(FirstAttackTag))
+        {
+            ActiveTags.AddTag(EscapeGameplayTags::Action_State_Attacking);
+            UE_LOG(LogTemp, Warning, TEXT("香子兰汇报：贴上了攻击Tag，成功打出第一段轻击！"));
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("不好，现在并没有进入攻击状态，请检查DataAsset是否配置正确"));
+        }
     }
     // 如果已经在轻击了，开启输入缓冲
     else if (ActiveTags.HasTagExact(EscapeGameplayTags::Action_State_Attacking))
@@ -329,10 +356,10 @@ void UEscapeCombatComponent::Input_AttackStarted()
         InputBufferTimer,
         this,
         &UEscapeCombatComponent::BeginOrUpdateChargedAttack,
-        0.45f, // 这个时间就是你的“长按判定阈值”，可以随便微调
+        0.55f, // 这个时间就是你的“长按判定阈值”，可以随便微调
         false
     );
-    UE_LOG(LogTemp, Log, TEXT("香子兰汇报：检测到按下！已开启 0.25 秒的输入缓冲闹钟..."));
+    UE_LOG(LogTemp, Log, TEXT("香子兰汇报：检测到按下！已开启 0.55秒的输入缓冲闹钟..."));
 }
 
 void UEscapeCombatComponent::Input_AttackCompleted()
@@ -359,4 +386,3 @@ void UEscapeCombatComponent::Input_AttackCompleted()
         UE_LOG(LogTemp, Warning, TEXT("香子兰汇报：判定为【蓄力松手】，重击斩出！"));
     }
 }
-

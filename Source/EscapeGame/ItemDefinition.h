@@ -16,7 +16,7 @@ class ESCAPEGAME_API UItemDefinition : public UDataAsset
 	GENERATED_BODY()
 
 public:
-
+	//是否可消耗
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Logic")
 	bool bConsumeOnUse = true;
 

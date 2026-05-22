@@ -84,7 +84,7 @@ void UInventorySlotWidget::SetItem(const FItemStack& Item)
 void UInventorySlotWidget::OnSlotClicked()
 {
 	// [安全检查] 确保物品有效再使用
-	if (IsValid(CurrentItem.ItemData.Icon) && CurrentItem.Count > 0)
+	if (CurrentItem.Count > 0&&!CurrentItem.ItemData.ID.IsNone())
 	{
 		UE_LOG(LogTemp, Log, TEXT("使用了物品: %s"), *CurrentItem.ItemData.ID.ToString());
 

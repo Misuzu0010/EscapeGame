@@ -5,6 +5,8 @@ Saved/
 DerivedDataCache/
 Build/
 Content/Katana_Animations/
+Docs/
+.cursor/
 
 # Visual Studio files
 .vs/

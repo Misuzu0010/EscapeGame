@@ -25,7 +25,7 @@ void USprintComponent::SetSpeedBuffMultiplier(float NewMultiplier)
 	CurrentBuffMultiplier = NewMultiplier;
 
 	// 每次 Buff 改变，立刻更新当前速度
-	UpdateMovementSpeed();
+	//UpdateMovementSpeed();
 
 	UE_LOG(LogTemp, Log, TEXT("喵！速度倍率变了: %f"), CurrentBuffMultiplier);
 }
@@ -61,126 +61,119 @@ void USprintComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-
 	OwnerCharacter = Cast<ACharacter>(GetOwner());
 	if (OwnerCharacter) 
 	{
-		MovementComp=OwnerCharacter->GetCharacterMovement();
-		// 初始化速度
-		if (MovementComp) 
-		{
-			MovementComp->MaxWalkSpeed = WalkSpeed;
-			StateMachine = OwnerCharacter->FindComponentByClass<UStateMachineComponent>();
+		MovementComp = OwnerCharacter->GetCharacterMovement();
+		StateMachine = OwnerCharacter->FindComponentByClass<UStateMachineComponent>();
+		// 🚨 硬核 Debug 拦截：如果组件挂载失败，立刻在控制台高亮报错
+		ensureMsgf(StateMachine, TEXT("香子兰警报：角色身上找不到状态机组件喵！"));
+		CurrentStamina = MaxStamina;
+		// 【核心修复】：刚开局时，必须主动触发一次多播代理广播，让 UI 刷新显示体力值！
+		ApplyStaminaChange();
 
-			CurrentStamina = MaxStamina;
-			if (MovementComp)MovementComp->MaxWalkSpeed = WalkSpeed;
+		if (MovementComp)
+		{
+			//MovementComp->MaxWalkSpeed = WalkSpeed;
+			CurrentSmoothedSpeed=WalkSpeed*CurrentBuffMultiplier;
+			MovementComp->MaxWalkSpeed = CurrentSmoothedSpeed;
 		}
 	}
-	
 }
 
 
 // Called every frame
+// 在 SprintComponent.cpp 中
 void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!OwnerCharacter || !MovementComp || !StateMachine)return;
+	if (!OwnerCharacter || !MovementComp || !StateMachine) return;
 	float OldStamina = CurrentStamina;
+
+	// 1. 体力耗尽检测
 	if (CurrentStamina <= 0.0f)
 	{
 		CurrentStamina = 0.0f;
-
 		bStaminaDrained = true;
-		//// 停止冲刺
-		MovementComp->MaxWalkSpeed = WalkSpeed*CurrentBuffMultiplier;
-		StateMachine->SetState(ECharacterState::Idle);
-		//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, TEXT("Stamina Depleted!"));
+		MovementComp->MaxWalkSpeed = WalkSpeed * CurrentBuffMultiplier;
+
+		// 只有当前正在冲刺，体力干涸了才退回 Moving
+		if (StateMachine->GetCurrentState() == ECharacterState::Sprinting)
+		{
+			StateMachine->SetState(ECharacterState::Moving);
+		}
 	}
 
-
-	//判断是否冲刺
 	ECharacterState CurrentState = StateMachine->GetCurrentState();
-	//仅当移动或者空闲 且有速度 允许冲刺
-	bool bCanSprint = ((CurrentState == ECharacterState::Moving || CurrentState == ECharacterState::Idle) && !OwnerCharacter->GetVelocity().IsZero());
+	const bool bHasMovement = !OwnerCharacter->GetVelocity().IsZero();
+	const bool bCanStartSprint = CurrentState == ECharacterState::Moving || CurrentState == ECharacterState::Idle;
+	const bool bCanKeepSprint = CurrentState == ECharacterState::Sprinting;
 
-	// 实际冲刺条件
-	bIsActurallySprinting = bSprintRequested && bCanSprint && !bStaminaDrained && MovementComp->IsMovingOnGround()&&!OwnerCharacter->bIsCrouched;
-
+	// 开始冲刺和维持冲刺分开判断，避免进入 Sprinting 后下一帧被自己打断。
+	bIsActurallySprinting = bSprintRequested && (bCanStartSprint || bCanKeepSprint) && bHasMovement && !bStaminaDrained && MovementComp->IsMovingOnGround() && !OwnerCharacter->bIsCrouched;
+	const float TargetSpeed = (bIsActurallySprinting? SprintSpeed: WalkSpeed)*CurrentBuffMultiplier;
+	CurrentSmoothedSpeed=FMath::FInterpTo(CurrentSmoothedSpeed,TargetSpeed,DeltaTime,SpeedInterpRate);
+	MovementComp->MaxWalkSpeed = CurrentSmoothedSpeed;
 	
 	if (bIsActurallySprinting) 
 	{
-		
 		CurrentStamina -= StaminaConsumeRate * DeltaTime;
-
 		StaminaRegenDelay = MaxStaminaRegenDelay;
-
-		//移动组件 设置为冲刺速度
-		MovementComp->MaxWalkSpeed = SprintSpeed*CurrentBuffMultiplier;
+		//MovementComp->MaxWalkSpeed = SprintSpeed * CurrentBuffMultiplier;
 		
-
-		// 设置状态机 (防止每帧重复Set，加个判断)
 		if (CurrentState != ECharacterState::Sprinting)
 		{
 			StateMachine->SetState(ECharacterState::Sprinting);
-
 		}
-	
 	}
 	else 
 	{
+		//MovementComp->MaxWalkSpeed = WalkSpeed * CurrentBuffMultiplier;
 		if (!bSprintRequested) 
 		{
-			MovementComp->MaxWalkSpeed = WalkSpeed*CurrentBuffMultiplier;
-			if (StaminaRegenDelay > 0.0f) 
-			{
-				StaminaRegenDelay -= DeltaTime;		
-			}
-
+			if (StaminaRegenDelay > 0.0f) StaminaRegenDelay -= DeltaTime;
 			else 
 			{
-				if (CurrentStamina < MaxStamina) 
-				{
-					CurrentStamina += StaminaRegenRate * DeltaTime;
-				}
-
-				if (CurrentStamina > 10.0f)bStaminaDrained = false;
+				if (CurrentStamina < MaxStamina) CurrentStamina += StaminaRegenRate * DeltaTime;
+				if (CurrentStamina > 10.0f) bStaminaDrained = false;
 			}
 		}
-		// 限制范围
 		CurrentStamina = FMath::Clamp(CurrentStamina, 0.0f, MaxStamina);
 
-		// =======================
-		//      状态回退逻辑
-		// =======================
-		// 只有当前是 Sprinting 才需要回退，不要干扰 Jumping/Attacking
+		// =======================================================
+		// 【认知纠偏核心修正】：冲刺组件只负责“退款”冲刺状态，不干扰别的主动状态！
+		// =======================================================
 		if (CurrentState == ECharacterState::Sprinting)
 		{
-			// 如果速度很小，切回 Idle，否则切回 Moving
-			if (OwnerCharacter->GetVelocity().SizeSquared() < 10.0f)
+			if (!bSprintRequested || OwnerCharacter->GetVelocity().IsZero())
 			{
-				StateMachine->SetState(ECharacterState::Idle);
-			}
-			else
-			{
-				StateMachine->SetState(ECharacterState::Moving);
+				if (OwnerCharacter->GetVelocity().SizeSquared() < 10.0f) StateMachine->SetState(ECharacterState::Idle);
+				else StateMachine->SetState(ECharacterState::Moving);
 			}
 		}
+		else if (CurrentState == ECharacterState::Moving)
+		{
+			// 兜底逻辑：如果处于物理静止，C++状态自动切回 Idle
+			if (OwnerCharacter->GetVelocity().SizeSquared() < 10.0f) StateMachine->SetState(ECharacterState::Idle);
+		}
 	}
+
 	if (!FMath::IsNearlyEqual(OldStamina, CurrentStamina, 0.01f))
 	{
-		// 只有真的变了，才通知 UI
 		ApplyStaminaChange();
-		// 调试用：只有变化时才会打印，刷屏会少很多
-		// UE_LOG(LogTemp, Warning, TEXT("Stamina Changed: %.2f"), CurrentStamina);
 	}
-
 }
-
 void USprintComponent::StartSprinting()
 {
+	if(bStaminaDrained) return; // 体力耗尽时按 Shift 无效
+
 	bSprintRequested = true;
+
+	// 强行激活一次速度更新，不等 Tick 的延迟
+	//UpdateMovementSpeed();
+
+	UE_LOG(LogTemp, Log, TEXT("香子兰检测：玩家按下了 Shift，冲刺请求已激活！"));
 }
 
 void USprintComponent::StopSprinting()
@@ -190,7 +183,7 @@ void USprintComponent::StopSprinting()
 
 float USprintComponent::GetCurrentStaminaPercent() const
 {
-	return CurrentStamina / MaxStamina;
+	return MaxStamina>0.f?CurrentStamina / MaxStamina:0.f;
 
 }
 
@@ -201,15 +194,15 @@ float USprintComponent::GetCurrentStamina() const
 void USprintComponent::StaminaChange(float Delta)
 {
 	// ...
-
 	CurrentStamina += Delta;
-	if (CurrentStamina > MaxStamina)CurrentStamina = MaxStamina;
+	if (CurrentStamina > MaxStamina)
+	{
+		CurrentStamina = MaxStamina;
+	}
 	if (OnStaminaChanged.IsBound())
 	{
 		OnStaminaChanged.Broadcast(CurrentStamina, MaxStamina);
 	}
-
-	//OnStaminaChanged.Broadcast(CurrentStamina,MaxStamina);
 }
 
 void USprintComponent::ApplyMaxChange(float Delta)

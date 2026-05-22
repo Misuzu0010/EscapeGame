@@ -64,6 +64,11 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
     float SprintSpeed = 1000.0f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
+	float SpeedInterpRate=1.0f;
+	
+	float CurrentSmoothedSpeed=0.f;
 
     // 广播代理
     UPROPERTY(BlueprintAssignable, Category = "Sprint")
@@ -74,7 +79,7 @@ public:
     class UInputAction* SprintAction; // <--- 加上这行！
     // 供 Character 使用：获取目标速度
 
-    bool bStaminaDrained;//是否耗尽
+    bool bStaminaDrained=false;//是否耗尽
 
     float StaminaRegenDelay=0.0f;//体力恢复延迟计时器
 
@@ -84,9 +89,9 @@ public:
 public:
     float CurrentStamina;
 
-    bool bSprintRequested; // 玩家是否按下了 Shift
+    bool bSprintRequested=false; // 玩家是否按下了 Shift
 
-	bool bIsActurallySprinting; // 实际是否在冲刺
+	bool bIsActurallySprinting=false; // 实际是否在冲刺
 
     // 缓存引用
     UPROPERTY()
@@ -113,5 +118,5 @@ public:
 
     void StartSpeedBuff(float Duration, float Multiplier);
 
-    bool RetuenSprintState() { return bIsActurallySprinting; }
+    bool ReturnSprintState() const{ return bIsActurallySprinting; }
 };
