@@ -18,6 +18,7 @@ public class EscapeGame : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
+			"SlateCore",
 			"Slate",
             "Niagara",
 			"NiagaraCore",
@@ -27,18 +28,18 @@ public class EscapeGame : ModuleRules
         });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {
-             "RenderCore",                   // äÖÈ¾ºËÐÄ
-            "RHI",                          // äÖÈ¾Ó²¼þ½Ó¿Ú
-            "Projects"                      // ÏîÄ¿Ö§³Ö
+             "RenderCore",                   // ï¿½ï¿½È¾ï¿½ï¿½ï¿½ï¿½
+            "RHI",                          // ï¿½ï¿½È¾Ó²ï¿½ï¿½ï¿½Ó¿ï¿½
+            "Projects"                      // ï¿½ï¿½Ä¿Ö§ï¿½ï¿½
 		});
 
         if (Target.bBuildEditor == true)
         {
             PrivateDependencyModuleNames.AddRange(new string[] {
-                "NiagaraEditor",            // Niagara±à¼­Æ÷À©Õ¹
-                "UnrealEd",                 // Unreal±à¼­Æ÷
-                "AssetTools",               // ×Ê²ú¹¤¾ß
-                "ContentBrowser"            // ÄÚÈÝä¯ÀÀÆ÷
+                "NiagaraEditor",            // Niagaraï¿½à¼­ï¿½ï¿½ï¿½ï¿½Õ¹
+                "UnrealEd",                 // Unrealï¿½à¼­ï¿½ï¿½
+                "AssetTools",               // ï¿½Ê²ï¿½ï¿½ï¿½ï¿½ï¿½
+                "ContentBrowser"            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             });
         }
 

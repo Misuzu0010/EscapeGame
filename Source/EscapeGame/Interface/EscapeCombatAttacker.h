@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/HitResult.h"
 #include "UObject/Interface.h"
 #include "EscapeCombatAttacker.generated.h"
 

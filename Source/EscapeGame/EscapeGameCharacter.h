@@ -10,13 +10,19 @@
 #include "Logging/LogMacros.h"
 #include"InterectComponent.h"
 #include"HealthController/AttributeComponent.h"
+#include "Interface/EscapeCombatAttacker.h"
 #include"Interface/EscapeCombatDamageable.h"
 #include "EscapeGameCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
 class UEscapeCombatComponent;
+class UWindSimulationComponent;
+class UWeaponDefinition;
+class UMeshComponent;
+class UStaticMeshComponent;
 class UInputAction;
+class UClothLODControllerComponent;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -26,7 +32,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class AEscapeGameCharacter : public ACharacter, public IEscapeCombatDamageable
+class AEscapeGameCharacter : public ACharacter, public IEscapeCombatDamageable, public IEscapeCombatAttacker
 {
 	GENERATED_BODY()
 
@@ -40,7 +46,7 @@ class AEscapeGameCharacter : public ACharacter, public IEscapeCombatDamageable
 	
 protected:
 
-	/** Jump Input Action */
+	/*JumpInput Action */
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* JumpAction;
 
@@ -105,14 +111,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* SprintAction;
 
-	
-
-public:
-
 	/** Constructor */
 	AEscapeGameCharacter();	
 
-protected:
+
 
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
@@ -153,7 +155,27 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Input")
 	virtual void StopCrouch();
 	
-	virtual void ApplyDamage_Implementation(float DamageValue, AActor* InstigatorActor, const FVector& HitLocation, const FVector& HitImpulse) override;
+	UFUNCTION(BlueprintCallable, Category = "Combat|Weapon")
+	bool EquipWeapon(UWeaponDefinition* WeaponDef);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|Weapon")
+	void UnequipWeapon();
+	
+	UWeaponDefinition* GetEquippedWeaponDef() const
+	{
+		return CurrentWeaponDefinition;
+	}
+
+	UMeshComponent* GetEquippedWeaponMesh() const
+	{
+		return EquippedWeaponMesh;
+	}
+	
+	virtual FCombatDamageResult ApplyDamage_Implementation(const FCombatDamageContext& DamageContext) override;
+	
+	virtual float GetBaseDamage_Implementation() const override;
+	virtual int32 GetCurrentComboCount_Implementation() const override;
+	virtual void NotifyHitConfirmed_Implementation(AActor* HitTarget, const FHitResult& HitResult) override;
 	
 	
 
@@ -178,7 +200,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
 	UEscapeCombatComponent* EscapeCombatComp;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
+	TObjectPtr<UWindSimulationComponent> WindSimulationComp;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
+	TObjectPtr<UClothLODControllerComponent> ClothLODComponent;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf < class UUserWidget > HUDWidgetClass;
 
@@ -188,15 +216,23 @@ public:
 
 	UPROPERTY()
 	bool bIsFirstPerson = false;
-
-public:
+	
 
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UStaticMeshComponent> EquippedWeaponMesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat|Weapon", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UWeaponDefinition> DefaultWeaponDefinition;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UWeaponDefinition> CurrentWeaponDefinition = nullptr;
+
 
 
 };
-

@@ -55,15 +55,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Output")
 	FVector KawaiiWind = FVector::ZeroVector;
 
-	// 动态阻尼：跑得越快，阻尼越大，防止乱甩
+	// 运行时头发阻尼：由移动速度插值驱动，输出给 Kawaii Physics。
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Output")
-	float DynamicDamping = 1.35f;
-	// 动态阻尼：跑得越快，阻尼越大，防止乱甩
+	float RuntimeHairDamping = 1.35f;
+
+	// 低速头发阻尼：待机或慢速移动时使用，保留更轻的摆动。
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Output")
-	float DynamicDampingForIdle = 1.35f;
-	// 动态阻尼：跑得越快，阻尼越大，防止乱甩
+	float HairDampingLowSpeed = 1.05f;
+
+	// 高速头发阻尼：跑动时提高阻尼，防止发束乱甩。
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Output")
-	float DynamicDampingForMoving = 1.05f;
+	float HairDampingHighSpeed = 1.35f;
 
 	// --- 线程安全数据中转站 (GameThread 写入, WorkerThread 读取) ---
 	float CurrentFrameSpeed = 0.0f;
@@ -95,6 +97,22 @@ protected:
 	// 动画资产的标准奔跑速度 (TA 需要根据具体的跑步动画位移速度来设定此值)
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement|Config")
 	float AuthoredRunSpeed = 300.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Run Bounce")
+	FVector HairRunBounceForce = FVector::ZeroVector;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Run Bounce")
+	float HairRunBounceStrength = 120.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Run Bounce")
+	float HairRunBounceFrequency = 2.6f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Run Bounce")
+	float HairRunBounceMinSpeed=120.f;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Kawaii Physics|Run Bounce")
+	float HairRunBounceMaxSpeed=600.f;
+	
 
 	// --- 内部缓存的组件指针 ---
 	TWeakObjectPtr<UWindSimulationComponent>WindComponent;

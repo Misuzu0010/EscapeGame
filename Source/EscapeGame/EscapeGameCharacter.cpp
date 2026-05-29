@@ -1,11 +1,14 @@
 ﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "EscapeGameCharacter.h"
+
+#include "ClothLODControllerComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
-#include"InventoryMenuWidget.h"
+#include "WeaponDefinition.h"
 #include"EscapeCombatComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
@@ -20,7 +23,8 @@
 #include "Engine/EngineTypes.h"
 #include "Engine/World.h"
 #include"EscapeGameplayTags.h"
-#include"Interface/PickupInterface.h"
+#include "WindSimulationComponent.h"
+
 #include "statemachine/StateMachineComponent.h"
 
 AEscapeGameCharacter::AEscapeGameCharacter()
@@ -76,6 +80,14 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 	InteractComp = CreateDefaultSubobject<UInterectComponent>(TEXT("InteractComp"));
 	
 	EscapeCombatComp=CreateDefaultSubobject<UEscapeCombatComponent>(TEXT("EscapeCombatComp"));
+	
+	WindSimulationComp=CreateDefaultSubobject<UWindSimulationComponent>(TEXT("WindSimulationComp"));
+	
+	ClothLODComponent=CreateDefaultSubobject<UClothLODControllerComponent>(TEXT("ClothLODComponent"));
+	EquippedWeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EquippedWeaponMesh"));
+	EquippedWeaponMesh->SetupAttachment(GetMesh());
+	EquippedWeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EquippedWeaponMesh->SetGenerateOverlapEvents(false);
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
@@ -131,6 +143,11 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 void AEscapeGameCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+	if (DefaultWeaponDefinition)
+	{
+		EquipWeapon(DefaultWeaponDefinition);
+	}
 
     // ==========================================
     // 🛠️ 【基础调试】核心挂载组件状态大排查
@@ -348,14 +365,115 @@ void AEscapeGameCharacter::Input_UseItem(const FInputActionValue& Value)
 	}
 }
 
-void AEscapeGameCharacter::ApplyDamage_Implementation(float DamageValue, AActor* InstigatorActor, const FVector& HitLocation, const FVector& HitImpulse)
+FCombatDamageResult AEscapeGameCharacter::ApplyDamage_Implementation(const FCombatDamageContext& DamageContext)
 {
-	AttributeComp->ApplyHealthChange(-FMath::Max(0.f,DamageValue));
-	if (AttributeComp->CurrentHealth<=0)
+	FCombatDamageResult result;
+	if (!AttributeComp || !StateMachineComp)
+	{
+		return result;
+	}
+
+	if (StateMachineComp->GetCurrentState() == ECharacterState::Dead)
+	{
+		return result;
+	}
+	const float DamageToApply = FMath::Max(0.f, DamageContext.DamageValue);
+	if (DamageToApply<=0.f)
+	{
+		return result;
+	}
+	const float OldHealth =  AttributeComp->CurrentHealth;
+	AttributeComp ->ApplyHealthChange(-DamageToApply);
+	const float NewHealth = AttributeComp->CurrentHealth;
+	
+	const float ActualDamage = FMath::Max(0.f, OldHealth - NewHealth);
+	
+	result.bApplied = ActualDamage > 0.f;
+	
+	result.ActualDamage = ActualDamage;
+	
+	result.bKilled = NewHealth <= 0.f && OldHealth > 0.f;
+	
+	if (result.bKilled)
 	{
 		StateMachineComp->ApplyDeath();
 	}
-	GetCharacterMovement()->AddImpulse(HitImpulse);
+	
+	if (result.bApplied && GetCharacterMovement())
+	{
+		GetCharacterMovement()->AddImpulse(DamageContext.HitImpulse);
+	}
+	return result;
+}
+
+float AEscapeGameCharacter::GetBaseDamage_Implementation() const
+{
+	return EscapeCombatComp ? EscapeCombatComp->GetCurrentActionBaseDamage() : 0.f;
+}
+
+int32 AEscapeGameCharacter::GetCurrentComboCount_Implementation() const
+{
+	return EscapeCombatComp ? EscapeCombatComp->GetCurrentComboCount() : 0;
+}
+
+void AEscapeGameCharacter::NotifyHitConfirmed_Implementation(AActor* HitTarget, const FHitResult& HitResult)
+{
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("命中确认：Target=%s, ImpactPoint=%s"),
+		*GetNameSafe(HitTarget),
+		*HitResult.ImpactPoint.ToCompactString()
+	);
+}
 
 
+bool AEscapeGameCharacter::EquipWeapon(UWeaponDefinition* WeaponDef)
+{
+	if (!WeaponDef)
+	{
+		UnequipWeapon();
+		return true;
+	}
+
+	if (!WeaponDef->WeaponMesh || !EquippedWeaponMesh || !GetMesh())
+	{
+		return false;
+	}
+
+	if (!GetMesh()->DoesSocketExist(WeaponDef->AttachSocketName))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("装备武器失败：角色缺少挂载 Socket [%s]"), *WeaponDef->AttachSocketName.ToString());
+		return false;
+	}
+
+	EquippedWeaponMesh->SetStaticMesh(WeaponDef->WeaponMesh);
+	EquippedWeaponMesh->AttachToComponent(
+		GetMesh(),
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+		WeaponDef->AttachSocketName
+	);
+
+	if (EscapeCombatComp)
+	{
+		EscapeCombatComp->SetEquippedWeapon(WeaponDef, EquippedWeaponMesh);
+	}
+
+	CurrentWeaponDefinition = WeaponDef;
+	return true;
+}
+
+void AEscapeGameCharacter::UnequipWeapon()
+{
+	CurrentWeaponDefinition = nullptr;
+
+	if (EquippedWeaponMesh)
+	{
+		EquippedWeaponMesh->SetStaticMesh(nullptr);
+	}
+
+	if (EscapeCombatComp)
+	{
+		EscapeCombatComp->ClearEquippedWeapon();
+	}
 }

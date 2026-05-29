@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include"EscapeCombatType.h"
 #include "EscapeCombatDamageable.generated.h"
 
 // This class does not need to be modified.
@@ -23,6 +24,6 @@ class ESCAPEGAME_API IEscapeCombatDamageable
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat|Damage")
-	void ApplyDamage(float DamageValue, AActor* InstigatorActor, const FVector& HitLocation, const FVector& HitImpulse);
+	FCombatDamageResult ApplyDamage(const FCombatDamageContext& DamageContext);
 
 };

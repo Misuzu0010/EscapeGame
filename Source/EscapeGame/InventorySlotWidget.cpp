@@ -127,17 +127,15 @@ void UInventorySlotWidget::InitSlot(UInventoryComponent* InComp, int32 InIndex)
 //鼠标按下 开始拖拽
 FReply UInventorySlotWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	
-	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton) 
+	// 将条件合并，减少嵌套，提高可读性
+	if (InMouseEvent.GetEffectingButton() == EKeys::LeftMouseButton && CurrentItem.Count > 0) 
 	{
-		//大于0才可以拖拽
-		if (CurrentItem.Count > 0) 
-		{
-			
-			return FReply::Handled().DetectDrag(TakeWidget(), EKeys::LeftMouseButton);
-		}
+		// 拖拽逻辑：Handled() 和 DetectDrag 链式调用
+		return FReply::Handled().DetectDrag(TakeWidget(), EKeys::LeftMouseButton);
 	}
-	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+    
+	// 如果不满足条件，直接放行，绝不牵扯 Super 和任何变量复制
+	return FReply::Unhandled();
 }
 
 void UInventorySlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) 

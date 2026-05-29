@@ -53,7 +53,6 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
         else
         {
             // 容错降级逻辑
-            
             bIsRunning = bShouldMove && (GroundSpeed > 300.0f);
         }
         CachedRotation = OwnerCharacter->GetActorRotation();
@@ -63,7 +62,7 @@ void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
     if (WindComponent.IsValid())
     {
 		float KawaiiMultiplier = 5.0f;// 这个值可以根据需要调整，增加风力的影响程度
-        KawaiiWind = WindComponent->GetCurrentWind()*KawaiiMultiplier;
+        KawaiiWind = WindComponent->GetfinalWind()*KawaiiMultiplier;
     }
     if (ClothLODComponent.IsValid())
     {
@@ -76,8 +75,12 @@ void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaTime)
     UAnimInstance::NativeThreadSafeUpdateAnimation(DeltaTime);
     
     float Speed = CachedVelocity.Size2D();
-    float TargetDamping = (Speed > 10.0f) ? DynamicDampingForIdle : DynamicDampingForMoving;
-    DynamicDamping = FMath::FInterpTo(DynamicDamping, TargetDamping, DeltaTime, 5.0f);
+    const float SpeedAlpha=FMath::Clamp((Speed-HairRunBounceMinSpeed)/(HairRunBounceMaxSpeed-HairRunBounceMinSpeed), 0.0f, 1.0f);
+    const float TimeSeconds = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+    const float BounceZ = FMath::Sin(TimeSeconds*HairRunBounceFrequency*TWO_PI)*HairRunBounceStrength*SpeedAlpha;
+    HairRunBounceForce=FVector(0.f,0.f,BounceZ);
+    const float TargetDamping = (Speed > 10.0f) ? HairDampingHighSpeed : HairDampingLowSpeed;
+    RuntimeHairDamping = FMath::FInterpTo(RuntimeHairDamping, TargetDamping, DeltaTime, 5.0f);
     float TargetPhysicsAlpha = 1.0f;
 	//传送检测：如果速度过快，直接关闭物理模拟，防止布料乱飞
     if (Speed > 2000.0f)

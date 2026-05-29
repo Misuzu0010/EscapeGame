@@ -61,6 +61,7 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	inline FVector GetCurrentWind() const { return CurrentWind; }
+	inline FVector GetfinalWind() const {return TargetWind;}
 private:
 	FVector CurrentWind;
 	FVector TargetWind;
