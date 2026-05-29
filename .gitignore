@@ -22,6 +22,9 @@ Docs/
 .idea/
 Plugins/Developer/RiderLink/
 
+# Project plugins are installed locally and should not be committed.
+Plugins/
+
 # macOS
 .DS_Store
 
