@@ -39,6 +39,7 @@ public class EscapeGame : ModuleRules
                 "NiagaraEditor",            // Niagara�༭����չ
                 "UnrealEd",                 // Unreal�༭��
                 "AssetTools",               // �ʲ�����
+                "AssetRegistry",
                 "ContentBrowser"            // ���������
             });
         }
