@@ -27,6 +27,11 @@ namespace WeaponImportTool
 		return DestinationPath / AssetName;
 	}
 
+	FString JoinMessages(const TArray<FString>& Messages)
+	{
+		return FString::Join(Messages, TEXT(" | "));
+	}
+
 	UObject* ImportSingleAsset(const FString& Filename, const FString& DestinationPath, FWeaponImportResult& Result, const UClass* ExpectedClass = nullptr)
 	{
 		UAssetImportTask* ImportTask = NewObject<UAssetImportTask>();
@@ -91,8 +96,25 @@ namespace WeaponImportTool
 	)
 	{
 		const FString SanitizedAssetBaseName = ObjectTools::SanitizeObjectName(AssetBaseName);
-		const FString MaterialName = FString::Printf(TEXT("M_%s"), *SanitizedAssetBaseName);
-		const FString PackageName = BuildAssetPackageName(DestinationPath, MaterialName);
+		if (SanitizedAssetBaseName.IsEmpty())
+		{
+			Result.AddMessage(FString::Printf(TEXT("Material create failed: sanitized asset base name is empty: %s"), *AssetBaseName));
+			return nullptr;
+		}
+
+		const FString DesiredMaterialName = FString::Printf(TEXT("M_%s"), *SanitizedAssetBaseName);
+		const FString DesiredPackageName = BuildAssetPackageName(DestinationPath, DesiredMaterialName);
+		FString PackageName;
+		FString MaterialName;
+
+		FAssetToolsModule& AssetToolsModule =
+			FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+		AssetToolsModule.Get().CreateUniqueAssetName(
+			DesiredPackageName,
+			TEXT(""),
+			PackageName,
+			MaterialName
+		);
 
 		UPackage* Package = CreatePackage(*PackageName);
 		if (!Package)
@@ -115,6 +137,12 @@ namespace WeaponImportTool
 
 		UMaterialExpressionTextureSample* TextureSample =
 			NewObject<UMaterialExpressionTextureSample>(Material);
+		if (!TextureSample)
+		{
+			Result.AddMessage(FString::Printf(TEXT("Material texture sample create failed: %s"), *MaterialName));
+			return nullptr;
+		}
+
 		TextureSample->Texture = DiffuseTexture;
 		TextureSample->MaterialExpressionEditorX = -400;
 		TextureSample->MaterialExpressionEditorY = 0;
@@ -123,6 +151,12 @@ namespace WeaponImportTool
 
 		UMaterialExpressionConstant* Roughness =
 			NewObject<UMaterialExpressionConstant>(Material);
+		if (!Roughness)
+		{
+			Result.AddMessage(FString::Printf(TEXT("Material roughness constant create failed: %s"), *MaterialName));
+			return nullptr;
+		}
+
 		Roughness->R = 0.45f;
 		Roughness->MaterialExpressionEditorX = -400;
 		Roughness->MaterialExpressionEditorY = 160;
@@ -131,6 +165,12 @@ namespace WeaponImportTool
 
 		UMaterialExpressionConstant* Metallic =
 			NewObject<UMaterialExpressionConstant>(Material);
+		if (!Metallic)
+		{
+			Result.AddMessage(FString::Printf(TEXT("Material metallic constant create failed: %s"), *MaterialName));
+			return nullptr;
+		}
+
 		Metallic->R = 0.3f;
 		Metallic->MaterialExpressionEditorX = -400;
 		Metallic->MaterialExpressionEditorY = 320;
@@ -144,6 +184,22 @@ namespace WeaponImportTool
 		Result.MaterialObjectPath = Material->GetPathName();
 		Result.AddMessage(FString::Printf(TEXT("Created Material: %s"), *Result.MaterialObjectPath));
 		return Material;
+	}
+
+	void AssignMaterialToStaticMesh(UStaticMesh* ImportedMesh, UMaterial* Material, FWeaponImportResult& Result)
+	{
+		if (ImportedMesh->GetStaticMaterials().Num() == 0)
+		{
+			ImportedMesh->AddMaterial(Material);
+			Result.AddMessage(TEXT("Added generated material to new Static Mesh material slot."));
+		}
+		else
+		{
+			ImportedMesh->SetMaterial(0, Material);
+			Result.AddMessage(TEXT("Assigned generated material to Static Mesh slot 0."));
+		}
+
+		ImportedMesh->MarkPackageDirty();
 	}
 #endif
 
@@ -283,7 +339,25 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 
 	if (!LightmapTextureFile.IsEmpty())
 	{
-		WeaponImportTool::ImportSingleAsset(LightmapTextureFile, DestinationPath, Result, UTexture2D::StaticClass());
+		FWeaponImportResult LightmapResult;
+		UObject* ImportedLightmapObject = WeaponImportTool::ImportSingleAsset(
+			LightmapTextureFile,
+			DestinationPath,
+			LightmapResult,
+			UTexture2D::StaticClass()
+		);
+
+		if (UTexture2D* LightmapTexture = Cast<UTexture2D>(ImportedLightmapObject))
+		{
+			Result.AddMessage(FString::Printf(TEXT("Imported optional Lightmap Texture: %s"), *LightmapTexture->GetPathName()));
+		}
+		else
+		{
+			const FString LightmapMessage = LightmapResult.Messages.Num() > 0 ?
+				WeaponImportTool::JoinMessages(LightmapResult.Messages) :
+				TEXT("import returned no Texture2D");
+			Result.AddMessage(FString::Printf(TEXT("Optional Lightmap import skipped: %s"), *LightmapMessage));
+		}
 	}
 
 	UMaterial* Material = WeaponImportTool::CreateBasicDiffuseMaterial(
@@ -298,9 +372,7 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 		return Result;
 	}
 
-	ImportedMesh->SetMaterial(0, Material);
-	ImportedMesh->MarkPackageDirty();
-	Result.AddMessage(TEXT("Assigned generated material to Static Mesh slot 0."));
+	WeaponImportTool::AssignMaterialToStaticMesh(ImportedMesh, Material, Result);
 
 	Result.StaticMeshObjectPath = ImportedMesh->GetPathName();
 	Result.bSucceeded = true;
