@@ -1,5 +1,7 @@
 #include "WeaponImportToolLibrary.h"
 
+#include "EscapeGameplayTags.h"
+#include "WeaponDefinition.h"
 #include "HAL/FileManager.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
@@ -186,6 +188,77 @@ namespace WeaponImportTool
 		return Material;
 	}
 
+	UWeaponDefinition* CreateWeaponDefinitionAsset(
+		const FString& DestinationPath,
+		const FString& AssetBaseName,
+		UStaticMesh* ImportedMesh,
+		float BaseDamage,
+		float TraceRadius,
+		FName AttachSocketName,
+		FName TraceStartSocketName,
+		FName TraceEndSocketName,
+		FWeaponImportResult& Result
+	)
+	{
+		const FString SanitizedAssetBaseName = ObjectTools::SanitizeObjectName(AssetBaseName);
+		if (SanitizedAssetBaseName.IsEmpty())
+		{
+			Result.AddMessage(FString::Printf(TEXT("WeaponDefinition create failed: sanitized asset base name is empty: %s"), *AssetBaseName));
+			return nullptr;
+		}
+
+		const FString DesiredDataAssetName = FString::Printf(TEXT("DA_Weapon_%s"), *SanitizedAssetBaseName);
+		const FString DesiredPackageName = BuildAssetPackageName(DestinationPath, DesiredDataAssetName);
+		FString PackageName;
+		FString DataAssetName;
+
+		FAssetToolsModule& AssetToolsModule =
+			FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+		AssetToolsModule.Get().CreateUniqueAssetName(
+			DesiredPackageName,
+			TEXT(""),
+			PackageName,
+			DataAssetName
+		);
+
+		UPackage* Package = CreatePackage(*PackageName);
+		if (!Package)
+		{
+			Result.AddMessage(FString::Printf(TEXT("WeaponDefinition package create failed: %s"), *PackageName));
+			return nullptr;
+		}
+
+		UWeaponDefinition* WeaponDefinition = NewObject<UWeaponDefinition>(
+			Package,
+			*DataAssetName,
+			RF_Public | RF_Standalone
+		);
+
+		if (!WeaponDefinition)
+		{
+			Result.AddMessage(FString::Printf(TEXT("WeaponDefinition create failed: %s"), *DataAssetName));
+			return nullptr;
+		}
+
+		WeaponDefinition->WeaponMesh = ImportedMesh;
+		WeaponDefinition->AttachSocketName = AttachSocketName;
+		WeaponDefinition->TraceStartSocketName = TraceStartSocketName;
+		WeaponDefinition->TraceEndSocketName = TraceEndSocketName;
+		WeaponDefinition->TraceRadius = TraceRadius;
+		WeaponDefinition->BaseDamage = BaseDamage;
+		WeaponDefinition->DamageTypeTag = EscapeGameplayTags::Data_Damage_Physical;
+		WeaponDefinition->bConsumeOnUse = false;
+		WeaponDefinition->bStackable = false;
+		WeaponDefinition->MaxStackCount = 1;
+
+		FAssetRegistryModule::AssetCreated(WeaponDefinition);
+		WeaponDefinition->MarkPackageDirty();
+
+		Result.WeaponDefinitionObjectPath = WeaponDefinition->GetPathName();
+		Result.AddMessage(FString::Printf(TEXT("Created WeaponDefinition: %s"), *Result.WeaponDefinitionObjectPath));
+		return WeaponDefinition;
+	}
+
 	void AssignMaterialToStaticMesh(UStaticMesh* ImportedMesh, UMaterial* Material, FWeaponImportResult& Result)
 	{
 		if (ImportedMesh->GetStaticMaterials().Num() == 0)
@@ -269,10 +342,6 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 )
 {
 	FWeaponImportResult Result;
-
-	(void)AttachSocketName;
-	(void)TraceStartSocketName;
-	(void)TraceEndSocketName;
 
 	if (SourceFolder.IsEmpty() || !IFileManager::Get().DirectoryExists(*SourceFolder))
 	{
@@ -374,12 +443,43 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 
 	WeaponImportTool::AssignMaterialToStaticMesh(ImportedMesh, Material, Result);
 
+	UWeaponDefinition* WeaponDefinition = WeaponImportTool::CreateWeaponDefinitionAsset(
+		DestinationPath,
+		AssetBaseName,
+		ImportedMesh,
+		BaseDamage,
+		TraceRadius,
+		AttachSocketName,
+		TraceStartSocketName,
+		TraceEndSocketName,
+		Result
+	);
+
+	if (!WeaponDefinition)
+	{
+		return Result;
+	}
+
+	if (!ImportedMesh->FindSocket(TraceStartSocketName))
+	{
+		Result.AddMessage(FString::Printf(TEXT("Warning: Static Mesh missing trace start socket: %s"), *TraceStartSocketName.ToString()));
+	}
+
+	if (!ImportedMesh->FindSocket(TraceEndSocketName))
+	{
+		Result.AddMessage(FString::Printf(TEXT("Warning: Static Mesh missing trace end socket: %s"), *TraceEndSocketName.ToString()));
+	}
+
 	Result.StaticMeshObjectPath = ImportedMesh->GetPathName();
-	Result.bSucceeded = true;
 	Result.AddMessage(FString::Printf(TEXT("Imported Static Mesh: %s"), *Result.StaticMeshObjectPath));
 	Result.AddMessage(FString::Printf(TEXT("Imported Diffuse Texture: %s"), *DiffuseTexture->GetPathName()));
+	Result.bSucceeded = true;
+	Result.AddMessage(TEXT("Weapon import complete. Check Static Mesh sockets and assign DA_Weapon_* to DefaultWeaponDefinition."));
 	return Result;
 #else
+	(void)AttachSocketName;
+	(void)TraceStartSocketName;
+	(void)TraceEndSocketName;
 	(void)LightmapTextureFile;
 	Result.AddMessage(TEXT("Weapon import tool can only run in UE Editor."));
 #endif
