@@ -9,13 +9,24 @@
 #include "AssetToolsModule.h"
 #include "IAssetTools.h"
 #include "Modules/ModuleManager.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/Texture2D.h"
+#include "Materials/Material.h"
+#include "Materials/MaterialExpressionConstant.h"
+#include "Materials/MaterialExpressionTextureSample.h"
+#include "ObjectTools.h"
+#include "UObject/Package.h"
 #endif
 
 namespace WeaponImportTool
 {
 #if WITH_EDITOR
+	FString BuildAssetPackageName(const FString& DestinationPath, const FString& AssetName)
+	{
+		return DestinationPath / AssetName;
+	}
+
 	UObject* ImportSingleAsset(const FString& Filename, const FString& DestinationPath, FWeaponImportResult& Result, const UClass* ExpectedClass = nullptr)
 	{
 		UAssetImportTask* ImportTask = NewObject<UAssetImportTask>();
@@ -70,6 +81,69 @@ namespace WeaponImportTool
 		}
 
 		return FirstImportedObject;
+	}
+
+	UMaterial* CreateBasicDiffuseMaterial(
+		const FString& DestinationPath,
+		const FString& AssetBaseName,
+		UTexture2D* DiffuseTexture,
+		FWeaponImportResult& Result
+	)
+	{
+		const FString SanitizedAssetBaseName = ObjectTools::SanitizeObjectName(AssetBaseName);
+		const FString MaterialName = FString::Printf(TEXT("M_%s"), *SanitizedAssetBaseName);
+		const FString PackageName = BuildAssetPackageName(DestinationPath, MaterialName);
+
+		UPackage* Package = CreatePackage(*PackageName);
+		if (!Package)
+		{
+			Result.AddMessage(FString::Printf(TEXT("Material package create failed: %s"), *PackageName));
+			return nullptr;
+		}
+
+		UMaterial* Material = NewObject<UMaterial>(
+			Package,
+			*MaterialName,
+			RF_Public | RF_Standalone
+		);
+
+		if (!Material)
+		{
+			Result.AddMessage(FString::Printf(TEXT("Material create failed: %s"), *MaterialName));
+			return nullptr;
+		}
+
+		UMaterialExpressionTextureSample* TextureSample =
+			NewObject<UMaterialExpressionTextureSample>(Material);
+		TextureSample->Texture = DiffuseTexture;
+		TextureSample->MaterialExpressionEditorX = -400;
+		TextureSample->MaterialExpressionEditorY = 0;
+		Material->GetExpressionCollection().AddExpression(TextureSample);
+		Material->GetEditorOnlyData()->BaseColor.Expression = TextureSample;
+
+		UMaterialExpressionConstant* Roughness =
+			NewObject<UMaterialExpressionConstant>(Material);
+		Roughness->R = 0.45f;
+		Roughness->MaterialExpressionEditorX = -400;
+		Roughness->MaterialExpressionEditorY = 160;
+		Material->GetExpressionCollection().AddExpression(Roughness);
+		Material->GetEditorOnlyData()->Roughness.Expression = Roughness;
+
+		UMaterialExpressionConstant* Metallic =
+			NewObject<UMaterialExpressionConstant>(Material);
+		Metallic->R = 0.3f;
+		Metallic->MaterialExpressionEditorX = -400;
+		Metallic->MaterialExpressionEditorY = 320;
+		Material->GetExpressionCollection().AddExpression(Metallic);
+		Material->GetEditorOnlyData()->Metallic.Expression = Metallic;
+
+		FAssetRegistryModule::AssetCreated(Material);
+		Material->PostEditChange();
+		Material->MarkPackageDirty();
+
+		Result.MaterialObjectPath = Material->GetPathName();
+		Result.AddMessage(FString::Printf(TEXT("Created Material: %s"), *Result.MaterialObjectPath));
+		return Material;
 	}
 #endif
 
@@ -211,6 +285,22 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 	{
 		WeaponImportTool::ImportSingleAsset(LightmapTextureFile, DestinationPath, Result, UTexture2D::StaticClass());
 	}
+
+	UMaterial* Material = WeaponImportTool::CreateBasicDiffuseMaterial(
+		DestinationPath,
+		AssetBaseName,
+		DiffuseTexture,
+		Result
+	);
+
+	if (!Material)
+	{
+		return Result;
+	}
+
+	ImportedMesh->SetMaterial(0, Material);
+	ImportedMesh->MarkPackageDirty();
+	Result.AddMessage(TEXT("Assigned generated material to Static Mesh slot 0."));
 
 	Result.StaticMeshObjectPath = ImportedMesh->GetPathName();
 	Result.bSucceeded = true;
