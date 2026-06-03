@@ -4,8 +4,75 @@
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
 
+#if WITH_EDITOR
+#include "AssetImportTask.h"
+#include "AssetToolsModule.h"
+#include "IAssetTools.h"
+#include "Modules/ModuleManager.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/Texture2D.h"
+#endif
+
 namespace WeaponImportTool
 {
+#if WITH_EDITOR
+	UObject* ImportSingleAsset(const FString& Filename, const FString& DestinationPath, FWeaponImportResult& Result, const UClass* ExpectedClass = nullptr)
+	{
+		UAssetImportTask* ImportTask = NewObject<UAssetImportTask>();
+		ImportTask->Filename = Filename;
+		ImportTask->DestinationPath = DestinationPath;
+		ImportTask->bAutomated = true;
+		ImportTask->bReplaceExisting = false;
+		ImportTask->bSave = false;
+
+		TArray<UAssetImportTask*> Tasks;
+		Tasks.Add(ImportTask);
+
+		FAssetToolsModule& AssetToolsModule =
+			FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+		AssetToolsModule.Get().ImportAssetTasks(Tasks);
+
+		if (ImportTask->ImportedObjectPaths.Num() == 0)
+		{
+			Result.AddMessage(FString::Printf(TEXT("\u8D44\u6E90\u5BFC\u5165\u5931\u8D25\uFF1A%s"), *Filename));
+			return nullptr;
+		}
+
+		UObject* FirstImportedObject = nullptr;
+		for (const FString& ImportedObjectPath : ImportTask->ImportedObjectPaths)
+		{
+			UObject* ImportedObject = LoadObject<UObject>(nullptr, *ImportedObjectPath);
+			if (!ImportedObject)
+			{
+				continue;
+			}
+
+			if (!FirstImportedObject)
+			{
+				FirstImportedObject = ImportedObject;
+			}
+
+			if (!ExpectedClass || ImportedObject->IsA(ExpectedClass))
+			{
+				return ImportedObject;
+			}
+		}
+
+		if (ExpectedClass)
+		{
+			Result.AddMessage(FString::Printf(TEXT("Imported asset did not match expected class %s: %s"), *ExpectedClass->GetName(), *Filename));
+			return nullptr;
+		}
+
+		if (!FirstImportedObject)
+		{
+			Result.AddMessage(FString::Printf(TEXT("\u8D44\u6E90\u5BFC\u5165\u540E\u52A0\u8F7D\u5931\u8D25\uFF1A%s"), *ImportTask->ImportedObjectPaths[0]));
+		}
+
+		return FirstImportedObject;
+	}
+#endif
+
 	bool IsValidGameDestinationPath(const FString& DestinationPath)
 	{
 		return DestinationPath.StartsWith(TEXT("/Game/")) &&
@@ -124,17 +191,35 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 	const FString LightmapTextureFile = WeaponImportTool::FindFirstTextureByKeyword(SourceFolder, TEXT("Lightmap"));
 
 #if WITH_EDITOR
-	Result.bSucceeded = true;
-	Result.AddMessage(FString::Printf(TEXT("\u627E\u5230 OBJ \u6587\u4EF6\uFF1A%s"), *ObjFile));
-	Result.AddMessage(FString::Printf(TEXT("\u627E\u5230 Diffuse \u8D34\u56FE\uFF1A%s"), *DiffuseTextureFile));
+	UObject* ImportedMeshObject = WeaponImportTool::ImportSingleAsset(ObjFile, DestinationPath, Result, UStaticMesh::StaticClass());
+	UStaticMesh* ImportedMesh = Cast<UStaticMesh>(ImportedMeshObject);
+	if (!ImportedMesh)
+	{
+		Result.AddMessage(TEXT("OBJ did not import as Static Mesh."));
+		return Result;
+	}
+
+	UObject* ImportedDiffuseObject = WeaponImportTool::ImportSingleAsset(DiffuseTextureFile, DestinationPath, Result, UTexture2D::StaticClass());
+	UTexture2D* DiffuseTexture = Cast<UTexture2D>(ImportedDiffuseObject);
+	if (!DiffuseTexture)
+	{
+		Result.AddMessage(TEXT("Diffuse texture did not import as Texture2D."));
+		return Result;
+	}
+
 	if (!LightmapTextureFile.IsEmpty())
 	{
-		Result.AddMessage(FString::Printf(TEXT("\u627E\u5230 Lightmap \u8D34\u56FE\uFF1A%s"), *LightmapTextureFile));
+		WeaponImportTool::ImportSingleAsset(LightmapTextureFile, DestinationPath, Result, UTexture2D::StaticClass());
 	}
-	Result.AddMessage(TEXT("\u53C2\u6570\u6821\u9A8C\u901A\u8FC7\uFF0C\u5BFC\u5165\u6D41\u7A0B\u5C06\u5728\u540E\u7EED\u4EFB\u52A1\u4E2D\u63A5\u5165\u3002"));
+
+	Result.StaticMeshObjectPath = ImportedMesh->GetPathName();
+	Result.bSucceeded = true;
+	Result.AddMessage(FString::Printf(TEXT("Imported Static Mesh: %s"), *Result.StaticMeshObjectPath));
+	Result.AddMessage(FString::Printf(TEXT("Imported Diffuse Texture: %s"), *DiffuseTexture->GetPathName()));
+	return Result;
 #else
 	(void)LightmapTextureFile;
-	Result.AddMessage(TEXT("\u6B66\u5668\u5BFC\u5165\u5DE5\u5177\u53EA\u80FD\u5728 UE Editor \u4E2D\u6267\u884C\u3002"));
+	Result.AddMessage(TEXT("Weapon import tool can only run in UE Editor."));
 #endif
 
 	return Result;
