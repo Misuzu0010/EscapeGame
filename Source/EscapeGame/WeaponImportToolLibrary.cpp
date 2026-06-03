@@ -61,6 +61,7 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 	}
 
 #if WITH_EDITOR
+	Result.bSucceeded = true;
 	Result.AddMessage(TEXT("\u53C2\u6570\u6821\u9A8C\u901A\u8FC7\uFF0C\u5BFC\u5165\u6D41\u7A0B\u5C06\u5728\u540E\u7EED\u4EFB\u52A1\u4E2D\u63A5\u5165\u3002"));
 #else
 	Result.AddMessage(TEXT("\u6B66\u5668\u5BFC\u5165\u5DE5\u5177\u53EA\u80FD\u5728 UE Editor \u4E2D\u6267\u884C\u3002"));
