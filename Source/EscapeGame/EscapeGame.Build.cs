@@ -20,31 +20,31 @@ public class EscapeGame : ModuleRules
 			"UMG",
 			"SlateCore",
 			"Slate",
-            "Niagara",
+			"Niagara",
 			"NiagaraCore",
 			"NiagaraShader",
 			"VectorVM",
 			"GameplayTags"
-        });
-
-		PrivateDependencyModuleNames.AddRange(new string[] {
-             "RenderCore",                   // ��Ⱦ����
-            "RHI",                          // ��ȾӲ���ӿ�
-            "Projects"                      // ��Ŀ֧��
 		});
 
-        if (Target.bBuildEditor == true)
-        {
-            PrivateDependencyModuleNames.AddRange(new string[] {
-                "NiagaraEditor",            // Niagara�༭����չ
-                "UnrealEd",                 // Unreal�༭��
-                "AssetTools",               // �ʲ�����
-                "AssetRegistry",
-                "ContentBrowser"            // ���������
-            });
-        }
+		PrivateDependencyModuleNames.AddRange(new string[] {
+			"RenderCore",
+			"RHI",
+			"Projects"
+		});
 
-        PublicIncludePaths.AddRange(new string[] {
+		if (Target.bBuildEditor == true)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[] {
+				"NiagaraEditor",
+				"UnrealEd",
+				"AssetTools",
+				"AssetRegistry",
+				"ContentBrowser"
+			});
+		}
+
+		PublicIncludePaths.AddRange(new string[] {
 			"EscapeGame",
 			"EscapeGame/Variant_Platforming",
 			"EscapeGame/Variant_Platforming/Animation",

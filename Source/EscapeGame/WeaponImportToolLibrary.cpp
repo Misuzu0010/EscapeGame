@@ -18,13 +18,21 @@ namespace WeaponImportTool
 		IFileManager::Get().FindFilesRecursive(
 			Files,
 			*SourceFolder,
-			*FString::Printf(TEXT("*.%s"), *Extension),
+			TEXT("*.*"),
 			true,
 			false
 		);
 
 		Files.Sort();
-		return Files.Num() > 0 ? Files[0] : FString();
+		for (const FString& File : Files)
+		{
+			if (FPaths::GetExtension(File, false).Equals(Extension, ESearchCase::IgnoreCase))
+			{
+				return File;
+			}
+		}
+
+		return FString();
 	}
 
 	FString FindFirstTextureByKeyword(const FString& SourceFolder, const FString& Keyword)
@@ -33,7 +41,7 @@ namespace WeaponImportTool
 		IFileManager::Get().FindFilesRecursive(
 			Files,
 			*SourceFolder,
-			TEXT("*.png"),
+			TEXT("*.*"),
 			true,
 			false
 		);
@@ -41,7 +49,8 @@ namespace WeaponImportTool
 		Files.Sort();
 		for (const FString& File : Files)
 		{
-			if (FPaths::GetBaseFilename(File).Contains(Keyword, ESearchCase::IgnoreCase))
+			if (FPaths::GetExtension(File, false).Equals(TEXT("png"), ESearchCase::IgnoreCase) &&
+				FPaths::GetBaseFilename(File).Contains(Keyword, ESearchCase::IgnoreCase))
 			{
 				return File;
 			}
