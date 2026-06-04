@@ -9,6 +9,7 @@
 #if WITH_EDITOR
 #include "AssetImportTask.h"
 #include "AssetToolsModule.h"
+#include "FileHelpers.h"
 #include "IAssetTools.h"
 #include "Modules/ModuleManager.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -32,6 +33,41 @@ namespace WeaponImportTool
 	FString JoinMessages(const TArray<FString>& Messages)
 	{
 		return FString::Join(Messages, TEXT(" | "));
+	}
+
+	bool SaveDirtyPackagesForAssets(const TArray<UObject*>& Assets, FWeaponImportResult& Result)
+	{
+		TArray<UPackage*> PackagesToSave;
+
+		for (UObject* Asset : Assets)
+		{
+			if (!Asset)
+			{
+				continue;
+			}
+
+			UPackage* Package = Asset->GetOutermost();
+			if (Package && Package->IsDirty())
+			{
+				PackagesToSave.AddUnique(Package);
+			}
+		}
+
+		if (PackagesToSave.Num() == 0)
+		{
+			Result.AddMessage(TEXT("No dirty asset packages to save."));
+			return true;
+		}
+
+		const bool bSaved = UEditorLoadingAndSavingUtils::SavePackages(PackagesToSave, false);
+		if (!bSaved)
+		{
+			Result.AddMessage(TEXT("Failed to save one or more imported weapon asset packages."));
+			return false;
+		}
+
+		Result.AddMessage(FString::Printf(TEXT("Saved asset package count: %d"), PackagesToSave.Num()));
+		return true;
 	}
 
 	UObject* ImportSingleAsset(const FString& Filename, const FString& DestinationPath, FWeaponImportResult& Result, const UClass* ExpectedClass = nullptr)
@@ -390,6 +426,8 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 	const FString LightmapTextureFile = WeaponImportTool::FindFirstTextureByKeyword(SourceFolder, TEXT("Lightmap"));
 
 #if WITH_EDITOR
+	UTexture2D* ImportedLightmapTexture = nullptr;
+
 	UObject* ImportedMeshObject = WeaponImportTool::ImportSingleAsset(ObjFile, DestinationPath, Result, UStaticMesh::StaticClass());
 	UStaticMesh* ImportedMesh = Cast<UStaticMesh>(ImportedMeshObject);
 	if (!ImportedMesh)
@@ -416,9 +454,10 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 			UTexture2D::StaticClass()
 		);
 
-		if (UTexture2D* LightmapTexture = Cast<UTexture2D>(ImportedLightmapObject))
+		ImportedLightmapTexture = Cast<UTexture2D>(ImportedLightmapObject);
+		if (ImportedLightmapTexture)
 		{
-			Result.AddMessage(FString::Printf(TEXT("Imported optional Lightmap Texture: %s"), *LightmapTexture->GetPathName()));
+			Result.AddMessage(FString::Printf(TEXT("Imported optional Lightmap Texture: %s"), *ImportedLightmapTexture->GetPathName()));
 		}
 		else
 		{
@@ -473,6 +512,22 @@ FWeaponImportResult UWeaponImportToolLibrary::ImportWeaponFromObjFolder(
 	Result.StaticMeshObjectPath = ImportedMesh->GetPathName();
 	Result.AddMessage(FString::Printf(TEXT("Imported Static Mesh: %s"), *Result.StaticMeshObjectPath));
 	Result.AddMessage(FString::Printf(TEXT("Imported Diffuse Texture: %s"), *DiffuseTexture->GetPathName()));
+
+	TArray<UObject*> AssetsToSave;
+	AssetsToSave.Add(ImportedMesh);
+	AssetsToSave.Add(DiffuseTexture);
+	if (ImportedLightmapTexture)
+	{
+		AssetsToSave.Add(ImportedLightmapTexture);
+	}
+	AssetsToSave.Add(Material);
+	AssetsToSave.Add(WeaponDefinition);
+
+	if (!WeaponImportTool::SaveDirtyPackagesForAssets(AssetsToSave, Result))
+	{
+		return Result;
+	}
+
 	Result.bSucceeded = true;
 	Result.AddMessage(TEXT("Weapon import complete. Check Static Mesh sockets and assign DA_Weapon_* to DefaultWeaponDefinition."));
 	return Result;
