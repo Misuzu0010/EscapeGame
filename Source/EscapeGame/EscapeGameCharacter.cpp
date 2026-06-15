@@ -292,6 +292,7 @@ void AEscapeGameCharacter::DoJumpStart()
 	// 1. 查岗：如果被定身（打开了背包），直接无视跳跃请求
 	if (Controller && Controller->IsMoveInputIgnored())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("跳跃被拒绝：当前 Controller 正在忽略移动输入，通常是背包或 UI 打开中。"));
 		return;
 	}
 	
@@ -319,13 +320,25 @@ void AEscapeGameCharacter::StartCrouch()
 {
 	// 【安全检查1】获取 CharacterMovement，必须判空
 	UCharacterMovementComponent* MovementComp = GetCharacterMovement();
-	if (!MovementComp) return;
+	if (!MovementComp)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("下蹲失败：CharacterMovementComponent 为空。"));
+		return;
+	}
 
 	// 【安全检查2】只有在非下落时才能蹲伏
-	if (MovementComp->IsFalling()) return;
+	if (MovementComp->IsFalling())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("下蹲被拒绝：角色正在下落，不能进入 Crouch。"));
+		return;
+	}
 
 	// 【安全检查3】检查 SprintComp 是否有效
-	if (SprintComp && SprintComp->bSprintRequested) return;
+	if (SprintComp && SprintComp->bSprintRequested)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("下蹲被拒绝：当前正在请求冲刺，避免冲刺和下蹲状态互相覆盖。"));
+		return;
+	}
 
 	Crouch();
 }
@@ -363,6 +376,10 @@ void AEscapeGameCharacter::Input_UseItem(const FInputActionValue& Value)
 		// 角色知道 CurrentSelectedSlotIndex 是多少，把它传给组件
 		InventoryComp->UseItem(CurrentSelectedSlotIndex);
 	}
+	else if (bIsPressed)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("使用物品失败：InventoryComp 为空，Slot=%d。"), CurrentSelectedSlotIndex);
+	}
 }
 
 FCombatDamageResult AEscapeGameCharacter::ApplyDamage_Implementation(const FCombatDamageContext& DamageContext)
@@ -370,18 +387,29 @@ FCombatDamageResult AEscapeGameCharacter::ApplyDamage_Implementation(const FComb
 	FCombatDamageResult result;
 	if (!AttributeComp || !StateMachineComp)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("受击失败：AttributeComp=%s, StateMachineComp=%s。"),
+			*GetNameSafe(AttributeComp),
+			*GetNameSafe(StateMachineComp));
 		return result;
 	}
 
 	if (StateMachineComp->GetCurrentState() == ECharacterState::Dead)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("受击被忽略：角色已经死亡，Instigator=%s, Damage=%.2f。"),
+			*GetNameSafe(DamageContext.InstigatorActor),
+			DamageContext.DamageValue);
 		return result;
 	}
 	const float DamageToApply = FMath::Max(0.f, DamageContext.DamageValue);
 	if (DamageToApply<=0.f)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("受击被忽略：伤害值非法或为零，Instigator=%s, Damage=%.2f。"),
+			*GetNameSafe(DamageContext.InstigatorActor),
+			DamageContext.DamageValue);
 		return result;
 	}
+
+	// 伤害结果由生命组件的实际扣血量反推，避免护盾/Clamp 等逻辑导致返回值和真实生命不同步。
 	const float OldHealth =  AttributeComp->CurrentHealth;
 	AttributeComp ->ApplyHealthChange(-DamageToApply);
 	const float NewHealth = AttributeComp->CurrentHealth;
@@ -432,12 +460,18 @@ bool AEscapeGameCharacter::EquipWeapon(UWeaponDefinition* WeaponDef)
 {
 	if (!WeaponDef)
 	{
+		UE_LOG(LogTemp, Log, TEXT("装备武器请求为空：执行卸下当前武器。"));
 		UnequipWeapon();
 		return true;
 	}
 
 	if (!WeaponDef->WeaponMesh || !EquippedWeaponMesh || !GetMesh())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("装备武器失败：WeaponDef=%s, WeaponMesh=%s, EquippedWeaponMesh=%s, CharacterMesh=%s。"),
+			*GetNameSafe(WeaponDef),
+			*GetNameSafe(WeaponDef->WeaponMesh),
+			*GetNameSafe(EquippedWeaponMesh),
+			*GetNameSafe(GetMesh()));
 		return false;
 	}
 
@@ -457,6 +491,10 @@ bool AEscapeGameCharacter::EquipWeapon(UWeaponDefinition* WeaponDef)
 	if (EscapeCombatComp)
 	{
 		EscapeCombatComp->SetEquippedWeapon(WeaponDef, EquippedWeaponMesh);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("装备武器警告：EscapeCombatComp 为空，武器 Mesh 已挂载但战斗组件不会读取武器数据。"));
 	}
 
 	CurrentWeaponDefinition = WeaponDef;

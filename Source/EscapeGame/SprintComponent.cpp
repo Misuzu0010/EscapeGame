@@ -33,10 +33,18 @@ void USprintComponent::SetSpeedBuffMultiplier(float NewMultiplier)
 void USprintComponent::UpdateMovementSpeed() 
 {
 	ACharacter* Character = Cast<ACharacter>(GetOwner());
-	if (!Character)return;
+	if (!Character)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("更新移动速度失败：SprintComponent 的 Owner 不是 ACharacter，Owner=%s。"), *GetNameSafe(GetOwner()));
+		return;
+	}
 
 	UCharacterMovementComponent* CharMoveComp = Character->GetCharacterMovement();
-	if (!CharMoveComp)return;
+	if (!CharMoveComp)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("更新移动速度失败：角色 %s 没有 CharacterMovementComponent。"), *GetNameSafe(Character));
+		return;
+	}
 
 	float BaseSpeed = bIsActurallySprinting ? SprintSpeed : WalkSpeed;
 
@@ -68,6 +76,14 @@ void USprintComponent::BeginPlay()
 		StateMachine = OwnerCharacter->FindComponentByClass<UStateMachineComponent>();
 		// 🚨 硬核 Debug 拦截：如果组件挂载失败，立刻在控制台高亮报错
 		ensureMsgf(StateMachine, TEXT("香子兰警报：角色身上找不到状态机组件喵！"));
+		if (!MovementComp)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SprintComponent 初始化警告：Owner=%s 没有 CharacterMovementComponent。"), *GetNameSafe(OwnerCharacter));
+		}
+		if (!StateMachine)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SprintComponent 初始化警告：Owner=%s 没有 StateMachineComponent。"), *GetNameSafe(OwnerCharacter));
+		}
 		CurrentStamina = MaxStamina;
 		// 【核心修复】：刚开局时，必须主动触发一次多播代理广播，让 UI 刷新显示体力值！
 		ApplyStaminaChange();
@@ -79,6 +95,10 @@ void USprintComponent::BeginPlay()
 			MovementComp->MaxWalkSpeed = CurrentSmoothedSpeed;
 		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SprintComponent 初始化失败：Owner=%s 不是 ACharacter。"), *GetNameSafe(GetOwner()));
+	}
 }
 
 
@@ -88,7 +108,14 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (!OwnerCharacter || !MovementComp || !StateMachine) return;
+	if (!OwnerCharacter || !MovementComp || !StateMachine)
+	{
+		UE_LOG(LogTemp, VeryVerbose, TEXT("Sprint Tick 跳过：OwnerCharacter=%s, MovementComp=%s, StateMachine=%s。"),
+			*GetNameSafe(OwnerCharacter),
+			*GetNameSafe(MovementComp),
+			*GetNameSafe(StateMachine));
+		return;
+	}
 	float OldStamina = CurrentStamina;
 
 	// 1. 体力耗尽检测
@@ -166,7 +193,11 @@ void USprintComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 }
 void USprintComponent::StartSprinting()
 {
-	if(bStaminaDrained) return; // 体力耗尽时按 Shift 无效
+	if(bStaminaDrained)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("冲刺被拒绝：体力已耗尽，CurrentStamina=%.2f, MaxStamina=%.2f。"), CurrentStamina, MaxStamina);
+		return;
+	}
 
 	bSprintRequested = true;
 

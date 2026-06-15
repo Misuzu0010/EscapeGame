@@ -88,10 +88,28 @@ void AEscapeGamePlayerController::ToggleInventoryUI()
             {
                 MenuWidget->InitializeInventory(InvComp);
             }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("背包 UI 初始化警告：MenuWidget=%s, InventoryComponent=%s, Pawn=%s。"),
+                    *GetNameSafe(MenuWidget),
+                    *GetNameSafe(InvComp),
+                    *GetNameSafe(ControlledPawn));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("背包 UI 初始化警告：ControlledPawn=%s, InventoryMenuInstance=%s。"),
+                *GetNameSafe(ControlledPawn),
+                *GetNameSafe(InventoryMenuInstance));
         }
     }
 
-    if (!InventoryMenuInstance) return;
+    if (!InventoryMenuInstance)
+    {
+        UE_LOG(LogTemp, Error, TEXT("背包 UI 切换失败：InventoryMenuInstance 创建失败，Class=%s。"),
+            InventoryMenuClass ? *InventoryMenuClass->GetName() : TEXT("None"));
+        return;
+    }
 
     // 2. 根据当前状态切换
     if (InventoryMenuInstance->IsInViewport())
@@ -108,7 +126,12 @@ void AEscapeGamePlayerController::ToggleInventoryUI()
 
 void AEscapeGamePlayerController::SetInventoryVisibility(bool bVisible)
 {
-    if (!InventoryMenuInstance) return;
+    if (!InventoryMenuInstance)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("设置背包可见性失败：InventoryMenuInstance 为空，bVisible=%s。"),
+            bVisible ? TEXT("true") : TEXT("false"));
+        return;
+    }
 
     if (bVisible)
     {

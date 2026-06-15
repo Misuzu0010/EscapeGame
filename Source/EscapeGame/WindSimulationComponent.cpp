@@ -78,11 +78,6 @@ void UWindSimulationComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	// 目标风力 = 基础风力 + 缓存的噪声风力
 	TargetWind = CurrentWind + CachedNoiseWind;;
 
-	if (TimerSettings<=0.0f) {
-		UE_LOG(LogTemp, Warning, TEXT("TargetWind: X=%.2f Y=%.2f Z=%.2f"),
-			TargetWind.X, TargetWind.Y, TargetWind.Z);
-		TimerSettings = 0.5f;// 每0.5秒输出一次日志，避免过于频繁
-	}
 	
 
 	// ...

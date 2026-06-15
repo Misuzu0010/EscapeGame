@@ -5,9 +5,13 @@
 #include "EscapeGame/SprintComponent.h"
 bool UItemAction_Boosting::OnUse_Implementation(AActor* TargetActor)
 {
-    if (!TargetActor) return false;
+    if (!TargetActor)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("使用加速药水失败：TargetActor 为空，无法查找 SprintComponent。"));
+        return false;
+    }
 
-    // 1. 尝试找到主人的腿（SprintComponent）
+    // 加速效果只通过 SprintComponent 进入，避免道具直接改 CharacterMovement 后被冲刺组件下一帧覆盖。
     USprintComponent* SprintComp = TargetActor->FindComponentByClass<USprintComponent>();
 
     if (SprintComp)

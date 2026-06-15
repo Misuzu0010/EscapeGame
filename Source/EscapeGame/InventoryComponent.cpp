@@ -18,11 +18,14 @@ int32 UInventoryComponent::AddItem(const FItemData& InItemData, int32 InCount)
 {
 	if (InItemData.ID.IsNone() || InCount <= 0) 
 	{
+		UE_LOG(LogTemp, Warning, TEXT("添加物品失败：ItemID=%s, Count=%d。ItemID 为空或数量非法。"),
+			*InItemData.ID.ToString(),
+			InCount);
 		return InCount;
 	}
 	int32 LeftoverCount = InCount;
 
-	//堆叠规则
+	// 堆叠规则来自物品逻辑资产；没有逻辑资产时使用默认 99 堆叠，保证纯数据物品也能进入背包。
 	bool bCanStack = true;
 	int32 MaxStackSize = 99;
 
@@ -108,7 +111,7 @@ void UInventoryComponent::SwapSlots(int32 IndexA, int32 IndexB)
 	if (IndexA == IndexB) 
 	{
 		// 相同槽位，不需要交换
-		UE_LOG(LogTemp,Warning,TEXT("这是一样的槽位捏"))
+		UE_LOG(LogTemp,Warning,TEXT("这是一样的槽位捏"));
 		return;
 	}
 
@@ -123,7 +126,13 @@ void UInventoryComponent::SwapSlots(int32 IndexA, int32 IndexB)
 }
 void UInventoryComponent::RemoveItem(const FItemData &InItemData, int32 InCount) 
 {
-	if (InCount <= 0)return;
+	if (InCount <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("移除物品失败：ItemID=%s, Count=%d。移除数量必须大于 0。"),
+			*InItemData.ID.ToString(),
+			InCount);
+		return;
+	}
 
 	//剩余需要移除的数量
 	int32 LeftoverToRemove = InCount;
@@ -229,6 +238,19 @@ void UInventoryComponent::UseItem(int32 SlotIndex)
 			{
 				OnInventoryUpdated.Broadcast();
 			}
+		}
+		else if (!bUsedSuccessfully)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("使用物品失败：Slot=%d, ItemID=%s, LogicAsset=%s 返回 false。"),
+				SlotIndex,
+				*ItemStack.ItemData.ID.ToString(),
+				*GetNameSafe(LogicAsset));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Log, TEXT("物品使用成功但未消耗：Slot=%d, ItemID=%s。"),
+				SlotIndex,
+				*ItemStack.ItemData.ID.ToString());
 		}
 	}
 

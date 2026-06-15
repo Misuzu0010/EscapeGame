@@ -19,6 +19,30 @@ class UMeshComponent;
 class UWeaponDefinition;
 class UStateMachineComponent;
 
+UENUM(BlueprintType)
+enum class ECombatBufferedInput : uint8
+{
+	None,
+	Light,
+	Heavy
+};
+
+UENUM(BlueprintType)
+enum class ECombatWindowType : uint8
+{
+	Combo,
+	HeavyCancel
+};
+
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	Idle            UMETA(DisplayName = "空闲"),
+	Attacking       UMETA(DisplayName = "轻击连招中"),
+	Charging        UMETA(DisplayName = "蓄力中"),
+	HeavyAttacking  UMETA(DisplayName = "重击释放中")
+};
+
 USTRUCT()
 struct FCombatRuntimeState
 {
@@ -47,6 +71,15 @@ struct FCombatRuntimeState
 	UPROPERTY(Transient)
 	FTimerHandle InputBufferTimer;
 
+	UPROPERTY(Transient)
+	ECombatBufferedInput CombatBufferedInput = ECombatBufferedInput::None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	ECombatWindowType WindowType = ECombatWindowType::Combo;
+
+	UPROPERTY(Transient)
+	TSet<ECombatWindowType> ActiveWindows;
+
 	void BeginAction(FGameplayTag ActionTag, UAnimMontage* MontageToPlay)
 	{
 		ClearCurrentActionTags();
@@ -63,6 +96,8 @@ struct FCombatRuntimeState
 	{
 		ComboCount = 0;
 		bHasSavedComboInput = false;
+		CombatBufferedInput = ECombatBufferedInput::None;
+		ActiveWindows.Reset();
 		CurrentActionTag = FGameplayTag::EmptyTag;
 		CurrentPlayingMontage = nullptr;
 		HitActorsThisAction.Reset();
@@ -113,14 +148,6 @@ struct FCombatRuntimeState
 	}
 };
 
-UENUM(BlueprintType)
-enum class ECombatState : uint8
-{
-	Idle            UMETA(DisplayName = "空闲"),
-	Attacking       UMETA(DisplayName = "轻击连招中"),
-	Charging        UMETA(DisplayName = "蓄力中"),
-	HeavyAttacking  UMETA(DisplayName = "重击释放中")
-};
 USTRUCT(BlueprintType)
 struct FAttackHitPayload
 {
@@ -135,6 +162,28 @@ struct FAttackHitPayload
     UPROPERTY(BlueprintReadWrite, Category = "Combat|Hit")
     FVector DamageImpulse = FVector::ZeroVector;
 };
+
+USTRUCT(BlueprintType)
+struct FAttackTraceInst
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool bAttackTraceActive = false;
+
+	UPROPERTY()
+	bool bHasLastTracePoints = false;
+
+	UPROPERTY()
+	FVector LastTraceStart;
+
+	UPROPERTY()
+	FVector LastTraceEnd;
+
+	UPROPERTY()
+	FName ActiveDamageSourceBone;
+};
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttackHitSignature, FAttackHitPayload, HitData);
 // 传递连击数变化
@@ -175,14 +224,29 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Combat")
     void TryPlayActionByTag(FGameplayTag ActionTag);
 
-	//从组件获取当前动作的 Trace 参数，执行 SweepMultiByObjectType
-	//攻击判定起点骨骼/socket名称
+	// Legacy: 单帧攻击判定入口，旧 AN_MeleeAttackTrace 使用。
+	// 新 Montage 请改用 ANS_MeleeAttackTrace -> BeginAttackTrace/TickAttackTrace/EndAttackTrace。
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void DoAttackTrace(FName DamageSourceBone);
 
-	//检查输入缓冲时间戳，决定是否进入连击状态
+	// Legacy-facing helper: 旧 AN_CheckCombo 可以直接调用它。
+	// 新 Montage 请使用 ANS_CheckComboWindow -> BeginComboWindow/TickComboWindow/EndComboWindow。
+	// 该函数仍被 TickComboWindow 内部复用，不要删除。
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	bool CommitNextLightCombo();
+
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void CheckCombo();
+
+	UFUNCTION(BlueprintCallable, Category="Combat|Combo")
+	void BeginComboWindow();
+
+	UFUNCTION(BlueprintCallable, Category="Combat|Combo")
+	void TickComboWindow();
+
+	UFUNCTION(BlueprintCallable, Category="Combat|Combo")
+	void EndComboWindow();
 
     // 蓝图 Enhanced Input 的 Started 或 Triggered 引脚调用此函数
     UFUNCTION(BlueprintCallable, Category = "Combat")
@@ -202,6 +266,38 @@ public:
 		// 真正调用底层容器的 HasTag 函数！
 		return RuntimeState.ActiveTags.HasTag(TagToCheck);
 	}
+	UFUNCTION(BlueprintCallable, Category="Combat|Trace")
+	void BeginAttackTrace(FName DamageSourceBone);
+
+	UFUNCTION(BlueprintCallable, Category="Combat|Trace")
+	void TickAttackTrace(FName DamageSourceBone);
+
+	UFUNCTION(BlueprintCallable, Category="Combat|Trace")
+	void EndAttackTrace();
+
+	UFUNCTION(BlueprintCallable, Category="Combat|Trace")
+	bool GetCurrentTracePoints(
+		FName DamageSourceBone,
+		FVector& OutStart,
+		FVector& OutEnd) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|Trace")
+	void SweepAttackSegment(
+		const FVector& TraceStart,
+		const FVector& TraceEnd);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|Trace")
+	void ProcessAttackHit(
+		const FHitResult& Hit,
+		const FCombatActionDefinition& ActionDef,
+		float BaseDamage,
+		FGameplayTag DamageTypeTag);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|Window")
+	void BeginCombatWindow(ECombatWindowType WindowType);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat|Window")
+	void EndCombatWindow(ECombatWindowType WindowType);
 	
 	
 	// 3. 触发函数 (Trigger Function) - 可选，用于封装 Broadcast
@@ -212,8 +308,8 @@ public:
 	// 只需要这两个绑定函数
 	void Input_AttackStarted();
 	void Input_AttackCompleted();
+	void HandleAttackHoldThresholdReached();
 	
-	// EscapeCombatComponent.h
 	UFUNCTION(BlueprintPure, Category = "Combat")
 	float GetCurrentActionBaseDamage() const;
 
@@ -225,6 +321,13 @@ public:
 	
 	void SetEquippedWeapon(UWeaponDefinition* WeaponDef, UMeshComponent* WeaponMesh);
 	void ClearEquippedWeapon();
+	void BufferCombatInput(ECombatBufferedInput Input);
+	void ClearBufferedInput();
+	void TryConsumeBufferedInput();
+	bool HasCombatWindow(ECombatWindowType WindowType) const
+	{
+		return RuntimeState.ActiveWindows.Contains(WindowType);
+	};
 
 
 private:
@@ -238,7 +341,13 @@ private:
 
 	UPROPERTY(Transient)
 	FCombatRuntimeState RuntimeState;
-	
+
+	UPROPERTY(Transient)
+	FAttackTraceInst AttackTraceInst;
+
+	UPROPERTY(Transient)
+	bool bComboWindowActive = false;
+
     UPROPERTY(Transient)
     TObjectPtr<ACharacter>OwnerCharacter;
 

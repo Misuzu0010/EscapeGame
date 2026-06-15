@@ -55,7 +55,13 @@ void APickupData::BeginPlay()
 
 bool APickupData::AttemptPickUp_Implementation(APawn* InstigatorPawn) 
 {
-    if (!InstigatorPawn) return false;
+    if (!InstigatorPawn)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("拾取失败：InstigatorPawn 为空，Pickup=%s, ItemID=%s。"),
+            *GetNameSafe(this),
+            *ItemID.ToString());
+        return false;
+    }
 
     if (!ItemDataTable || ItemID.IsNone()) 
     {
@@ -99,6 +105,9 @@ bool APickupData::AttemptPickUp_Implementation(APawn* InstigatorPawn)
             return false;
         }
     }
+    UE_LOG(LogTemp, Warning, TEXT("拾取失败：Pawn=%s 没有 InventoryComponent，ItemID=%s。"),
+        *GetNameSafe(InstigatorPawn),
+        *ItemID.ToString());
     return false;
 
 }

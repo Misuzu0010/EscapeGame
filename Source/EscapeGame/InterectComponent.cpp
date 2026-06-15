@@ -51,7 +51,11 @@ void UInterectComponent::OnInteract(const FInputActionValue& Value)
 
 	//必须问 Owner 要坐标！
 	AActor* MyOwner = GetOwner();
-	if (!MyOwner) return;
+	if (!MyOwner)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("交互失败：InterectComponent 没有 Owner，无法执行 Sphere Sweep。"));
+		return;
+	}
 
 	FVector Start = MyOwner->GetActorLocation();
 	FVector End = Start; // 起点和终点一样，就相当于原地生成一个球
@@ -103,6 +107,10 @@ void UInterectComponent::OnInteract(const FInputActionValue& Value)
 					UE_LOG(LogTemp, Warning, TEXT("香子兰帮你摸到了: %s"), *HitActor->GetName());
 					break;
 				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("拾取交互失败：Owner=%s 不是 Pawn，无法作为拾取发起者。"), *GetNameSafe(MyOwner));
+				}
 			}
 			else if (HitActor->Implements<UInteractableInterface>())
 			{
@@ -112,6 +120,12 @@ void UInterectComponent::OnInteract(const FInputActionValue& Value)
 				if(PawnOwner)
 				{
 					IInteractableInterface::Execute_Interact(HitActor, PawnOwner);
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("通用交互失败：Owner=%s 不是 Pawn，无法传给交互对象 %s。"),
+						*GetNameSafe(MyOwner),
+						*GetNameSafe(HitActor));
 				}
 
 				break; // 交互通常一次只触发一个

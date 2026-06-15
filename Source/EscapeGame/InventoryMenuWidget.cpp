@@ -7,7 +7,11 @@
 
 void UInventoryMenuWidget::InitializeInventory(UInventoryComponent* InventoryComp)
 {
-	if (!InventoryComp) return;
+	if (!InventoryComp)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("背包菜单初始化失败：InventoryComp 为空。"));
+		return;
+	}
 
 	InventoryRef = InventoryComp;
 
@@ -20,7 +24,14 @@ void UInventoryMenuWidget::InitializeInventory(UInventoryComponent* InventoryCom
 
 void UInventoryMenuWidget::RefreshInventory()
 {
-	if (!ItemGrid || !SlotWidgetClass || !InventoryRef.IsValid())return;
+	if (!ItemGrid || !SlotWidgetClass || !InventoryRef.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("背包菜单刷新失败：ItemGrid=%s, SlotWidgetClass=%s, InventoryRefValid=%s。"),
+			*GetNameSafe(ItemGrid),
+			SlotWidgetClass ? *SlotWidgetClass->GetName() : TEXT("None"),
+			InventoryRef.IsValid() ? TEXT("true") : TEXT("false"));
+		return;
+	}
 
 	ItemGrid ->ClearChildren();
 	
@@ -40,6 +51,12 @@ void UInventoryMenuWidget::RefreshInventory()
 			}
 			//添加到格子里
 			ItemGrid->AddChild(NewSlot);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("背包菜单刷新警告：创建 SlotWidget 失败，Index=%d, WidgetClass=%s。"),
+				i,
+				SlotWidgetClass ? *SlotWidgetClass->GetName() : TEXT("None"));
 		}
 	}
 }

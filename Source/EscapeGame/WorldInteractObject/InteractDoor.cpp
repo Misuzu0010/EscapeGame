@@ -28,7 +28,13 @@ void AInteractDoor::Tick(float DeltaTime)
 
 FText AInteractDoor::GetInteractText_Implementation(AActor* Interactor) const
 {
-	if (!bIsInteractable)return FText::GetEmpty();
+	if (!bIsInteractable)
+	{
+		UE_LOG(LogTemp, VeryVerbose, TEXT("门交互文本为空：Door=%s 当前不可交互，Interactor=%s。"),
+			*GetNameSafe(this),
+			*GetNameSafe(Interactor));
+		return FText::GetEmpty();
+	}
 
 	if (!RequireKeyID.ID.IsNone()) 
 	{
@@ -40,7 +46,14 @@ FText AInteractDoor::GetInteractText_Implementation(AActor* Interactor) const
 
 bool AInteractDoor::Interact_Implementation(APawn* InstigatorPawn) 
 {
-	if (!InstigatorPawn || !bIsInteractable)return false;
+	if (!InstigatorPawn || !bIsInteractable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("开门失败：Door=%s, InstigatorPawn=%s, bIsInteractable=%s。"),
+			*GetNameSafe(this),
+			*GetNameSafe(InstigatorPawn),
+			bIsInteractable ? TEXT("true") : TEXT("false"));
+		return false;
+	}
 
 	if (RequireKeyID.ID.IsNone()) 
 	{
@@ -57,7 +70,7 @@ bool AInteractDoor::Interact_Implementation(APawn* InstigatorPawn)
 		{
 			bIsOpen = true;
 			OnDoorOpen();
-			//���Լ�һ�����ŵ��ı���ʾ
+			// 钥匙验证通过后先触发开门事件，再按配置决定是否消耗钥匙。
 
 			if (bConsumeKey) 
 			{
@@ -68,6 +81,9 @@ bool AInteractDoor::Interact_Implementation(APawn* InstigatorPawn)
 		}
 		else 
 		{
+			UE_LOG(LogTemp, Warning, TEXT("开门失败：Pawn=%s 缺少钥匙 ItemID=%s。"),
+				*GetNameSafe(InstigatorPawn),
+				*RequireKeyID.ID.ToString());
 			OnDoorLocked();
 			return false;
 
@@ -75,6 +91,9 @@ bool AInteractDoor::Interact_Implementation(APawn* InstigatorPawn)
 		}
 
 	}
+	UE_LOG(LogTemp, Warning, TEXT("开门失败：Pawn=%s 没有 InventoryComponent，无法检查钥匙 ItemID=%s。"),
+		*GetNameSafe(InstigatorPawn),
+		*RequireKeyID.ID.ToString());
 	return false;
 }
 bool AInteractDoor::CanInteract_Implementation(AActor* Interactor) const
