@@ -1,0 +1,16 @@
+/.git
+/.github
+/.idea
+/.vs
+/.vscode
+/Backup
+/Content
+/DerivedDataCache
+/Intermediate
+/Saved
+/Plugins/Developer/RiderLink/Intermediate
+/Plugins/KawaiiPhysics_5.7_1.20.0/KawaiiPhysics/Intermediate
+/Plugins/VRM4U_5_3_20260101/Content
+/Plugins/VRM4U_5_3_20260101/Intermediate
+/Plugins/VRM4U_5_3_20260101/Shaders
+/Plugins/VRM4U_5_3_20260101/ThirdParty

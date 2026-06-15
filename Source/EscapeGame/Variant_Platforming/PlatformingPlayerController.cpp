@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 
 #include "Variant_Platforming/PlatformingPlayerController.h"
@@ -10,7 +10,7 @@
 #include "Engine/LocalPlayer.h"
 #include "Engine/World.h"
 #include "Blueprint/UserWidget.h"
-#include "EscapeGame.h"
+#include "Core/EscapeGame.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 
 void APlatformingPlayerController::BeginPlay()

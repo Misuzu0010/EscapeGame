@@ -1,0 +1,117 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "Character/Animation/CharacterAnimInstance.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Character/Components/WindSimulationComponent.h" // 用于获取风力数据
+#include "Kismet/KismetMathLibrary.h" // 用于数学计算
+#include "Character/Components/ClothLODControllerComponent.h"
+#include "Character/Components/SprintComponent.h"
+
+void UCharacterAnimInstance::NativeInitializeAnimation()
+{
+    UAnimInstance::NativeInitializeAnimation();
+    // 缓存所有者，只会执行一次
+    OwnerCharacter = Cast<ACharacter>(GetOwningActor());
+    
+    if (OwnerCharacter)
+    {
+        MovementComponent = OwnerCharacter->GetCharacterMovement();
+
+        WindComponent = OwnerCharacter->FindComponentByClass<UWindSimulationComponent>();
+
+        // 【新增】获取我们的布料LOD控制器
+		ClothLODComponent = OwnerCharacter->FindComponentByClass<UClothLODControllerComponent>();
+        
+        SprintComp=OwnerCharacter->FindComponentByClass<USprintComponent>();
+    }
+}
+
+// ==========================================
+// 基础写法：在游戏线程更新 (Game Thread)
+// 逻辑：【绝对安全】在这里只做一件事：从组件提取数据并存入 Cached 变量！绝不做复杂运算！
+// ==========================================
+
+void UCharacterAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
+{
+    UAnimInstance::NativeUpdateAnimation(DeltaSeconds);
+
+    // 1. 安全提取速度，存入普通变量
+    if (MovementComponent)
+    {
+        CachedVelocity = MovementComponent->Velocity;
+		VerticalVelocity = CachedVelocity.Z;
+		GroundSpeed = CachedVelocity.Size2D();
+        bIsFalling = MovementComponent->IsFalling();
+		bShouldMove = (MovementComponent->GetCurrentAcceleration().Size2D() > 0.f) && (GroundSpeed > 3.0f);
+        if (SprintComp.IsValid())
+        {
+            // 用你写好的状态判断，直接驱动动画蓝图的变量
+            bIsRunning = SprintComp->ReturnSprintState();
+        }
+        else
+        {
+            // 容错降级逻辑
+            bIsRunning = bShouldMove && (GroundSpeed > 300.0f);
+        }
+        CachedRotation = OwnerCharacter->GetActorRotation();
+    }
+
+    // 2. 安全提取风力，弱指针必须用 IsValid() 判断
+    if (WindComponent.IsValid())
+    {
+		float KawaiiMultiplier = 5.0f;// 这个值可以根据需要调整，增加风力的影响程度
+        KawaiiWind = WindComponent->GetfinalWind()*KawaiiMultiplier;
+    }
+    if (ClothLODComponent.IsValid())
+    {
+        CachedClothLODFactor = ClothLODComponent->GetLODFactor();
+    }
+}
+
+void UCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaTime)
+{
+    UAnimInstance::NativeThreadSafeUpdateAnimation(DeltaTime);
+    
+    float Speed = CachedVelocity.Size2D();
+    const float SpeedAlpha=FMath::Clamp((Speed-HairRunBounceMinSpeed)/(HairRunBounceMaxSpeed-HairRunBounceMinSpeed), 0.0f, 1.0f);
+    const float TimeSeconds = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+    const float BounceZ = FMath::Sin(TimeSeconds*HairRunBounceFrequency*TWO_PI)*HairRunBounceStrength*SpeedAlpha;
+    HairRunBounceForce=FVector(0.f,0.f,BounceZ);
+    const float TargetDamping = (Speed > 10.0f) ? HairDampingHighSpeed : HairDampingLowSpeed;
+    RuntimeHairDamping = FMath::FInterpTo(RuntimeHairDamping, TargetDamping, DeltaTime, 5.0f);
+    float TargetPhysicsAlpha = 1.0f;
+	//传送检测：如果速度过快，直接关闭物理模拟，防止布料乱飞
+    if (Speed > 2000.0f)
+    {
+        PhysicsAlpha = 0.0f;
+    }
+    else
+    {
+        // 使用缓存的 LOD Factor，不再调用外部组件的方法
+        float LODMultiplier = 1.0f - CachedClothLODFactor;
+        TargetPhysicsAlpha *= LODMultiplier;
+    }
+    PhysicsAlpha = FMath::FInterpTo(PhysicsAlpha, TargetPhysicsAlpha, DeltaTime, 2.0f);
+    
+    if (GroundSpeed > 3.0f)
+    {
+        // 限制倍率范围，防止动画抽搐 (0.5倍到2.0倍之间)
+        LocomotionPlayRate = FMath::Clamp(GroundSpeed / AuthoredRunSpeed, 0.5f, 2.0f);
+    }
+    else
+    {
+        LocomotionPlayRate = 1.0f;
+    }
+    // 2. 线程安全的局部移动角度计算 (替代 CalculateDirection)
+    // 逻辑：使用四元数逆变换，将世界空间的 Velocity 转换到角色的局部空间
+    if (GroundSpeed > 3.0f)
+    {
+        FVector LocalVelocity = CachedRotation.UnrotateVector(CachedVelocity);
+        
+        // 利用 Atan2 计算出 X 和 Y 的夹角，并转换为角度 (-180 到 180)
+        // 这样计算完全脱离了引擎的 Actor 引用，完美线程安全！
+        LocomotionAngle = FMath::RadiansToDegrees(FMath::Atan2(LocalVelocity.Y, LocalVelocity.X));
+    }
+};
