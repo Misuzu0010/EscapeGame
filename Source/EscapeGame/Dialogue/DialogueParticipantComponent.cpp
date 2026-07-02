@@ -1,34 +1,10 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Dialogue/DialogueParticipantComponent.h"
 
-// Sets default values for this component's properties
 UDialogueParticipantComponent::UDialogueParticipantComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	// 对话参与者组件只保存配置，不需要每帧更新。
+	// 触发逻辑应由交互、重叠、AI 或 Subsystem 主动调用。
+	PrimaryComponentTick.bCanEverTick = false;
 }
-
-
-// Called when the game starts
-void UDialogueParticipantComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// ...
-	
-}
-
-
-// Called every frame
-void UDialogueParticipantComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
-}
-

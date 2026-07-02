@@ -3,12 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Dialogue/EscapeDialogueTypes.h"
 #include "GameFramework/PlayerController.h"
 #include "EscapeGamePlayerController.generated.h"
 
 class UInventoryComponent;
 class UInputMappingContext;
 class UUserWidget;
+class UDialogueQuestSubsystem;
+class UDialogueWidget;
 
 /**
  *  Basic PlayerController class for a third person game
@@ -43,6 +46,18 @@ protected:
 	UPROPERTY()
 	UUserWidget* InventoryMenuInstance;
 
+	// 对话 UI 蓝图类。需要在 PlayerController 蓝图里设置为继承 UDialogueWidget 的 WBP。
+	UPROPERTY(EditDefaultsOnly, Category = "UI|Dialogue")
+	TSubclassOf<UDialogueWidget> DialogueWidgetClass;
+
+	// 当前正在显示的对话 UI 实例。
+	UPROPERTY()
+	TObjectPtr<UDialogueWidget> DialogueWidgetInstance;
+
+	// 运行时对话子系统引用，用来绑定开始/结束会话事件。
+	UPROPERTY()
+	TObjectPtr<UDialogueQuestSubsystem> DialogueSubsystem;
+
 	/** Gameplay initialization */
 	virtual void BeginPlay() override;
 
@@ -51,6 +66,15 @@ protected:
 
 	// 辅助函数：专门用来开关
 	void SetInventoryVisibility(bool bVisible);
+
+	UFUNCTION()
+	void HandleDialogueConversationStarted(const FConversationSession& Session);
+
+	UFUNCTION()
+	void HandleDialogueConversationEnded(EInterruptReason Reason);
+
+	void ShowDialogueUI();
+	void HideDialogueUI();
 public:
 	UFUNCTION()
 	void ToggleInventoryUI();

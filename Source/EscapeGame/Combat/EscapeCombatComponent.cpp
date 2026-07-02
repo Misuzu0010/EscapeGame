@@ -754,12 +754,12 @@ void UEscapeCombatComponent::ClearEquippedWeapon()
 
 void UEscapeCombatComponent::BeginAttackTrace(FName DamageSourceBone)
 {
-    UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] BeginAttackTrace Enter Bone=%s ActionTag=%s Owner=%s WeaponDef=%s WeaponMesh=%s"),
-        *DamageSourceBone.ToString(),
-        *RuntimeState.CurrentActionTag.ToString(),
-        *GetNameSafe(GetOwner()),
-        *GetNameSafe(EquippedWeaponDef),
-        *GetNameSafe(EquippedWeaponMesh));
+    // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] BeginAttackTrace Enter Bone=%s ActionTag=%s Owner=%s WeaponDef=%s WeaponMesh=%s"),
+    //     *DamageSourceBone.ToString(),
+    //     *RuntimeState.CurrentActionTag.ToString(),
+    //     *GetNameSafe(GetOwner()),
+    //     *GetNameSafe(EquippedWeaponDef),
+    //     *GetNameSafe(EquippedWeaponMesh));
 
     AttackTraceInst.bAttackTraceActive=true;
     AttackTraceInst.bHasLastTracePoints=false;
@@ -776,9 +776,9 @@ void UEscapeCombatComponent::BeginAttackTrace(FName DamageSourceBone)
         AttackTraceInst.LastTraceStart=CurrentStart;
         AttackTraceInst.LastTraceEnd=CurrentEnd;
         AttackTraceInst.bHasLastTracePoints=true;
-        UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] BeginAttackTrace InitPoints Start=%s End=%s"),
-            *CurrentStart.ToString(),
-            *CurrentEnd.ToString());
+        // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] BeginAttackTrace InitPoints Start=%s End=%s"),
+        //     *CurrentStart.ToString(),
+        //     *CurrentEnd.ToString());
     }
     else
     {
@@ -789,11 +789,11 @@ void UEscapeCombatComponent::BeginAttackTrace(FName DamageSourceBone)
 
 void UEscapeCombatComponent::EndAttackTrace()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] EndAttackTrace Active=%s HasLast=%s HitActors=%d ActionTag=%s"),
-        AttackTraceInst.bAttackTraceActive ? TEXT("true") : TEXT("false"),
-        AttackTraceInst.bHasLastTracePoints ? TEXT("true") : TEXT("false"),
-        RuntimeState.HitActorsThisAction.Num(),
-        *RuntimeState.CurrentActionTag.ToString());
+    // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] EndAttackTrace Active=%s HasLast=%s HitActors=%d ActionTag=%s"),
+    //     AttackTraceInst.bAttackTraceActive ? TEXT("true") : TEXT("false"),
+    //     AttackTraceInst.bHasLastTracePoints ? TEXT("true") : TEXT("false"),
+    //     RuntimeState.HitActorsThisAction.Num(),
+    //     *RuntimeState.CurrentActionTag.ToString());
 
     AttackTraceInst.bAttackTraceActive = false;
     AttackTraceInst.bHasLastTracePoints = false;
@@ -802,11 +802,11 @@ void UEscapeCombatComponent::EndAttackTrace()
 
 void UEscapeCombatComponent::TickAttackTrace(FName DamageSourceBone)
 {
-    UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] TickAttackTrace Enter InputBone=%s ActiveBone=%s Active=%s HasLast=%s"),
-        *DamageSourceBone.ToString(),
-        *AttackTraceInst.ActiveDamageSourceBone.ToString(),
-        AttackTraceInst.bAttackTraceActive ? TEXT("true") : TEXT("false"),
-        AttackTraceInst.bHasLastTracePoints ? TEXT("true") : TEXT("false"));
+    // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] TickAttackTrace Enter InputBone=%s ActiveBone=%s Active=%s HasLast=%s"),
+    //     *DamageSourceBone.ToString(),
+    //     *AttackTraceInst.ActiveDamageSourceBone.ToString(),
+    //     AttackTraceInst.bAttackTraceActive ? TEXT("true") : TEXT("false"),
+    //     AttackTraceInst.bHasLastTracePoints ? TEXT("true") : TEXT("false"));
 
     if (!AttackTraceInst.bAttackTraceActive)
     {
@@ -829,11 +829,11 @@ void UEscapeCombatComponent::TickAttackTrace(FName DamageSourceBone)
 
     if (AttackTraceInst.bHasLastTracePoints)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] TickAttackTrace Points LastStart=%s LastEnd=%s CurrentStart=%s CurrentEnd=%s"),
-            *AttackTraceInst.LastTraceStart.ToString(),
-            *AttackTraceInst.LastTraceEnd.ToString(),
-            *CurrentStart.ToString(),
-            *CurrentEnd.ToString());
+        // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][ANS] TickAttackTrace Points LastStart=%s LastEnd=%s CurrentStart=%s CurrentEnd=%s"),
+        //     *AttackTraceInst.LastTraceStart.ToString(),
+        //     *AttackTraceInst.LastTraceEnd.ToString(),
+        //     *CurrentStart.ToString(),
+        //     *CurrentEnd.ToString());
 
         SweepAttackSegment(AttackTraceInst.LastTraceStart, CurrentStart);
         SweepAttackSegment(AttackTraceInst.LastTraceEnd, CurrentEnd);
@@ -866,11 +866,11 @@ bool UEscapeCombatComponent::GetCurrentTracePoints(FName DamageSourceBone, FVect
     {
         OutStart = EquippedWeaponMesh->GetSocketLocation(EquippedWeaponDef->TraceStartSocketName);
         OutEnd = EquippedWeaponMesh->GetSocketLocation(EquippedWeaponDef->TraceEndSocketName);
-        UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][TracePoints] Using weapon sockets StartSocket=%s EndSocket=%s Start=%s End=%s"),
-            *EquippedWeaponDef->TraceStartSocketName.ToString(),
-            *EquippedWeaponDef->TraceEndSocketName.ToString(),
-            *OutStart.ToString(),
-            *OutEnd.ToString());
+        // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][TracePoints] Using weapon sockets StartSocket=%s EndSocket=%s Start=%s End=%s"),
+        //     *EquippedWeaponDef->TraceStartSocketName.ToString(),
+        //     *EquippedWeaponDef->TraceEndSocketName.ToString(),
+        //     *OutStart.ToString(),
+        //     *OutEnd.ToString());
         return true;
     }
     else
@@ -897,9 +897,9 @@ bool UEscapeCombatComponent::GetCurrentTracePoints(FName DamageSourceBone, FVect
     else if (Mesh->DoesSocketExist(TEXT("右手首")))
     {
         OutStart = Mesh->GetSocketLocation(TEXT("右手首"));
-        UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][TracePoints] DamageSourceBone invalid. Fallback to 右手首 Start=%s InputBone=%s"),
-            *OutStart.ToString(),
-            *DamageSourceBone.ToString());
+        // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][TracePoints] DamageSourceBone invalid. Fallback to 右手首 Start=%s InputBone=%s"),
+        //     *OutStart.ToString(),
+        //     *DamageSourceBone.ToString());
     }
     else
     {
@@ -915,10 +915,10 @@ bool UEscapeCombatComponent::GetCurrentTracePoints(FName DamageSourceBone, FVect
     const float FallbackDistance = ActionDef ? ActionDef->TraceDistance : 80.f;
     OutEnd = OutStart + OwnerChar->GetActorForwardVector() * FallbackDistance;
 
-    UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][TracePoints] Character fallback End=%s Distance=%.2f ActionDef=%s"),
-        *OutEnd.ToString(),
-        FallbackDistance,
-        ActionDef ? TEXT("valid") : TEXT("null"));
+    // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][TracePoints] Character fallback End=%s Distance=%.2f ActionDef=%s"),
+    //     *OutEnd.ToString(),
+    //     FallbackDistance,
+    //     ActionDef ? TEXT("valid") : TEXT("null"));
 
     return true;
 }
@@ -981,18 +981,18 @@ void UEscapeCombatComponent::SweepAttackSegment(const FVector& TraceStart, const
         QueryParams
     );
 
-    UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][Sweep] Start=%s End=%s Radius=%.2f Hit=%s HitCount=%d BaseDamage=%.2f FinalDamage=%.2f"),
-        *TraceStart.ToString(),
-        *TraceEnd.ToString(),
-        TraceRadius,
-        bHit ? TEXT("true") : TEXT("false"),
-        OutHits.Num(),
-        BaseDamage,
-        BaseDamage * ActionDef->DamageMultiplier);
+    // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][Sweep] Start=%s End=%s Radius=%.2f Hit=%s HitCount=%d BaseDamage=%.2f FinalDamage=%.2f"),
+    //     *TraceStart.ToString(),
+    //     *TraceEnd.ToString(),
+    //     TraceRadius,
+    //     bHit ? TEXT("true") : TEXT("false"),
+    //     OutHits.Num(),
+    //     BaseDamage,
+    //     BaseDamage * ActionDef->DamageMultiplier);
 
-    DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Cyan, false, 1.0f, 0, 1.5f);
-    DrawDebugSphere(GetWorld(), TraceStart, TraceRadius, 8, FColor::Yellow, false, 1.0f);
-    DrawDebugSphere(GetWorld(), TraceEnd, TraceRadius, 8, FColor::Red, false, 1.0f);
+    // DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Cyan, false, 1.0f, 0, 1.5f);
+    // DrawDebugSphere(GetWorld(), TraceStart, TraceRadius, 8, FColor::Yellow, false, 1.0f);
+    // DrawDebugSphere(GetWorld(), TraceEnd, TraceRadius, 8, FColor::Red, false, 1.0f);
 
     if (!bHit)
     {
@@ -1003,7 +1003,7 @@ void UEscapeCombatComponent::SweepAttackSegment(const FVector& TraceStart, const
     {
         ProcessAttackHit(Hit, *ActionDef, BaseDamage, DamageTypeTag);
     }
-    UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][Sweep] segment finished."));
+    //UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][Sweep] segment finished."));
 }
 
 void UEscapeCombatComponent::ProcessAttackHit(const FHitResult& Hit, const FCombatActionDefinition& ActionDef, float BaseDamage, FGameplayTag DamageTypeTag)
@@ -1020,9 +1020,9 @@ void UEscapeCombatComponent::ProcessAttackHit(const FHitResult& Hit, const FComb
         return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][Hit] Candidate Actor=%s Impact=%s"),
-        *GetNameSafe(HitActor),
-        *Hit.ImpactPoint.ToString());
+    // UE_LOG(LogTemp, Warning, TEXT("[EscapeCombat][Hit] Candidate Actor=%s Impact=%s"),
+    //     *GetNameSafe(HitActor),
+    //     *Hit.ImpactPoint.ToString());
 
     const TObjectKey<AActor> HitKey(HitActor);
 

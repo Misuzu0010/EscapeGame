@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Interaction/InterectComponent.h"
+#include "Interaction/InteractComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/PlayerController.h" // 必须加！不然不认识 PC
 #include "Blueprint/UserWidget.h"           // 必须加！不然不认识 CreateWidget
@@ -14,7 +14,7 @@
 #include "Engine/EngineTypes.h"
 
 // Sets default values for this component's properties
-UInterectComponent::UInterectComponent()
+UInteractComponent::UInteractComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -25,7 +25,7 @@ UInterectComponent::UInterectComponent()
 
 
 // Called when the game starts
-void UInterectComponent::BeginPlay()
+void UInteractComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -34,7 +34,7 @@ void UInterectComponent::BeginPlay()
 
 
 // Called every frame
-void UInterectComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UInteractComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	//Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
@@ -42,7 +42,7 @@ void UInterectComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 }
 
 
-void UInterectComponent::OnInteract(const FInputActionValue& Value)
+void UInteractComponent::OnInteract(const FInputActionValue& Value)
 {
 	// --- 1. 准备参数 ---
 
@@ -53,7 +53,7 @@ void UInterectComponent::OnInteract(const FInputActionValue& Value)
 	AActor* MyOwner = GetOwner();
 	if (!MyOwner)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("交互失败：InterectComponent 没有 Owner，无法执行 Sphere Sweep。"));
+		UE_LOG(LogTemp, Warning, TEXT("交互失败：InteractComponent 没有 Owner，无法执行 Sphere Sweep。"));
 		return;
 	}
 
@@ -142,7 +142,7 @@ void UInterectComponent::OnInteract(const FInputActionValue& Value)
 	// DrawDebugSphere(GetWorld(), Start, 150.0f, 12, FColor::Red, false, 2.0f);
 }
 
-void UInterectComponent::RequestToggleInventory()
+void UInteractComponent::RequestToggleInventory()
 {
 	// 我不管UI怎么开，我只管喊一声
 	if (OnRequestToggleInventory.IsBound()) 

@@ -6,14 +6,34 @@
 #include "Engine/LocalPlayer.h"
 #include "InputMappingContext.h"
 #include "Blueprint/UserWidget.h"
+#include "Dialogue/DialogueQuestSubsystem.h"
 #include "Inventory/InventoryComponent.h"
 #include "Core/EscapeGame.h"
 #include "Widgets/Input/SVirtualJoystick.h"
 #include "Inventory/UI/InventoryMenuWidget.h"
+#include "UI/DialogueWidget.h"
 
 void AEscapeGamePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (UGameInstance* GameInstance = GetGameInstance())
+	{
+		DialogueSubsystem = GameInstance->GetSubsystem<UDialogueQuestSubsystem>();
+		if (DialogueSubsystem)
+		{
+			DialogueSubsystem->OnConversationStarted.AddDynamic(this, &AEscapeGamePlayerController::HandleDialogueConversationStarted);
+			DialogueSubsystem->OnConversationEnded.AddDynamic(this, &AEscapeGamePlayerController::HandleDialogueConversationEnded);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("对话 UI 绑定失败：找不到 UDialogueQuestSubsystem。"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("对话 UI 绑定失败：GameInstance 为空。"));
+	}
 
 	// only spawn touch controls on local player controllers
 	if (SVirtualJoystick::ShouldDisplayTouchInterface() && IsLocalPlayerController())
@@ -160,4 +180,77 @@ void AEscapeGamePlayerController::SetInventoryVisibility(bool bVisible)
         SetIgnoreMoveInput(false);
         SetIgnoreLookInput(false);
     }
+}
+
+void AEscapeGamePlayerController::HandleDialogueConversationStarted(const FConversationSession& Session)
+{
+	if (!Session.bIsActive)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("对话 UI 打开失败：收到的 Session 不是激活状态。DialogueID=%s。"),
+			*Session.DialogueID.ToString());
+		return;
+	}
+
+	ShowDialogueUI();
+}
+
+void AEscapeGamePlayerController::HandleDialogueConversationEnded(EInterruptReason Reason)
+{
+	HideDialogueUI();
+}
+
+void AEscapeGamePlayerController::ShowDialogueUI()
+{
+	if (!DialogueWidgetClass)
+	{
+		UE_LOG(LogTemp, Error, TEXT("对话 UI 打开失败：请在 PlayerController 蓝图里设置 DialogueWidgetClass。"));
+		return;
+	}
+
+	if (!DialogueSubsystem)
+	{
+		UE_LOG(LogTemp, Error, TEXT("对话 UI 打开失败：DialogueSubsystem 为空。"));
+		return;
+	}
+
+	if (!DialogueWidgetInstance)
+	{
+		DialogueWidgetInstance = CreateWidget<UDialogueWidget>(this, DialogueWidgetClass);
+		if (!DialogueWidgetInstance)
+		{
+			UE_LOG(LogTemp, Error, TEXT("对话 UI 打开失败：CreateWidget 返回空，Class=%s。"), *GetNameSafe(DialogueWidgetClass));
+			return;
+		}
+	}
+
+	DialogueWidgetInstance->InitializeDialogueWidget(DialogueSubsystem);
+
+	if (!DialogueWidgetInstance->IsInViewport())
+	{
+		DialogueWidgetInstance->AddToViewport();
+	}
+
+	FInputModeGameAndUI InputMode;
+	InputMode.SetWidgetToFocus(DialogueWidgetInstance->TakeWidget());
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+	bShowMouseCursor = true;
+
+	SetIgnoreMoveInput(true);
+	SetIgnoreLookInput(true);
+}
+
+void AEscapeGamePlayerController::HideDialogueUI()
+{
+	if (DialogueWidgetInstance && DialogueWidgetInstance->IsInViewport())
+	{
+		DialogueWidgetInstance->RemoveFromParent();
+	}
+
+	FInputModeGameOnly InputMode;
+	SetInputMode(InputMode);
+	bShowMouseCursor = false;
+
+	SetIgnoreMoveInput(false);
+	SetIgnoreLookInput(false);
 }

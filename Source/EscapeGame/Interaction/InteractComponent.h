@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "InterectComponent.generated.h"
+#include "InteractComponent.generated.h"
 struct FInputActionValue;
 
 
@@ -12,13 +12,13 @@ struct FInputActionValue;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRequestToggleInventory);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class ESCAPEGAME_API UInterectComponent : public UActorComponent
+class ESCAPEGAME_API UInteractComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UInterectComponent();
+	UInteractComponent();
 
 protected:
 	// Called when the game starts

@@ -1,29 +1,30 @@
 # Unreal Engine generated files
-Binaries/
-Intermediate/
-Saved/
-DerivedDataCache/
-Build/
-Content/Katana_Animations/
-Docs/
-.cursor/
+/Binaries/
+/Intermediate/
+/Saved/
+/DerivedDataCache/
+/Build/
+/Backup/
+
+# Local tool/editor state
+/.cursor/
 
 # Visual Studio files
-.vs/
+/.vs/
 *.sln
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
 
 # Visual Studio Code
-.vscode/
+/.vscode/
 
 # Rider
-.idea/
+/.idea/
 Plugins/Developer/RiderLink/
 
 # Project plugins are installed locally and should not be committed.
-Plugins/
+/Plugins/
 
 # macOS
 .DS_Store

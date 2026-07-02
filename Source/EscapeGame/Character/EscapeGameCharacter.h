@@ -8,7 +8,7 @@
 #include "Character/Components/SprintComponent.h"                      // 包含冲刺组件
 #include "Inventory/InventoryComponent.h"
 #include "Logging/LogMacros.h"
-#include "Interaction/InterectComponent.h"
+#include "Interaction/InteractComponent.h"
 #include "Character/Components/AttributeComponent.h"
 #include "Interfaces/EscapeCombatAttacker.h"
 #include "Interfaces/EscapeCombatDamageable.h"
@@ -196,7 +196,7 @@ public:
 	UCameraComponent* FirstPersonCameraComponent;
 
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly, Category = "Component")
-	UInterectComponent* InteractComp;
+	UInteractComponent* InteractComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Component")
 	UEscapeCombatComponent* EscapeCombatComp;

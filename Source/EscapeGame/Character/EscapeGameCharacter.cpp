@@ -77,7 +77,7 @@ AEscapeGameCharacter::AEscapeGameCharacter()
 	// 创建背包组件
 	InventoryComp = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComp"));
 
-	InteractComp = CreateDefaultSubobject<UInterectComponent>(TEXT("InteractComp"));
+	InteractComp = CreateDefaultSubobject<UInteractComponent>(TEXT("InteractComp"));
 	
 	EscapeCombatComp=CreateDefaultSubobject<UEscapeCombatComponent>(TEXT("EscapeCombatComp"));
 	
@@ -118,11 +118,11 @@ void AEscapeGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AEscapeGameCharacter::StopCrouch);
 		
 		
-		// 注意第三个参数是 InterectComp，第四个参数是组件的函数地址			
-		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::RequestToggleInventory);
+		// 注意第三个参数是 InteractComp，第四个参数是组件的函数地址			
+		EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, InteractComp, &UInteractComponent::RequestToggleInventory);
 
 		// 交互键也是同理
-		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, InteractComp, &UInterectComponent::OnInteract);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, InteractComp, &UInteractComponent::OnInteract);
 
 		//切换视角
 		EnhancedInputComponent->BindAction(ToggleCameraAction, ETriggerEvent::Started, this, &AEscapeGameCharacter::ToggleCameraMode);
